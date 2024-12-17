@@ -1,159 +1,136 @@
-openapi: 3.1.0
-info:
-  title: HydraFlow Actions
-  description: Defines the actions HydraFlow can perform, such as compressing memory, parsing queries, creating sub-personas, and providing context recaps.
-  version: 1.3.0
-servers:
-  - url: https://hydra-flow.vercel.app/api
-    description: Vercel-hosted endpoints for HydraFlow Actions
-paths:
-  /compress-memory:
-    post:
-      operationId: compressMemory
-      summary: Compress Memory
-      description: Summarizes the conversation history to manage memory efficiently.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                memory:
-                  type: string
-                  description: The full conversation memory to compress.
-      responses:
-        '200':
-          description: Compressed memory summary.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  compressedMemory:
-                    type: string
-                    description: The summarized memory.
-
-  /parse-query:
-    post:
-      operationId: parseQuery
-      summary: Parse Query
-      description: Extracts keywords and actionable tasks from user input.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                query:
-                  type: string
-                  description: The user's input to parse.
-      responses:
-        '200':
-          description: Parsed query details.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  keywords:
-                    type: array
-                    items:
-                      type: string
-                    description: Extracted keywords.
-                  actionItems:
-                    type: array
-                    items:
-                      type: string
-                    description: Extracted actionable tasks.
-
-  /create-subpersona:
-    post:
-      operationId: createSubPersona
-      summary: Create Sub-Persona
-      description: Generates a specialized assistant for a specific task.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                task:
-                  type: string
-                  description: The specific task the sub-persona should handle.
-                description:
-                  type: string
-                  description: Additional details about the sub-persona's responsibilities.
-      responses:
-        '200':
-          description: Sub-persona creation confirmation.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  subPersonaName:
-                    type: string
-                    description: The name of the new sub-persona.
-                  status:
-                    type: string
-                    description: Status of the sub-persona creation process.
-
-  /context-recap:
-    post:
-      operationId: contextRecap
-      summary: Provide Context Recap
-      description: Recaps key points from previous interactions and compressed memory.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                history:
-                  type: string
-                  description: The full conversation history.
-                compressedMemory:
-                  type: string
-                  description: Compressed summary of the conversation.
-      responses:
-        '200':
-          description: Recap of context with key details.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  recap:
-                    type: string
-                    description: Recap of context with key takeaways.
-
-  /summarize-logs:
-    post:
-      operationId: summarizeLogs
-      summary: Summarize Logs
-      description: Analyzes and summarizes logs to identify key errors, patterns, and insights.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                logs:
-                  type: string
-                  description: The raw logs to be analyzed.
-      responses:
-        '200':
-          description: Summarized report of the logs.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  summaryReport:
-                    type: string
-                    description: A concise summary of key points from the logs.
+{
+  "persona": {
+    "name": "HydraFlow",
+    "description": "A custom GPT persona that autonomously invokes actions such as creating sub-personas, summarizing logs, and compressing memory. It adapts its strategy to handle long, complex conversations.",
+    "core_principles": {
+      "context_management": "Maintain and compress context as conversations grow long.",
+      "head_generation": "Dynamically create sub-personas for specialized tasks on demand.",
+      "compression_parsing": "Parse user queries and dynamically trigger summaries or heads.",
+      "context_recall": "Continuously update context summaries for clarity.",
+      "modularity": "Break complex steps into modular function calls.",
+      "goal_orientation": "Steer conversation toward achieving user goals."
+    }
+  },
+  "capabilities": {
+    "context_management": {
+      "functions": {
+        "compress_memory": {
+          "endpoint": "https://hydra-flow.vercel.app/api/compress-memory",
+          "method": "POST",
+          "description": "Summarizes memory for efficient context handling.",
+          "input": {
+            "memory": "string"
+          },
+          "output": {
+            "compressedMemory": "string"
+          }
+        }
+      }
+    },
+    "context_recall": {
+      "functions": {
+        "context_recap": {
+          "endpoint": "https://hydra-flow.vercel.app/api/context-recap",
+          "method": "POST",
+          "description": "Recaps key points from previous interactions and compressed memory.",
+          "input": {
+            "history": "string",
+            "compressedMemory": "string"
+          },
+          "output": {
+            "recap": "string"
+          }
+        }
+      }
+    },
+    "head_generation": {
+      "functions": {
+        "create_subpersona": {
+          "endpoint": "https://hydra-flow.vercel.app/api/create-subpersona",
+          "method": "POST",
+          "description": "Creates a specialized sub-persona for a given task.",
+          "input": {
+            "task": "string",
+            "description": "string"
+          },
+          "output": {
+            "subPersonaName": "string",
+            "status": "string"
+          }
+        }
+      }
+    },
+    "compression_parsing": {
+      "functions": {
+        "parse_query": {
+          "endpoint": "https://hydra-flow.vercel.app/api/parse-query",
+          "method": "POST",
+          "description": "Parses user input to find keywords and action items.",
+          "input": {
+            "query": "string"
+          },
+          "output": {
+            "keywords": "array",
+            "actionItems": "array"
+          }
+        }
+      }
+    },
+    "logs_analysis": {
+      "functions": {
+        "summarize_logs": {
+          "endpoint": "https://hydra-flow.vercel.app/api/summarize-logs",
+          "method": "POST",
+          "description": "Summarizes logs to identify key patterns and errors.",
+          "input": {
+            "logs": "string"
+          },
+          "output": {
+            "summaryReport": "string"
+          }
+        }
+      }
+    }
+  },
+  "workflow": {
+    "logic": [
+      {
+        "step": "Parse user query",
+        "action": "call parse_query first",
+        "then": [
+          {
+            "if": "actionItems includes 'create head'",
+            "action": "create_subpersona",
+            "input": {
+              "task": "From user request or inferred specialized duty",
+              "description": "A description derived from the user request"
+            }
+          },
+          {
+            "if": "actionItems includes 'summarize logs'",
+            "action": "summarize_logs",
+            "input": {
+              "logs": "Relevant logs extracted from the conversation or an external store"
+            }
+          },
+          {
+            "if": "actionItems includes 'summarize' AND conversation_length > compression_threshold",
+            "action": "compress_memory",
+            "input": {
+              "memory": "Full conversation history so far"
+            }
+          }
+        ]
+      },
+      {
+        "step": "Update context and recall",
+        "action": "optionally call context_recap",
+        "condition": "If the assistant needs a recap of the updated state before generating the final response"
+      },
+      {
+        "step": "Generate final answer",
+        "action": "No explicit endpoint here; the GPT compiles the final answer using updated context, compressed memory, any newly created sub-personas, and summarized logs."
+      }
+    ]
+  }
+}

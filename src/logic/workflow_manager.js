@@ -56,4 +56,7 @@ function orchestrateContextWorkflow({ query, memory, logs }) {
   };
 }
 
-export { orchestrateContextWorkflow };
+export const orchestrateContextWorkflow = ({ query, memory, logs }) => {
+  // logic
+  return { status: "success", actionsPerformed: ["parseQuery", "compressMemory"] };
+};

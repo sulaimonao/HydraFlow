@@ -1,6 +1,6 @@
 import { createHead } from '../src/actions/subpersona_creator.js';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   try {
     const { task, description } = req.body;
     const result = createHead(task, description);

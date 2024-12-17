@@ -1,8 +1,8 @@
 let currentContext = {};
 
-function updateContext(newData) {
+export function updateContext(newData) {
   currentContext = { ...currentContext, ...newData };
   return currentContext;
 }
 
-module.exports = { updateContext };
+export { currentContext };

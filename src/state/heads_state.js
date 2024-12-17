@@ -1,9 +1,11 @@
-let heads = [];
+const heads = [];
 
-export function addHead(name, status) {
+function addHead(name, status) {
   heads.push({ name, status, createdAt: Date.now() });
 }
 
-export function getHeads() {
+function getHeads() {
   return heads;
 }
+
+export { addHead, getHeads };

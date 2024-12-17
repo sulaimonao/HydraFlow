@@ -1,4 +1,4 @@
-const { callApi } = require('./action_caller');
+import { callApi } from './action_caller.js';
 
 async function summarizeLogs(logs) {
   const endpoint = 'https://hydra-flow.vercel.app/api/summarize-logs';
@@ -6,4 +6,4 @@ async function summarizeLogs(logs) {
   return callApi(endpoint, payload);
 }
 
-module.exports = { summarizeLogs };
+export { summarizeLogs };

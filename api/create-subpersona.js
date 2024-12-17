@@ -1,4 +1,4 @@
-const { createHead } = require('../src/actions/subpersona_creator');
+import { createHead } from '../src/actions/subpersona_creator.js';
 
 module.exports = async (req, res) => {
   try {

@@ -8,4 +8,4 @@ function parseQuery(query) {
   return { keywords, actionItems };
 }
 
-module.exports = { parseQuery };
+export { parseQuery };

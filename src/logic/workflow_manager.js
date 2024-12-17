@@ -1,10 +1,9 @@
-const { parseQuery } = require('../actions/query_parser');
-const { compressMemory } = require('../actions/memory_compressor');
-const { updateContext } = require('../state/context_state');
-const { summarizeLogs } = require('../actions/logs_summarizer');
-const { createSubpersona, assignHeadTask, pruneHead } = require('../actions/subpersona_creator');
+import { parseQuery } from '../actions/query_parser.js';
+import { compressMemory } from '../actions/memory_compressor.js';
+import { updateContext } from '../state/context_state.js';
+import { summarizeLogs } from '../actions/logs_summarizer.js';
+import { createSubpersona, assignHeadTask, pruneHead } from '../actions/subpersona_creator.js';
 
-// Orchestrates actions for parsing, updating context, managing memory, and handling sub-personas
 function orchestrateContextWorkflow({ query, memory, logs }) {
   let updatedContext = {};
   const response = {};
@@ -57,4 +56,4 @@ function orchestrateContextWorkflow({ query, memory, logs }) {
   };
 }
 
-module.exports = { orchestrateContextWorkflow };
+export { orchestrateContextWorkflow };

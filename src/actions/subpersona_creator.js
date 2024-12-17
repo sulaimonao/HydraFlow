@@ -1,4 +1,4 @@
-const { compressMemory } = require('./memory_compressor');
+import { compressMemory } from './memory_compressor.js';
 
 const activeHeads = {}; // Store active heads temporarily
 
@@ -35,4 +35,4 @@ function pruneHead(headId, mainMemory) {
   return { error: "Head not found for pruning", headId };
 }
 
-module.exports = { createSubpersona, assignHeadTask, pruneHead };
+export { createSubpersona, assignHeadTask, pruneHead };

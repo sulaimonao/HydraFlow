@@ -1,8 +1,6 @@
 let memory = "";
 
-function appendMemory(newMemory) {
+export function appendMemory(newMemory) {
   memory += ` ${newMemory}`;
   return memory;
 }
-
-module.exports = { appendMemory };

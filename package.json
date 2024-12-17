@@ -1,0 +1,17 @@
+{
+    "name": "hydraflow",
+    "version": "1.0.0",
+    "description": "HydraFlow API server for managing workflows",
+    "main": "main.js",
+    "scripts": {
+      "start": "node main.js",
+      "dev": "nodemon main.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2"
+    },
+    "engines": {
+      "node": ">=14.0.0"
+    }
+  }
+  

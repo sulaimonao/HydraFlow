@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
   title: HydraFlow Actions
-  description: Defines the actions HydraFlow can perform, such as compressing memory, parsing queries, and creating sub-personas.
-  version: 1.1.0
+  description: Defines the actions HydraFlow can perform, such as compressing memory, parsing queries, creating sub-personas, and providing context recaps.
+  version: 1.2.0
 servers:
-  - url: https://example.com/api  # Placeholder URL required by OpenAPI
-    description: Dummy server URL for validation
+  - url: https://sulaimonao.github.io/HydraFlow/HydraFlow_actions.yaml
+    description: Public URL for HydraFlow OpenAPI schema
 paths:
   /compress-memory:
     post:
@@ -100,3 +100,60 @@ paths:
                   status:
                     type: string
                     description: Status of the sub-persona creation process.
+
+  /context-recap:
+    post:
+      operationId: contextRecap
+      summary: Provide Context Recap
+      description: Recaps key points from previous interactions and compressed memory.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                history:
+                  type: string
+                  description: The full conversation history.
+                compressedMemory:
+                  type: string
+                  description: Compressed summary of the conversation.
+      responses:
+        '200':
+          description: Recap of context with key details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recap:
+                    type: string
+                    description: Recap of context with key takeaways.
+
+  /summarize-logs:
+    post:
+      operationId: summarizeLogs
+      summary: Summarize Logs
+      description: Analyzes and summarizes logs to identify key errors, patterns, and insights.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logs:
+                  type: string
+                  description: The raw logs to be analyzed.
+      responses:
+        '200':
+          description: Summarized report of the logs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summaryReport:
+                    type: string
+                    description: A concise summary of key points from the logs.

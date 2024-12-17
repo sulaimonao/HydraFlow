@@ -1,7 +1,11 @@
-import { callApi } from './action_caller.js';
+function parseQuery(query) {
+  const keywords = query.split(" ").filter(word => word.length > 2);
+  const actionItems = [];
 
-export async function parseQuery(userInput) {
-  const endpoint = 'https://hydra-flow.vercel.app/api/parse-query';
-  const payload = { query: userInput };
-  return callApi(endpoint, payload);
+  if (query.includes("summarize logs")) actionItems.push("summarize logs");
+  if (query.includes("create head")) actionItems.push("create head");
+
+  return { keywords, actionItems };
 }
+
+module.exports = { parseQuery };

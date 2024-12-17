@@ -1,16 +1,27 @@
-import { addUserMessage, addAssistantMessage } from './src/state/memory_state.js';
-import { processUserInput } from './src/logic/workflow_manager.js';
+const express = require('express');
+const app = express();
 
-async function handleUserInput(userInput) {
-  addUserMessage(userInput);
-  const response = await processUserInput(userInput);
-  addAssistantMessage(response);
-  return response;
-}
+app.use(express.json());
 
-// Example usage
-(async () => {
-  const userMessage = "Summarize the logs and create a head for deep analysis.";
-  const reply = await handleUserInput(userMessage);
-  console.log("Assistant:", reply);
-})();
+// Import API endpoints
+app.use('/api/parse-query', require('./api/parse-query'));
+app.use('/api/create-subpersona', require('./api/create-subpersona'));
+app.use('/api/compress-memory', require('./api/compress-memory'));
+
+const { orchestrateContextWorkflow } = require('./src/logic/workflow_manager');
+
+// Context Management Endpoint
+app.post('/api/context-workflow', (req, res) => {
+  const { query, memory, logs } = req.body;
+
+  try {
+    const result = orchestrateContextWorkflow({ query, memory, logs });
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in context workflow:", error);
+    res.status(500).json({ error: "Failed to manage context workflow." });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

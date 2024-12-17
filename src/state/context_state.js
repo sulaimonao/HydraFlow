@@ -1,15 +1,8 @@
-let context = {
-    domain: "General",
-    project_goal: "Assist the user",
-    known_details: [],
-    previous_progress: ""
-  };
-  
-  export function getContextState() {
-    return context;
-  }
-  
-  export function updateContext(newContext) {
-    context = { ...context, ...newContext };
-  }
-  
+let currentContext = {};
+
+function updateContext(newData) {
+  currentContext = { ...currentContext, ...newData };
+  return currentContext;
+}
+
+module.exports = { updateContext };

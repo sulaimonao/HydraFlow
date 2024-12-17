@@ -1,15 +1,12 @@
-export default function handler(req, res) {
-    if (req.method === 'POST') {
-      const { query } = req.body;
-      const keywords = query.split(' ').filter(word => word.length > 3);
-      const actionItems = [];
-  
-      if (query.includes('summarize logs')) actionItems.push('summarize logs');
-      if (query.includes('create head')) actionItems.push('create head');
-  
-      res.status(200).json({ keywords, actionItems });
-    } else {
-      res.status(405).json({ error: 'Method Not Allowed' });
-    }
+const { parseQuery } = require('../src/actions/query_parser');
+
+module.exports = async (req, res) => {
+  try {
+    const { query } = req.body;
+    const result = parseQuery(query);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in parse-query:", error);
+    res.status(500).json({ error: "Failed to parse query." });
   }
-  
+};

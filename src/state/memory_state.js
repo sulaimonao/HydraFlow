@@ -1,26 +1,8 @@
-let conversationHistory = [];
-let compressedMemory = "";
+let memory = "";
 
-export function addUserMessage(message) {
-  conversationHistory.push({ role: 'user', content: message });
+function appendMemory(newMemory) {
+  memory += ` ${newMemory}`;
+  return memory;
 }
 
-export function addAssistantMessage(message) {
-  conversationHistory.push({ role: 'assistant', content: message });
-}
-
-export function getConversationLength() {
-  return conversationHistory.length;
-}
-
-export function getFullHistory() {
-  return conversationHistory;
-}
-
-export function getCompressedMemory() {
-  return compressedMemory;
-}
-
-export function setCompressedMemory(value) {
-  compressedMemory = value;
-}
+module.exports = { appendMemory };

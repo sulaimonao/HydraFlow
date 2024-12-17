@@ -1,15 +1,12 @@
-export default function handler(req, res) {
-    if (req.method === 'POST') {
-      const { task, description } = req.body;
-  
-      const head = {
-        subPersonaName: `Head-${task.replace(/\s/g, '_')}`,
-        status: 'active'
-      };
-  
-      res.status(200).json(head);
-    } else {
-      res.status(405).json({ error: 'Method Not Allowed' });
-    }
+const { createHead } = require('../src/actions/subpersona_creator');
+
+module.exports = async (req, res) => {
+  try {
+    const { task, description } = req.body;
+    const result = createHead(task, description);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in create-subpersona:", error);
+    res.status(500).json({ error: "Failed to create sub-persona." });
   }
-  
+};

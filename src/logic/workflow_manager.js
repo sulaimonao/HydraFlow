@@ -1,67 +1,60 @@
-import { parseQuery } from '../actions/query_parser.js';
-import { createSubPersona } from '../actions/subpersona_creator.js';
-import { summarizeLogs } from '../actions/logs_summarizer.js';
-import { compressMemory } from '../actions/memory_compressor.js';
-import { contextRecap } from '../actions/context_recapper.js';
-import { shouldCreateHead, shouldSummarizeLogs, shouldCompress, needsContextRecap, INITIAL_COMPRESSION_THRESHOLD } from './conditions.js';
-import { getConversationLength, getFullHistory, getCompressedMemory, setCompressedMemory } from '../state/memory_state.js';
-import { addHead } from '../state/heads_state.js';
-import { getContextState } from '../state/context_state.js';
-import { generateFinalResponse } from './response_generator.js';
+const { parseQuery } = require('../actions/query_parser');
+const { compressMemory } = require('../actions/memory_compressor');
+const { updateContext } = require('../state/context_state');
+const { summarizeLogs } = require('../actions/logs_summarizer');
+const { createSubpersona, assignHeadTask, pruneHead } = require('../actions/subpersona_creator');
 
-export async function processUserInput(userInput) {
-  const conversationLength = getConversationLength();
-  const fullHistory = getFullHistory();
-  let compressedMemory = getCompressedMemory();
+// Orchestrates actions for parsing, updating context, managing memory, and handling sub-personas
+function orchestrateContextWorkflow({ query, memory, logs }) {
+  let updatedContext = {};
+  const response = {};
+  const activeHeadTasks = [];
 
-  // Compress at initialization if conversation is already long and not compressed yet
-  if (conversationLength > INITIAL_COMPRESSION_THRESHOLD && !compressedMemory) {
-    const cmResult = await compressMemory(fullHistory);
-    compressedMemory = cmResult.compressedMemory;
-    setCompressedMemory(compressedMemory);
+  // Step 1: Parse query for action items and keywords
+  const { keywords, actionItems } = parseQuery(query);
+  console.log("Parsed Query:", { keywords, actionItems });
+
+  updatedContext.keywords = keywords;
+  updatedContext.actionItems = actionItems;
+
+  // Step 2: Handle 'summarize logs' with a specialized head
+  if (actionItems.includes("summarize logs") && logs) {
+    const newHead = createSubpersona('log analysis', 'Summarize logs for key patterns and errors');
+    console.log("Created Head:", newHead);
+
+    // Perform the task and assign the results to the head
+    const taskResult = summarizeLogs(logs);
+    assignHeadTask(newHead.headId, taskResult);
+
+    // Mark the head for pruning
+    activeHeadTasks.push(newHead.headId);
+    response.logsSummary = taskResult;
   }
 
-  // Parse the user input to find action items
-  const parsed = await parseQuery(userInput);
-  const actionItems = parsed.actionItems || [];
-  const context = getContextState();
-  let summaryReport = "";
-
-  // If user wants a head, dynamically create it based on context and parsed query
-  if (shouldCreateHead(actionItems)) {
-    const task = "Custom task derived from user intent"; // Extract more specifics from parsed key words
-    const description = `A specialized sub-persona for ${context.domain}, created to handle: ${parsed.keywords.join(', ')}. Adjust as needed.`;
-    const headResult = await createSubPersona(task, description);
-    addHead(headResult.subPersonaName, headResult.status);
+  // Step 3: Compress memory if needed
+  if (actionItems.includes("compress memory") || memory.length > 1000) {
+    response.compressedMemory = compressMemory(memory).compressedMemory;
+    updatedContext.memory = response.compressedMemory;
+  } else {
+    updatedContext.memory = memory;
   }
 
-  // If user wants logs summarized
-  if (shouldSummarizeLogs(actionItems)) {
-    const logs = await fetchRelevantLogs(); // You define how to get logs
-    const sumResult = await summarizeLogs(logs);
-    summaryReport = sumResult.summaryReport;
-  }
-
-  // Compress memory if needed
-  if (shouldCompress(actionItems, conversationLength)) {
-    const cmResult = await compressMemory(fullHistory);
-    compressedMemory = cmResult.compressedMemory;
-    setCompressedMemory(compressedMemory);
-  }
-
-  // Optional: recap if needed
-  if (needsContextRecap()) {
-    const recapResult = await contextRecap(fullHistory, compressedMemory);
-    // Incorporate recap into final response generation if desired
-  }
-
-  // Generate final response considering updated state
-  const response = await generateFinalResponse({
-    userInput,
-    compressedMemory,
-    summaryReport,
-    context
+  // Step 4: Prune and compress active heads into main memory
+  activeHeadTasks.forEach((headId) => {
+    const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
+    updatedContext.memory = updatedMainMemory;
   });
 
-  return response;
+  // Step 5: Update the context state
+  const context = updateContext(updatedContext);
+  console.log("Updated Context:", context);
+
+  // Step 6: Return orchestrated output
+  return {
+    status: "context_updated",
+    context,
+    actionsPerformed: response
+  };
 }
+
+module.exports = { orchestrateContextWorkflow };

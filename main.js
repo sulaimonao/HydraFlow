@@ -1,14 +1,13 @@
 const express = require('express');
-const app = express();
+const { orchestrateContextWorkflow } = require('./src/logic/workflow_manager');
 
+const app = express();
 app.use(express.json());
 
 // Import API endpoints
 app.use('/api/parse-query', require('./api/parse-query'));
 app.use('/api/create-subpersona', require('./api/create-subpersona'));
 app.use('/api/compress-memory', require('./api/compress-memory'));
-
-const { orchestrateContextWorkflow } = require('./src/logic/workflow_manager');
 
 // Context Management Endpoint
 app.post('/api/context-workflow', (req, res) => {

@@ -1,0 +1,250 @@
+openapi: 3.1.0
+info:
+  title: HydraFlow Actions API
+  description: >
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
+    dynamic sub-persona creation, memory compression, and log summarization.
+  version: 1.0.0
+servers:
+  - url: https://hydra-flow.vercel.app/api
+    description: Deployed API server
+
+paths:
+  /parse-query:
+    post:
+      operationId: parseQuery
+      summary: Parse a query into actionable keywords and tasks
+      description: Parses user-provided query to extract keywords and actionable tasks.
+      requestBody:
+        description: User query to parse
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: The query input that needs parsing.
+      responses:
+        '200':
+          description: Successfully parsed query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keywords:
+                    type: array
+                    items:
+                      type: string
+                    description: Keywords extracted from the query.
+                  actionItems:
+                    type: array
+                    items:
+                      type: string
+                    description: Actionable tasks identified from the query.
+        '400':
+          description: Invalid input, query missing or malformed.
+        '500':
+          description: Server error while processing the query.
+
+  /create-subpersona:
+    post:
+      operationId: createSubpersona
+      summary: Create a specialized sub-persona
+      description: Dynamically generates a specialized sub-persona for a specified task.
+      requestBody:
+        description: Details for sub-persona creation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task
+                - description
+              properties:
+                task:
+                  type: string
+                  description: The specific task the sub-persona will handle.
+                description:
+                  type: string
+                  description: A detailed description of the sub-persona's role.
+      responses:
+        '200':
+          description: Successfully created a sub-persona
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subPersonaName:
+                    type: string
+                    description: Name assigned to the newly created sub-persona.
+                  status:
+                    type: string
+                    description: The status of the sub-persona creation process.
+        '400':
+          description: Missing task or description fields.
+        '500':
+          description: Server error while creating the sub-persona.
+
+  /compress-memory:
+    post:
+      operationId: compressMemory
+      summary: Compress and optimize memory
+      description: Compresses lengthy conversation memory for optimized context management.
+      requestBody:
+        description: Full memory content to compress
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - memory
+              properties:
+                memory:
+                  type: string
+                  description: The full conversation memory to be compressed.
+      responses:
+        '200':
+          description: Successfully compressed the memory
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  compressedMemory:
+                    type: string
+                    description: The compressed version of the memory.
+        '400':
+          description: Memory input missing or invalid.
+        '500':
+          description: Server error while compressing memory.
+
+  /context-recap:
+    post:
+      operationId: contextRecap
+      summary: Generate a recap of context and memory
+      description: Provides a summary recap of conversation context and compressed memory.
+      requestBody:
+        description: Inputs for generating a recap
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - history
+                - compressedMemory
+              properties:
+                history:
+                  type: string
+                  description: Historical context or conversation.
+                compressedMemory:
+                  type: string
+                  description: Compressed memory to include in the recap.
+      responses:
+        '200':
+          description: Successfully generated a context recap
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recap:
+                    type: string
+                    description: A concise summary of the conversation history and memory.
+        '400':
+          description: Missing history or compressedMemory fields.
+        '500':
+          description: Server error while generating recap.
+
+  /summarize-logs:
+    post:
+      operationId: summarizeLogs
+      summary: Summarize logs for key insights
+      description: Analyzes and summarizes logs to provide a concise report of key patterns or errors.
+      requestBody:
+        description: Log data to summarize
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logs
+              properties:
+                logs:
+                  type: string
+                  description: Log content for summarization.
+      responses:
+        '200':
+          description: Successfully summarized the logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summaryReport:
+                    type: string
+                    description: A summarized report based on the provided logs.
+        '400':
+          description: Missing logs field or invalid input.
+        '500':
+          description: Server error while summarizing logs.
+
+  /context-workflow:
+    post:
+      operationId: contextWorkflow
+      summary: Orchestrate the full context workflow
+      description: Executes the complete context workflow, parsing query, compressing memory, and managing logs.
+      requestBody:
+        description: Inputs for context workflow orchestration
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+                - memory
+              properties:
+                query:
+                  type: string
+                  description: User's query for context parsing.
+                memory:
+                  type: string
+                  description: Current conversation memory.
+                logs:
+                  type: string
+                  description: Optional logs to analyze.
+      responses:
+        '200':
+          description: Successfully orchestrated the context workflow
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parsedQuery:
+                    type: object
+                    description: Parsed query results.
+                    additionalProperties: true
+                  compressedMemory:
+                    type: string
+                    description: Compressed version of the memory.
+                  logSummary:
+                    type: string
+                    description: Summarized log insights, if provided.
+                  contextRecap:
+                    type: string
+                    description: A recap of the updated conversation context.
+        '400':
+          description: Missing required fields: 'query' or 'memory'.
+        '500':
+          description: Server error while orchestrating the workflow.

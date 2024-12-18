@@ -244,7 +244,5 @@ paths:
                   contextRecap:
                     type: string
                     description: A recap of the updated conversation context.
-        '400':
-          description: Missing required fields: 'query' or 'memory'.
         '500':
           description: Server error while orchestrating the workflow.

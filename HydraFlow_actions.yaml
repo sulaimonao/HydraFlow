@@ -126,85 +126,15 @@ paths:
         '500':
           description: Server error while compressing memory.
 
-  /context-recap:
+  /autonomous:
     post:
-      operationId: contextRecap
-      summary: Generate a recap of context and memory
-      description: Provides a summary recap of conversation context and compressed memory.
+      operationId: executeAutonomousWorkflow
+      summary: Execute an autonomous workflow
+      description: >
+        Dynamically executes tasks based on the parsed query, 
+        such as creating sub-personas, compressing memory, or summarizing logs.
       requestBody:
-        description: Inputs for generating a recap
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - history
-                - compressedMemory
-              properties:
-                history:
-                  type: string
-                  description: Historical context or conversation.
-                compressedMemory:
-                  type: string
-                  description: Compressed memory to include in the recap.
-      responses:
-        '200':
-          description: Successfully generated a context recap
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  recap:
-                    type: string
-                    description: A concise summary of the conversation history and memory.
-        '400':
-          description: Missing history or compressedMemory fields.
-        '500':
-          description: Server error while generating recap.
-
-  /summarize-logs:
-    post:
-      operationId: summarizeLogs
-      summary: Summarize logs for key insights
-      description: Analyzes and summarizes logs to provide a concise report of key patterns or errors.
-      requestBody:
-        description: Log data to summarize
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - logs
-              properties:
-                logs:
-                  type: string
-                  description: Log content for summarization.
-      responses:
-        '200':
-          description: Successfully summarized the logs
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  summaryReport:
-                    type: string
-                    description: A summarized report based on the provided logs.
-        '400':
-          description: Missing logs field or invalid input.
-        '500':
-          description: Server error while summarizing logs.
-
-  /context-workflow:
-    post:
-      operationId: contextWorkflow
-      summary: Orchestrate the full context workflow
-      description: Executes the complete context workflow, parsing query, compressing memory, and managing logs.
-      requestBody:
-        description: Inputs for context workflow orchestration
+        description: Input query for triggering autonomous workflow
         required: true
         content:
           application/json:
@@ -212,37 +142,26 @@ paths:
               type: object
               required:
                 - query
-                - memory
               properties:
                 query:
                   type: string
-                  description: User's query for context parsing.
-                memory:
-                  type: string
-                  description: Current conversation memory.
-                logs:
-                  type: string
-                  description: Optional logs to analyze.
+                  description: The user's query triggering the autonomous workflow.
       responses:
         '200':
-          description: Successfully orchestrated the context workflow
+          description: Successfully executed the autonomous workflow
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  parsedQuery:
+                  message:
+                    type: string
+                    description: Confirmation message for successful execution.
+                  results:
                     type: object
-                    description: Parsed query results.
+                    description: Results of the executed tasks.
                     additionalProperties: true
-                  compressedMemory:
-                    type: string
-                    description: Compressed version of the memory.
-                  logSummary:
-                    type: string
-                    description: Summarized log insights, if provided.
-                  contextRecap:
-                    type: string
-                    description: A recap of the updated conversation context.
+        '400':
+          description: Invalid input, query missing or malformed.
         '500':
-          description: Server error while orchestrating the workflow.
+          description: Server error while executing the workflow.

@@ -8,3 +8,6 @@ project_overview.json
 node_modules
 deployment_insights.py
 deployment_insights.json
+repo_summary.py
+project_context_summary.txt
+.DS_Store

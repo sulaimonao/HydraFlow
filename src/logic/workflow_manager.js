@@ -9,6 +9,7 @@ import {
 } from "../actions/subpersona_creator.js";
 import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
+import { generateFinalResponse } from "../actions/response_generator.js"; // New import
 
 export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
   let updatedContext = {};
@@ -81,11 +82,17 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
   const context = updateContext(updatedContext);
   console.log("Updated Context:", context);
 
-  // Step 7: Return orchestrated output
+  // Step 7: Generate final response
+  const finalResponse = generateFinalResponse({
+    contextDigest,
+    taskCard,
+    actionsPerformed: response,
+  });
+
+  // Step 8: Return orchestrated output
   return {
     status: "context_updated",
     context,
-    taskCard,
-    actionsPerformed: response,
+    finalResponse, // Return the unified response
   };
 };

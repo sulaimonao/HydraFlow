@@ -4,7 +4,7 @@ info:
   description: >
     HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
     dynamic sub-persona creation, memory compression, and log summarization.
-  version: 1.0.0
+  version: 1.0.1
 servers:
   - url: https://hydra-flow.vercel.app/api
     description: Deployed API server
@@ -165,3 +165,72 @@ paths:
           description: Invalid input, query missing or malformed.
         '500':
           description: Server error while executing the workflow.
+
+  /feedback/all:
+    get:
+      operationId: getAllFeedback
+      summary: Retrieve all feedback entries
+      description: Fetches all collected feedback with details.
+      responses:
+        '200':
+          description: Successfully retrieved all feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        responseId:
+                          type: string
+                        userFeedback:
+                          type: string
+                        rating:
+                          type: number
+                        timestamp:
+                          type: string
+        '500':
+          description: Server error while retrieving feedback.
+
+  /feedback/summary:
+    get:
+      operationId: getFeedbackSummary
+      summary: Retrieve feedback summary
+      description: Fetches a summarized view of all feedback including totals and averages.
+      responses:
+        '200':
+          description: Successfully retrieved feedback summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      totalFeedback:
+                        type: number
+                      averageRating:
+                        type: number
+                      feedbackEntries:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            responseId:
+                              type: string
+                            userFeedback:
+                              type: string
+                            rating:
+                              type: number
+                            timestamp:
+                              type: string
+        '500':
+          description: Server error while generating feedback summary.

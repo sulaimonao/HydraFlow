@@ -10,8 +10,9 @@ import {
 import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator.js"; // New import
+import { collectFeedback } from "../actions/feedback_collector.js"; // New import
 
-export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
+export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback }) => {
   let updatedContext = {};
   const response = {};
   const activeHeadTasks = [];
@@ -89,10 +90,20 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
     actionsPerformed: response,
   });
 
-  // Step 8: Return orchestrated output
+  // Step 8: Collect user feedback if provided
+  if (feedback) {
+    const feedbackResult = collectFeedback({
+      responseId: Date.now().toString(),
+      userFeedback: feedback.comment,
+      rating: feedback.rating,
+    });
+    console.log("Feedback Result:", feedbackResult);
+  }
+
+  // Step 9: Return orchestrated output
   return {
     status: "context_updated",
     context,
-    finalResponse, // Return the unified response
+    finalResponse, // Unified response
   };
 };

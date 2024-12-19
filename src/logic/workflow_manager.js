@@ -2,10 +2,14 @@ import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
 import { summarizeLogs } from "../actions/logs_summarizer.js";
-import { createSubpersona, assignHeadTask, pruneHead } from "../actions/subpersona_creator.js";
+import {
+  createSubpersona,
+  assignHeadTask,
+  pruneHead,
+} from "../actions/subpersona_creator.js";
 import { createTaskCard, addDependency, getTaskCard } from "../state/task_manager.js";
 
-export const orchestrateContextWorkflow = ({ query, memory, logs }) => {
+export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
   let updatedContext = {};
   const response = {};
   const activeHeadTasks = [];
@@ -21,52 +25,73 @@ export const orchestrateContextWorkflow = ({ query, memory, logs }) => {
   const taskCard = createTaskCard(query, actionItems);
   console.log("Generated Task Card:", taskCard);
 
-  // Step 3: Handle 'summarize logs' task
-  if (actionItems.includes("summarize logs") && logs) {
-    const newHead = createSubpersona(
-      "log analysis",
-      "Summarize logs for key patterns and errors"
-    );
-    console.log("Created Head:", newHead);
+  // Step 3: Execute Tasks
+  for (const action of actionItems) {
+    switch (action) {
+      case "summarize logs":
+        if (logs) {
+          const subPersona = createSubpersona(
+            "log analysis",
+            "Summarize logs for key patterns and errors"
+          );
+          console.log("Created Sub-Persona:", subPersona);
 
-    // Perform the task and assign the results to the head
-    const taskResult = summarizeLogs(logs);
-    assignHeadTask(newHead.headId, taskResult);
+          // Perform the task
+          const result = summarizeLogs(logs);
+          assignHeadTask(subPersona.headId, result);
+          activeHeadTasks.push(subPersona.headId);
 
-    // Mark the head for pruning
-    activeHeadTasks.push(newHead.headId);
-    response.logsSummary = taskResult;
+          // Update Task Card
+          const subtask = taskCard.subtasks.find((t) => t.task === action);
+          if (subtask) subtask.status = "completed";
+          response.logsSummary = result;
+        }
+        break;
 
-    // Update the Task Card
-    taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
+      case "compress memory":
+        if (memory.length > 1000) {
+          const compressed = compressMemory(memory);
+          updatedContext.memory = compressed.compressedMemory;
+
+          // Update Task Card
+          const subtask = taskCard.subtasks.find((t) => t.task === action);
+          if (subtask) subtask.status = "completed";
+          response.compressedMemory = compressed.compressedMemory;
+        }
+        break;
+
+      case "create sub-persona":
+        const persona = createSubpersona(
+          "custom task",
+          "Handle specialized user requests dynamically"
+        );
+        console.log("Created Sub-Persona:", persona);
+
+        // Update Task Card
+        const subtask = taskCard.subtasks.find((t) => t.task === action);
+        if (subtask) subtask.status = "in progress";
+        break;
+
+      default:
+        console.warn("Unknown action:", action);
+    }
   }
 
-  // Step 4: Compress memory if needed
-  if (actionItems.includes("compress memory") || memory.length > 1000) {
-    response.compressedMemory = compressMemory(memory).compressedMemory;
-    updatedContext.memory = response.compressedMemory;
-
-    // Update Task Card for memory compression
-    taskCard.subtasks.find((t) => t.task === "compress memory").status = "completed";
-  } else {
-    updatedContext.memory = memory;
-  }
-
-  // Step 5: Prune and compress active heads into main memory
+  // Step 4: Prune and compress active heads into main memory
   activeHeadTasks.forEach((headId) => {
     const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
     updatedContext.memory = updatedMainMemory;
   });
 
-  // Step 6: Update the context state
+  // Step 5: Update the context state
   const context = updateContext(updatedContext);
   console.log("Updated Context:", context);
 
-  // Step 7: Return orchestrated output
+  // Step 6: Return orchestrated output
   return {
     status: "context_updated",
     context,
-    taskCard, // Include the Task Card for tracking
+    taskCard,
     actionsPerformed: response,
   };
 };

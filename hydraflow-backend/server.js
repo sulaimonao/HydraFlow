@@ -9,7 +9,15 @@ app.use(express.json());
 // API Routes
 app.use("/api/feedback", feedbackRoutes);
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+// Start the server
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+

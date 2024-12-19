@@ -7,7 +7,8 @@ import {
   assignHeadTask,
   pruneHead,
 } from "../actions/subpersona_creator.js";
-import { createTaskCard, addDependency, getTaskCard } from "../state/task_manager.js";
+import { createTaskCard } from "../state/task_manager.js";
+import { generateContextDigest } from "../actions/context_digest.js";
 
 export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
   let updatedContext = {};
@@ -25,7 +26,7 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
   const taskCard = createTaskCard(query, actionItems);
   console.log("Generated Task Card:", taskCard);
 
-  // Step 3: Execute Tasks
+  // Step 3: Execute Tasks (from Phase 3)
   for (const action of actionItems) {
     switch (action) {
       case "summarize logs":
@@ -60,34 +61,27 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs }) => {
         }
         break;
 
-      case "create sub-persona":
-        const persona = createSubpersona(
-          "custom task",
-          "Handle specialized user requests dynamically"
-        );
-        console.log("Created Sub-Persona:", persona);
-
-        // Update Task Card
-        const subtask = taskCard.subtasks.find((t) => t.task === action);
-        if (subtask) subtask.status = "in progress";
-        break;
-
       default:
         console.warn("Unknown action:", action);
     }
   }
 
-  // Step 4: Prune and compress active heads into main memory
+  // Step 4: Prune and integrate sub-persona results
   activeHeadTasks.forEach((headId) => {
     const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
     updatedContext.memory = updatedMainMemory;
   });
 
-  // Step 5: Update the context state
+  // Step 5: Generate Context Digest
+  const contextDigest = generateContextDigest(updatedContext.memory);
+  console.log("Generated Context Digest:", contextDigest);
+  response.contextDigest = contextDigest;
+
+  // Step 6: Update the context state
   const context = updateContext(updatedContext);
   console.log("Updated Context:", context);
 
-  // Step 6: Return orchestrated output
+  // Step 7: Return orchestrated output
   return {
     status: "context_updated",
     context,

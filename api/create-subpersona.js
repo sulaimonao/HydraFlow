@@ -1,6 +1,6 @@
 export default async (req, res) => {
   try {
-    const { task, description, parentHeadId } = req.body;
+    const { task, description } = req.body;
 
     if (!task || !description) {
       return res.status(400).json({ error: "Task and description are required." });
@@ -12,16 +12,20 @@ export default async (req, res) => {
     const subPersonaData = {
       name: subPersonaName,
       taskDescription: description,
-      parentHeadId: parentHeadId || null, // Link to parent persona if provided
       status: "active",
       createdAt: new Date(timestamp).toISOString(),
     };
 
-    // Mock saving the sub-persona (you can replace this with actual database logic)
+    // Mock saving the sub-persona (replace with database logic if needed)
     console.log("Sub-Persona Created:", subPersonaData);
 
     // Respond with the new sub-persona details
-    res.status(200).json(subPersonaData);
+    res.status(200).json({
+      subPersonaName: subPersonaData.name,
+      description: subPersonaData.taskDescription,
+      status: subPersonaData.status,
+      createdAt: subPersonaData.createdAt,
+    });
   } catch (error) {
     console.error("Error in create-subpersona:", error);
     res.status(500).json({ error: "Failed to create sub-persona." });

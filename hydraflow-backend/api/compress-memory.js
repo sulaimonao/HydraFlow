@@ -1,4 +1,4 @@
-import { compressMemory } from '../../../src/actions/memory_compressor.js';
+import { compressMemory } from '../../src/actions/memory_compressor.js';
 
 export default async (req, res) => {
   try {

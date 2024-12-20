@@ -1,3 +1,4 @@
+// Updated workflow_manager.js
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
@@ -9,101 +10,84 @@ import {
 } from "../actions/subpersona_creator.js";
 import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
-import { generateFinalResponse } from "../actions/response_generator.js"; // New import
-import { collectFeedback } from "../actions/feedback_collector.js"; // New import
+import { generateFinalResponse } from "../actions/response_generator.js";
+import { collectFeedback } from "../actions/feedback_collector.js";
 
 export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback }) => {
-  let updatedContext = {};
-  const response = {};
-  const activeHeadTasks = [];
+  try {
+    let updatedContext = {};
+    const response = {};
+    const activeHeadTasks = [];
 
-  // Step 1: Parse query for action items and keywords
-  const { keywords, actionItems } = parseQuery(query);
-  console.log("Parsed Query:", { keywords, actionItems });
+    const { keywords, actionItems } = parseQuery(query);
+    updatedContext.keywords = keywords;
+    updatedContext.actionItems = actionItems;
 
-  updatedContext.keywords = keywords;
-  updatedContext.actionItems = actionItems;
+    const taskCard = createTaskCard(query, actionItems);
 
-  // Step 2: Generate Task Card
-  const taskCard = createTaskCard(query, actionItems);
-  console.log("Generated Task Card:", taskCard);
+    for (const action of actionItems) {
+      switch (action) {
+        case "summarize logs":
+          if (logs) {
+            const subPersona = createSubpersona("log analysis", "Summarize logs for key patterns and errors");
+            const result = await summarizeLogs(logs);
+            assignHeadTask(subPersona.headId, result);
+            activeHeadTasks.push(subPersona.headId);
+            const subtask = taskCard.subtasks.find((t) => t.task === action);
+            if (subtask) subtask.status = "completed";
+            response.logsSummary = result;
+          }
+          break;
 
-  // Step 3: Execute Tasks (from Phase 3)
-  for (const action of actionItems) {
-    switch (action) {
-      case "summarize logs":
-        if (logs) {
-          const subPersona = createSubpersona(
-            "log analysis",
-            "Summarize logs for key patterns and errors"
-          );
-          console.log("Created Sub-Persona:", subPersona);
+        case "compress memory":
+          if (memory.length > 1000) {
+            const compressed = compressMemory(memory);
+            updatedContext.memory = compressed.compressedMemory;
+            const subtask = taskCard.subtasks.find((t) => t.task === action);
+            if (subtask) subtask.status = "completed";
+            response.compressedMemory = compressed.compressedMemory;
+          }
+          break;
 
-          // Perform the task
-          const result = summarizeLogs(logs);
-          assignHeadTask(subPersona.headId, result);
-          activeHeadTasks.push(subPersona.headId);
-
-          // Update Task Card
-          const subtask = taskCard.subtasks.find((t) => t.task === action);
-          if (subtask) subtask.status = "completed";
-          response.logsSummary = result;
-        }
-        break;
-
-      case "compress memory":
-        if (memory.length > 1000) {
-          const compressed = compressMemory(memory);
-          updatedContext.memory = compressed.compressedMemory;
-
-          // Update Task Card
-          const subtask = taskCard.subtasks.find((t) => t.task === action);
-          if (subtask) subtask.status = "completed";
-          response.compressedMemory = compressed.compressedMemory;
-        }
-        break;
-
-      default:
-        console.warn("Unknown action:", action);
+        default:
+          console.warn("Unknown action:", action);
+      }
     }
-  }
 
-  // Step 4: Prune and integrate sub-persona results
-  activeHeadTasks.forEach((headId) => {
-    const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
-    updatedContext.memory = updatedMainMemory;
-  });
+    for (const headId of activeHeadTasks) {
+      const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
+      updatedContext.memory = updatedMainMemory;
+    }
 
-  // Step 5: Generate Context Digest
-  const contextDigest = generateContextDigest(updatedContext.memory);
-  console.log("Generated Context Digest:", contextDigest);
-  response.contextDigest = contextDigest;
+    const contextDigest = generateContextDigest(updatedContext.memory);
+    response.contextDigest = contextDigest;
 
-  // Step 6: Update the context state
-  const context = updateContext(updatedContext);
-  console.log("Updated Context:", context);
+    const context = updateContext(updatedContext);
 
-  // Step 7: Generate final response
-  const finalResponse = generateFinalResponse({
-    contextDigest,
-    taskCard,
-    actionsPerformed: response,
-  });
-
-  // Step 8: Collect user feedback if provided
-  if (feedback) {
-    const feedbackResult = collectFeedback({
-      responseId: Date.now().toString(),
-      userFeedback: feedback.comment,
-      rating: feedback.rating,
+    const finalResponse = await generateFinalResponse({
+      userInput: query,
+      compressedMemory: response.compressedMemory,
+      summaryReport: response.logsSummary,
+      context,
+      taskCard,
+      actionsPerformed: response,
     });
-    console.log("Feedback Result:", feedbackResult);
-  }
 
-  // Step 9: Return orchestrated output
-  return {
-    status: "context_updated",
-    context,
-    finalResponse, // Unified response
-  };
+    if (feedback) {
+      const feedbackResult = collectFeedback({
+        responseId: Date.now().toString(),
+        userFeedback: feedback.comment,
+        rating: feedback.rating,
+      });
+    }
+
+    return {
+      status: "context_updated",
+      context,
+      finalResponse,
+    };
+  } catch (error) {
+    console.error("Error in orchestrateContextWorkflow:", error);
+    throw new Error("Workflow orchestration failed.");
+  }
 };

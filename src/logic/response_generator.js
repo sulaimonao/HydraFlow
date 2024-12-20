@@ -1,4 +1,5 @@
-export async function generateFinalResponse({ userInput, compressedMemory, summaryReport, context }) {  
+// Updated response_generator.js
+export async function generateFinalResponse({ userInput, compressedMemory, summaryReport, context, taskCard, actionsPerformed }) {
   let draftResponse = "Here's my response:\n\n";
 
   if (summaryReport) {
@@ -9,11 +10,15 @@ export async function generateFinalResponse({ userInput, compressedMemory, summa
     draftResponse += `Context (Compressed):\n${compressedMemory}\n\n`;
   }
 
+  if (taskCard) {
+    draftResponse += `Tasks Executed:\n${taskCard.subtasks.map(task => `- ${task.task}: ${task.status}`).join('\n')}\n\n`;
+  }
+
+  if (actionsPerformed) {
+    draftResponse += `Actions Performed:\n${Object.entries(actionsPerformed).map(([action, result]) => `- ${action}: ${result}`).join('\n')}\n\n`;
+  }
+
   draftResponse += `User asked: "${userInput}"\nDomain: ${context.domain}\nGoal: ${context.project_goal}`;
 
-  // Return this draft for the model to transform into a final user-facing answer
   return draftResponse;
 }
-
-//Here you'd have logic to produce the final answer. In a Custom GPT, this might mean returning a draft message that includes references to the sub-personas, summaries, and compressed memory.
-

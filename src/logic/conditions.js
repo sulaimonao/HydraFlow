@@ -1,21 +1,59 @@
-// Updated conditions.js
+// Enhanced conditions.js
+import { currentContext } from "../state/context_state.js";
+import { getTaskCard } from "../state/task_manager.js";
+
 const COMPRESSION_THRESHOLD = 20;
 const INITIAL_COMPRESSION_THRESHOLD = 10;
 
 const shouldCreateHead = (actionItems) => {
-  return actionItems.includes('create head');
+  return actionItems.includes("create head");
 };
 
 const shouldSummarizeLogs = (actionItems) => {
-  return actionItems.includes('summarize logs');
+  return actionItems.includes("summarize logs");
 };
 
 const shouldCompress = (actionItems, conversationLength) => {
-  return actionItems.includes('summarize') && conversationLength > COMPRESSION_THRESHOLD;
+  const contextPriority = currentContext.priority || "Normal";
+  const adjustedThreshold =
+    contextPriority === "High" ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
+
+  return (
+    actionItems.includes("summarize") &&
+    conversationLength > adjustedThreshold
+  );
 };
 
 const needsContextRecap = (conversationLength, userEngagement) => {
-  return conversationLength > INITIAL_COMPRESSION_THRESHOLD || userEngagement < 50;
+  const contextGoal = currentContext.goal || "General";
+
+  if (contextGoal === "Complex") {
+    return true;
+  }
+
+  return (
+    conversationLength > INITIAL_COMPRESSION_THRESHOLD ||
+    userEngagement < 50
+  );
 };
 
-export { COMPRESSION_THRESHOLD, INITIAL_COMPRESSION_THRESHOLD, shouldCreateHead, shouldSummarizeLogs, shouldCompress, needsContextRecap };
+const hasPendingDependencies = (taskId) => {
+  const taskCard = getTaskCard(taskId);
+
+  if (!taskCard) {
+    console.warn(`Task ${taskId} not found`);
+    return false;
+  }
+
+  return taskCard.subtasks.some((subtask) => subtask.dependencies.length > 0);
+};
+
+export {
+  COMPRESSION_THRESHOLD,
+  INITIAL_COMPRESSION_THRESHOLD,
+  shouldCreateHead,
+  shouldSummarizeLogs,
+  shouldCompress,
+  needsContextRecap,
+  hasPendingDependencies,
+};

@@ -1,4 +1,5 @@
-import { callApi } from './action_caller.mjs';
+// Updated context_recapper.js
+import { callApiWithRetry } from './action_caller.mjs';
 
 export async function contextRecap(history, compressedMemory) {
   const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
@@ -6,5 +7,5 @@ export async function contextRecap(history, compressedMemory) {
     history: JSON.stringify(history),
     compressedMemory: compressedMemory || ""
   };
-  return callApi(endpoint, payload);
+  return callApiWithRetry(endpoint, payload);
 }

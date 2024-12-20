@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api/parse-query", "dest": "/api/parse-query.js" },
+    { "src": "/api/create-subpersona", "dest": "/api/create-subpersona.js" },
+    { "src": "/api/compress-memory", "dest": "/api/compress-memory.js" },
+    { "src": "/api/context-recap", "dest": "/api/context-recap.js" },
+    { "src": "/api/summarize-logs", "dest": "/api/summarize-logs.js" },
+    { "src": "/api/autonomous", "dest": "/api/autonomous.js" }
+  ]
+}

@@ -6,7 +6,7 @@ info:
     dynamic sub-persona creation, memory compression, and log summarization.
   version: 1.0.1
 servers:
-  - url: https://hydra-flow.vercel.app/api
+  - url: https://hydra-flow.vercel.app/hydraflow-backend/api
     description: Deployed API server
 
 paths:

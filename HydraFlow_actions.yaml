@@ -2,11 +2,11 @@ openapi: 3.1.0
 info:
   title: HydraFlow Actions API
   description: >
-    HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
-    dynamic sub-persona creation, memory compression, and log summarization.
-  version: 1.0.1
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing,
+    dynamic sub-persona creation, memory compression, log summarization, and context recapping.
+  version: 1.1.0
 servers:
-  - url: https://hydra-flow.vercel.app/hydraflow-backend/api
+  - url: https://hydra-flow.vercel.app/api
     description: Deployed API server
 
 paths:
@@ -46,6 +46,9 @@ paths:
                     items:
                       type: string
                     description: Actionable tasks identified from the query.
+                  taskCard:
+                    type: object
+                    description: Structured task card generated from the query.
         '400':
           description: Invalid input, query missing or malformed.
         '500':
@@ -126,12 +129,93 @@ paths:
         '500':
           description: Server error while compressing memory.
 
+  /summarize-logs:
+    post:
+      operationId: summarizeLogs
+      summary: Summarize logs for patterns and errors
+      description: Analyzes log data to generate summaries of key patterns and errors.
+      requestBody:
+        description: Log data to summarize
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logs
+              properties:
+                logs:
+                  type: string
+                  description: Log data to analyze and summarize.
+      responses:
+        '200':
+          description: Successfully summarized logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summaryReport:
+                    type: object
+                    properties:
+                      totalEntries:
+                        type: integer
+                        description: Total number of log entries analyzed.
+                      errorCount:
+                        type: integer
+                        description: Number of error-like patterns detected.
+                      firstFiveLines:
+                        type: string
+                        description: The first five lines of the log for quick overview.
+        '400':
+          description: Invalid or missing log input.
+        '500':
+          description: Server error while summarizing logs.
+
+  /context-recap:
+    post:
+      operationId: generateContextRecap
+      summary: Generate a recap of current context
+      description: Summarizes compressed memory and conversation history for clarity.
+      requestBody:
+        description: Inputs for generating a context recap
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - history
+                - compressedMemory
+              properties:
+                history:
+                  type: string
+                  description: The conversation history.
+                compressedMemory:
+                  type: string
+                  description: The compressed memory for recap generation.
+      responses:
+        '200':
+          description: Successfully generated context recap
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recap:
+                    type: string
+                    description: The generated context recap.
+        '400':
+          description: Missing or invalid input for recap generation.
+        '500':
+          description: Server error while generating context recap.
+
   /autonomous:
     post:
       operationId: executeAutonomousWorkflow
       summary: Execute an autonomous workflow
       description: >
-        Dynamically executes tasks based on the parsed query, 
+        Dynamically executes tasks based on the parsed query,
         such as creating sub-personas, compressing memory, or summarizing logs.
       requestBody:
         description: Input query for triggering autonomous workflow

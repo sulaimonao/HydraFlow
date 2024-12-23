@@ -1,12 +1,15 @@
+// sub-persona.js
+
 export default async (req, res) => {
   try {
     const { task, description } = req.body;
 
+    // Validate input
     if (!task || !description) {
       return res.status(400).json({ error: "Task and description are required." });
     }
 
-    // Generate a dynamic name for the sub-persona
+    // Generate a unique sub-persona name
     const timestamp = Date.now();
     const subPersonaName = `${task.replace(/ /g, "").toLowerCase()}_${timestamp}`;
     const subPersonaData = {
@@ -16,10 +19,10 @@ export default async (req, res) => {
       createdAt: new Date(timestamp).toISOString(),
     };
 
-    // Mock saving the sub-persona (replace with database logic if needed)
+    // Replace this with database save logic if needed
     console.log("Sub-Persona Created:", subPersonaData);
 
-    // Respond with the new sub-persona details
+    // Return the new sub-persona details
     res.status(200).json({
       subPersonaName: subPersonaData.name,
       description: subPersonaData.taskDescription,

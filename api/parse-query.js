@@ -1,7 +1,10 @@
+// parse-query.js
+
 export default async (req, res) => {
   try {
     const { query } = req.body;
 
+    // Validate input
     if (!query) {
       return res.status(400).json({ error: "Query is required." });
     }
@@ -27,7 +30,7 @@ export default async (req, res) => {
     // Construct structured data for tasks
     const taskCard = {
       goal: query,
-      priority: "High",
+      priority: "High", // Default priority for tasks
       subtasks: actionItems.map((item) => ({
         task: item,
         status: "pending",
@@ -37,7 +40,7 @@ export default async (req, res) => {
 
     // Respond with extracted data and structured tasks
     res.status(200).json({
-      keywords: query.split(" "),
+      keywords: query.split(" "), // Basic keyword extraction
       actionItems,
       taskCard,
       message: "Query parsed successfully.",

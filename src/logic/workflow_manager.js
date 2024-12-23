@@ -1,4 +1,4 @@
-// Updated workflow_manager.js
+// workflow_manager.js
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
@@ -15,56 +15,59 @@ import { collectFeedback } from "../actions/feedback_collector.js";
 
 export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback }) => {
   try {
-    let updatedContext = {};
     const response = {};
     const activeHeadTasks = [];
+    const updatedContext = {};
 
+    // Parse the query
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords;
     updatedContext.actionItems = actionItems;
 
+    // Create a task card
     const taskCard = createTaskCard(query, actionItems);
 
+    // Define handlers for actions
+    const taskHandlers = {
+      "summarize logs": async () => {
+        if (logs) {
+          const subPersona = createSubpersona("log analysis", "Summarize logs for key patterns and errors");
+          const result = await summarizeLogs(logs);
+          assignHeadTask(subPersona.headId, result);
+          activeHeadTasks.push(subPersona.headId);
+          taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
+          response.logsSummary = result;
+        }
+      },
+      "compress memory": async () => {
+        if (memory.length > 1000) {
+          const compressed = compressMemory(memory);
+          updatedContext.memory = compressed.compressedMemory;
+          taskCard.subtasks.find((t) => t.task === "compress memory").status = "completed";
+          response.compressedMemory = compressed.compressedMemory;
+        }
+      },
+    };
+
+    // Execute tasks
     for (const action of actionItems) {
-      switch (action) {
-        case "summarize logs":
-          if (logs) {
-            const subPersona = createSubpersona("log analysis", "Summarize logs for key patterns and errors");
-            const result = await summarizeLogs(logs);
-            assignHeadTask(subPersona.headId, result);
-            activeHeadTasks.push(subPersona.headId);
-            const subtask = taskCard.subtasks.find((t) => t.task === action);
-            if (subtask) subtask.status = "completed";
-            response.logsSummary = result;
-          }
-          break;
-
-        case "compress memory":
-          if (memory.length > 1000) {
-            const compressed = compressMemory(memory);
-            updatedContext.memory = compressed.compressedMemory;
-            const subtask = taskCard.subtasks.find((t) => t.task === action);
-            if (subtask) subtask.status = "completed";
-            response.compressedMemory = compressed.compressedMemory;
-          }
-          break;
-
-        default:
-          console.warn("Unknown action:", action);
+      if (taskHandlers[action]) {
+        await taskHandlers[action]();
+      } else {
+        console.warn("Unknown action:", action);
       }
     }
 
+    // Finalize context and response
     for (const headId of activeHeadTasks) {
       const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
       updatedContext.memory = updatedMainMemory;
     }
 
-    const contextDigest = generateContextDigest(updatedContext.memory);
-    response.contextDigest = contextDigest;
-
+    response.contextDigest = generateContextDigest(updatedContext.memory);
     const context = updateContext(updatedContext);
 
-    const finalResponse = await generateFinalResponse({
+    response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
       summaryReport: response.logsSummary,
@@ -74,17 +77,13 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
     });
 
     if (feedback) {
-      const feedbackResult = collectFeedback({
-        responseId: Date.now().toString(),
-        userFeedback: feedback.comment,
-        rating: feedback.rating,
-      });
+      collectFeedback({ responseId: Date.now().toString(), userFeedback: feedback.comment, rating: feedback.rating });
     }
 
     return {
       status: "context_updated",
       context,
-      finalResponse,
+      finalResponse: response.finalResponse,
     };
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);

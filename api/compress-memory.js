@@ -1,14 +1,12 @@
-// compress-memory.js
-function compressMemory(memory) {
-  const compressedMemory = new Map();
+import { compressMemory } from '../src/actions/memory_compressor.js';
 
-  memory.forEach((item) => {
-    if (!compressedMemory.has(item.key)) {
-      compressedMemory.set(item.key, item.value);
-    }
-  });
-
-  return Array.from(compressedMemory.values());
-}
-
-export { compressMemory };
+export default async (req, res) => {
+  try {
+    const { memory } = req.body;
+    const result = compressMemory(memory);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in compress-memory:", error);
+    res.status(500).json({ error: "Failed to compress memory." });
+  }
+};

@@ -12,3 +12,4 @@ repo_summary.py
 project_context_summary.txt
 .DS_Store
 vercel_root_dir_checker.py
+/.vercel

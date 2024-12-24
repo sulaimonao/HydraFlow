@@ -21,13 +21,13 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
 
     // Parse the query
     const { keywords, actionItems } = parseQuery(query);
-    updatedContext.keywords = keywords;
-    updatedContext.actionItems = actionItems;
+    updatedContext.keywords = keywords || [];
+    updatedContext.actionItems = actionItems || [];
 
     // Create a task card
     const taskCard = createTaskCard(query, actionItems);
 
-    // Define handlers for actions
+    // Task Handlers
     const taskHandlers = {
       "summarize logs": async () => {
         if (logs) {
@@ -35,17 +35,24 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
           const result = await summarizeLogs(logs);
           assignHeadTask(subPersona.headId, result);
           activeHeadTasks.push(subPersona.headId);
+
+          // Update task card status
           taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
           response.logsSummary = result;
         }
       },
       "compress memory": async () => {
-        if (memory.length > 1000) {
+        if (memory && memory.length > 1000) {
           const compressed = compressMemory(memory);
           updatedContext.memory = compressed.compressedMemory;
           taskCard.subtasks.find((t) => t.task === "compress memory").status = "completed";
           response.compressedMemory = compressed.compressedMemory;
         }
+      },
+      default: async (action) => {
+        console.warn(`Unhandled action: ${action}`);
+        response.unhandledActions = response.unhandledActions || [];
+        response.unhandledActions.push(action);
       },
     };
 
@@ -54,11 +61,11 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
       if (taskHandlers[action]) {
         await taskHandlers[action]();
       } else {
-        console.warn("Unknown action:", action);
+        await taskHandlers.default(action);
       }
     }
 
-    // Finalize context and response
+    // Prune sub-personas and finalize context
     for (const headId of activeHeadTasks) {
       const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
       updatedContext.memory = updatedMainMemory;
@@ -67,6 +74,7 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
     response.contextDigest = generateContextDigest(updatedContext.memory);
     const context = updateContext(updatedContext);
 
+    // Finalize response
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
@@ -76,8 +84,13 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
       actionsPerformed: response,
     });
 
+    // Collect feedback
     if (feedback) {
-      collectFeedback({ responseId: Date.now().toString(), userFeedback: feedback.comment, rating: feedback.rating });
+      collectFeedback({
+        responseId: Date.now().toString(),
+        userFeedback: feedback.comment,
+        rating: feedback.rating,
+      });
     }
 
     return {

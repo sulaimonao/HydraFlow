@@ -10,17 +10,99 @@ servers:
     description: Deployed API server
 
 components:
+  schemas:
+    ParseQueryResponse:
+      type: object
+      properties:
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords extracted from the query.
+        actionItems:
+          type: array
+          items:
+            type: string
+          description: Actionable tasks identified from the query.
+        taskCard:
+          type: object
+          properties:
+            goal:
+              type: string
+              description: Goal of the task.
+            priority:
+              type: string
+              description: Task priority (e.g., High, Medium).
+            subtasks:
+              type: array
+              items:
+                type: object
+                properties:
+                  task:
+                    type: string
+                    description: Subtask description.
+                  status:
+                    type: string
+                    description: Subtask status (e.g., pending, completed).
+
+    FeedbackEntry:
+      type: object
+      properties:
+        responseId:
+          type: string
+          description: Response ID associated with the feedback.
+        userFeedback:
+          type: string
+          description: Feedback text provided by the user.
+        rating:
+          type: integer
+          description: Rating given by the user (1-5).
+        timestamp:
+          type: string
+          format: date-time
+          description: Time of feedback submission.
+
+    FeedbackSummary:
+      type: object
+      properties:
+        totalFeedback:
+          type: integer
+          description: Total number of feedback entries.
+        averageRating:
+          type: number
+          description: Average rating from all feedback entries.
+        feedbackEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackEntry'
+
+    LogSummary:
+      type: object
+      properties:
+        totalEntries:
+          type: integer
+          description: Total number of log entries analyzed.
+        errorCount:
+          type: integer
+          description: Number of error-like patterns detected.
+        firstFiveLines:
+          type: string
+          description: The first five lines of the log for a quick overview.
+
+    ServerErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Description of the error.
+
   responses:
     ServerError:
-      description: Server error while processing the request
+      description: Server error while processing the request.
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              error:
-                type: string
-                description: Error details.
+            $ref: '#/components/schemas/ServerErrorResponse'
 
 paths:
   /parse-query:
@@ -29,7 +111,7 @@ paths:
       summary: Parse a query into actionable keywords and tasks
       description: Parses user-provided query to extract keywords and actionable tasks.
       requestBody:
-        description: User query to parse
+        description: User query to parse.
         required: true
         content:
           application/json:
@@ -41,42 +123,15 @@ paths:
                 query:
                   type: string
                   description: The query input that needs parsing.
-              example:
-                query: "Summarize the logs and create a sub-persona."
       responses:
         '200':
-          description: Successfully parsed query
+          description: Successfully parsed query.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  keywords:
-                    type: array
-                    items:
-                      type: string
-                    description: Keywords extracted from the query.
-                  actionItems:
-                    type: array
-                    items:
-                      type: string
-                    description: Actionable tasks identified from the query.
-                  taskCard:
-                    type: object
-                    description: Structured task card generated from the query.
-                  example:
-                    keywords: ["summarize", "logs", "create"]
-                    actionItems: ["summarize-logs", "create-subpersona"]
-                    taskCard:
-                      goal: "Summarize logs and create sub-persona."
-                      priority: "High"
-                      subtasks:
-                        - task: "summarize-logs"
-                          status: "pending"
-                        - task: "create-subpersona"
-                          status: "pending"
+                $ref: '#/components/schemas/ParseQueryResponse'
         '400':
-          description: Invalid input, query missing or malformed.
+          description: Invalid input; query missing or malformed.
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -86,7 +141,7 @@ paths:
       summary: Create a specialized sub-persona
       description: Dynamically generates a specialized sub-persona for a specified task.
       requestBody:
-        description: Details for sub-persona creation
+        description: Details for sub-persona creation.
         required: true
         content:
           application/json:
@@ -102,12 +157,9 @@ paths:
                 description:
                   type: string
                   description: A detailed description of the sub-persona's role.
-              example:
-                task: "log analysis"
-                description: "Summarize logs for patterns and errors."
       responses:
         '200':
-          description: Successfully created a sub-persona
+          description: Successfully created a sub-persona.
           content:
             application/json:
               schema:
@@ -119,9 +171,6 @@ paths:
                   status:
                     type: string
                     description: The status of the sub-persona creation process.
-                  example:
-                    subPersonaName: "loganalysis_1693084567000"
-                    status: "active"
         '400':
           description: Missing task or description fields.
         '500':
@@ -133,7 +182,7 @@ paths:
       summary: Compress and optimize memory
       description: Compresses lengthy conversation memory for optimized context management.
       requestBody:
-        description: Full memory content to compress
+        description: Full memory content to compress.
         required: true
         content:
           application/json:
@@ -145,11 +194,9 @@ paths:
                 memory:
                   type: string
                   description: The full conversation memory to be compressed.
-              example:
-                memory: "This is a very long conversation memory that needs to be compressed."
       responses:
         '200':
-          description: Successfully compressed the memory
+          description: Successfully compressed memory.
           content:
             application/json:
               schema:
@@ -157,46 +204,53 @@ paths:
                 properties:
                   compressedMemory:
                     type: string
-                    description: The compressed version of the memory.
-                  example:
-                    compressedMemory: "Summary of memory."
+                    description: Compressed memory summary.
         '400':
-          description: Memory input missing or invalid.
+          description: Missing or invalid memory input.
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /feedback/all:
-    get:
-      operationId: getAllFeedback
-      summary: Retrieve all feedback entries
-      description: Fetches all collected feedback with details.
+  /summarize-logs:
+    post:
+      operationId: summarizeLogs
+      summary: Summarize logs for patterns and errors
+      description: Analyzes log data to generate summaries of key patterns and errors.
+      requestBody:
+        description: Log data to summarize.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logs
+              properties:
+                logs:
+                  type: string
+                  description: Log data to analyze and summarize.
       responses:
         '200':
-          description: Successfully retrieved all feedback
+          description: Successfully summarized logs.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        responseId:
-                          type: string
-                        userFeedback:
-                          type: string
-                        rating:
-                          type: number
-                        timestamp:
-                          type: string
-                      example:
-                        responseId: "response_12345"
-                        userFeedback: "Great response!"
-                        rating: 5
-                        timestamp: "2023-09-01T12:34:56Z"
+                $ref: '#/components/schemas/LogSummary'
+        '400':
+          description: Missing or invalid log data.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /feedback/summary:
+    get:
+      operationId: getFeedbackSummary
+      summary: Retrieve feedback summary
+      description: Fetches a summarized view of all feedback, including totals and averages.
+      responses:
+        '200':
+          description: Successfully retrieved feedback summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackSummary'
         '500':
           $ref: '#/components/responses/ServerError'

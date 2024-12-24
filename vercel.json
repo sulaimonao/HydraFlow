@@ -12,17 +12,6 @@
     { "src": "/api/autonomous", "dest": "/api/autonomous.js" },
     { "src": "/api/feedback/all", "dest": "/api/feedback/all.js" },
     { "src": "/api/feedback/summary", "dest": "/api/feedback/summary.js" },
-    { "src": "/api/feedback/submit", "dest": "/api/feedback/submit.js" },
-    { "src": "/.*", "status": 404, "dest": "/404.html" }
-  ],
-  "headers": [
-    {
-      "source": "/api/feedback/(all|summary)",
-      "headers": [{ "key": "Cache-Control", "value": "s-maxage=3600" }]
-    }
-  ],
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "API_KEY": "@api-key"
-  }
+    { "src": "/api/feedback/submit", "dest": "/api/feedback/submit.js" }
+  ]
 }

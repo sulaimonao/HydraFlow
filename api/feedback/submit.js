@@ -1,5 +1,6 @@
 // api/feedback/submit.js
 import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 
 // Initialize Supabase client
 const supabaseUrl = process.env.DATABASE_URL;
@@ -16,10 +17,13 @@ export default async function handler(req, res) {
     }
 
     try {
+      // Generate a unique response_id
+      const responseId = uuidv4();
+
       // Insert feedback into the feedback_entries table
       const { data, error } = await supabase
         .from('feedback_entries')
-        .insert([{ user_feedback: userFeedback, rating }]);
+        .insert([{ response_id: responseId, user_feedback: userFeedback, rating }]);
 
       if (error) {
         console.error('Error inserting feedback:', error);
@@ -36,4 +40,3 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-// Compare this snippet from lib/db.js:

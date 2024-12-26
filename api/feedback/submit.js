@@ -20,10 +20,11 @@ export default async function handler(req, res) {
       // Generate a unique response_id
       const responseId = uuidv4();
 
-      // Insert feedback into the feedback_entries table
+      // Insert feedback into the feedback_entries table and return the inserted data
       const { data, error } = await supabase
         .from('feedback_entries')
-        .insert([{ response_id: responseId, user_feedback: userFeedback, rating }]);
+        .insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
+        .select('*'); // Explicitly select the inserted row
 
       if (error) {
         console.error('Error inserting feedback:', error);

@@ -1,4 +1,5 @@
-// workflow_manager.js
+// src/logic/workflow_manager.js
+
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
@@ -11,6 +12,8 @@ import {
 import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator.js";
+import { collectFeedback } from "../actions/feedback_collector.js";
+// Include collectFeedback for collecting user feedback
 import { collectFeedback } from "../actions/feedback_collector.js";
 
 export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback }) => {
@@ -84,9 +87,17 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
       actionsPerformed: response,
     });
 
-    // Collect feedback
+    // Prompt for feedback after task completion
+    if (taskCard && taskCard.status === "completed") {
+      response.feedbackPrompt = {
+        message: "How was the workflow? Please provide your feedback (e.g., 'Great job! 5').",
+        hint: "Feedback and rating (1-5)",
+      };
+    }
+
+    // Collect feedback if provided
     if (feedback) {
-      collectFeedback({
+      await collectFeedback({
         responseId: Date.now().toString(),
         userFeedback: feedback.comment,
         rating: feedback.rating,
@@ -97,6 +108,7 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
       status: "context_updated",
       context,
       finalResponse: response.finalResponse,
+      feedbackPrompt: response.feedbackPrompt || null,
     };
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);

@@ -1,8 +1,7 @@
 // api/feedback/submit.js
 import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library
+import { v4 as uuidv4 } from 'uuid';
 
-// Initialize Supabase client
 const supabaseUrl = process.env.DATABASE_URL;
 const supabaseKey = process.env.KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -11,20 +10,16 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { userFeedback, rating } = req.body;
 
-    // Input validation
     if (!userFeedback || typeof userFeedback !== 'string' || !rating || isNaN(rating)) {
       return res.status(400).json({ error: 'Invalid input. Please provide valid feedback and rating.' });
     }
 
     try {
-      // Generate a unique response_id
       const responseId = uuidv4();
-
-      // Insert feedback into the feedback_entries table and return the inserted data
       const { data, error } = await supabase
         .from('feedback_entries')
         .insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
-        .select('*'); // Explicitly select the inserted row
+        .select('*');
 
       if (error) {
         console.error('Error inserting feedback:', error);

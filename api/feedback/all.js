@@ -2,26 +2,29 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
 const supabaseUrl = process.env.DATABASE_URL;
 const supabaseKey = process.env.KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-  try {
-    const { data, error } = await supabase
-      .from('feedback_entries')
-      .select('*')
-      .order('timestamp', { ascending: false });
+  if (req.method === 'GET') {
+    try {
+      const { data, error } = await supabase
+        .from('feedback_entries')
+        .select('*');
 
-    if (error) {
-      console.error('Error fetching feedback:', error);
-      return res.status(500).json({ error: 'Failed to fetch feedback.' });
+      if (error) {
+        console.error('Error fetching feedback:', error);
+        return res.status(500).json({ error: 'Failed to fetch feedback.' });
+      }
+
+      res.status(200).json({ data });
+    } catch (error) {
+      console.error('Error retrieving feedback:', error);
+      res.status(500).json({ error: 'Unexpected error occurred.' });
     }
-
-    res.status(200).json({ data });
-  } catch (error) {
-    console.error('Error in /api/feedback/all:', error);
-    res.status(500).json({ error: 'Unexpected error occurred.' });
+  } else {
+    res.setHeader('Allow', ['GET']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

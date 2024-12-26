@@ -1,24 +1,38 @@
-// Updated response_generator.js
-export async function generateFinalResponse({ userInput, compressedMemory, summaryReport, context, taskCard, actionsPerformed }) {
-  let draftResponse = "Here's my response:\n\n";
+// src/logic/response_generator.js
 
-  if (summaryReport) {
-    draftResponse += `Summary Report:\n${summaryReport}\n\n`;
+export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed, feedbackPrompt }) => {
+  const response = [];
+
+  // Include context digest summary
+  if (contextDigest) {
+    response.push(
+      `### Context Digest:\n- Total Memory Entries: ${contextDigest.totalEntries}\n- Highlights:\n${contextDigest.highlights
+        .map((entry, index) => `  ${index + 1}. ${entry}`)
+        .join("\n")}`
+    );
   }
 
-  if (compressedMemory) {
-    draftResponse += `Context (Compressed):\n${compressedMemory}\n\n`;
-  }
-
+  // Include task statuses
   if (taskCard) {
-    draftResponse += `Tasks Executed:\n${taskCard.subtasks.map(task => `- ${task.task}: ${task.status}`).join('\n')}\n\n`;
+    response.push(`### Task Card: ${taskCard.goal}`);
+    taskCard.subtasks.forEach((subtask) => {
+      response.push(`- **${subtask.task}**: ${subtask.status}`);
+    });
   }
 
+  // Include results of actions performed
   if (actionsPerformed) {
-    draftResponse += `Actions Performed:\n${Object.entries(actionsPerformed).map(([action, result]) => `- ${action}: ${result}`).join('\n')}\n\n`;
+    response.push("### Actions Performed:");
+    Object.keys(actionsPerformed).forEach((key) => {
+      response.push(`- **${key}**: ${JSON.stringify(actionsPerformed[key], null, 2)}`);
+    });
   }
 
-  draftResponse += `User asked: "${userInput}"\nDomain: ${context.domain}\nGoal: ${context.project_goal}`;
+  // Include feedback prompt if available
+  if (feedbackPrompt) {
+    response.push(`### Feedback Prompt:\n${feedbackPrompt.message}\nHint: ${feedbackPrompt.hint}`);
+  }
 
-  return draftResponse;
-}
+  // Combine response into a cohesive output
+  return response.join("\n\n");
+};

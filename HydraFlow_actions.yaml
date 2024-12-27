@@ -56,6 +56,8 @@ components:
           description: Feedback text provided by the user.
         rating:
           type: integer
+          minimum: 1
+          maximum: 5
           description: Rating given by the user (1-5).
         timestamp:
           type: string
@@ -70,6 +72,7 @@ components:
           description: Total number of feedback entries.
         averageRating:
           type: number
+          format: float
           description: Average rating from all feedback entries.
         feedbackEntries:
           type: array

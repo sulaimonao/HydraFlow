@@ -1,4 +1,4 @@
-//task_manager.js
+// src/state/task_manager.js
 
 const tasks = []; // In-memory task storage (replace with DB if needed)
 

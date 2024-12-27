@@ -1,3 +1,4 @@
+-- /lib/feedback_schema.sql
 -- Feedback Entries Table
 CREATE TABLE feedback_entries (
     id SERIAL PRIMARY KEY,

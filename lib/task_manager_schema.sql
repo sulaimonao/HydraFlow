@@ -1,3 +1,4 @@
+-- lib/task_manager_schema.sql
 -- Task Cards Table
 CREATE TABLE task_cards (
     id SERIAL PRIMARY KEY,

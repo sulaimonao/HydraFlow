@@ -1,5 +1,5 @@
 // src/state/context_state.js
-import { supabase } from "../../lib/db.js"; // or however you export it
+import { supabase } from "../../lib/db.js";
 
 let currentContext = {};
 const contextHistory = [];

@@ -42,6 +42,10 @@
     {
       "source": "/api/feedback/submit",
       "destination": "/api/feedback/submit.js"
+    },
+    {
+      "source": "/api/gauge",
+      "destination": "/api/gauge.js"
     }
   ]
 }

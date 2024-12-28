@@ -1,8 +1,10 @@
 // src/state/task_manager.js
 
-const tasks = []; // In-memory task storage (replace with DB if needed)
+import { db } from "../../lib/db.js";
 
-export const createTaskCard = (goal, subtasks) => {
+let tasks = []; // In-memory task storage (fallback for testing or offline mode)
+
+export const createTaskCard = async (goal, subtasks, userId, chatroomId) => {
   const taskCard = {
     id: `task_${Date.now()}`,
     goal,
@@ -14,14 +16,19 @@ export const createTaskCard = (goal, subtasks) => {
       dependencies: [],
     })),
     createdAt: new Date().toISOString(),
+    userId,
+    chatroomId,
   };
 
-  tasks.push(taskCard);
+  // Store taskCard in the database
+  tasks.push(taskCard); // Keep existing in-memory functionality
+  await db.task_cards.insert(taskCard);
+
   return taskCard;
 };
 
-export const addDependency = (taskId, dependencyId) => {
-  const task = tasks.find((t) => t.id === taskId);
+export const addDependency = async (taskId, dependencyId, userId, chatroomId) => {
+  const task = await db.task_cards.findOne({ id: taskId, userId, chatroomId });
   if (!task) throw new Error(`Task ${taskId} not found`);
 
   task.subtasks.forEach((subtask) => {
@@ -29,15 +36,30 @@ export const addDependency = (taskId, dependencyId) => {
       subtask.dependencies.push(taskId);
     }
   });
+
+  await db.task_cards.update(
+    { id: taskId, userId, chatroomId },
+    { $set: { subtasks: task.subtasks } }
+  );
 };
 
-export const updateTaskStatus = (taskId, status) => {
-  const task = tasks.find((t) => t.id === taskId);
+export const updateTaskStatus = async (taskId, status, userId, chatroomId) => {
+  const task = await db.task_cards.findOne({ id: taskId, userId, chatroomId });
   if (!task) throw new Error(`Task ${taskId} not found`);
 
   task.subtasks.forEach((subtask) => {
     subtask.status = status;
   });
+
+  await db.task_cards.update(
+    { id: taskId, userId, chatroomId },
+    { $set: { subtasks: task.subtasks } }
+  );
 };
 
-export const getTaskCard = (taskId) => tasks.find((t) => t.id === taskId);
+export const getTaskCard = async (taskId, userId, chatroomId) => {
+  return (
+    (await db.task_cards.findOne({ id: taskId, userId, chatroomId })) ||
+    tasks.find((t) => t.id === taskId) // Fallback for in-memory tasks
+  );
+};

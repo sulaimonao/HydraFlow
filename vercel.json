@@ -1,18 +1,47 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "src/**/*.js", "use": "@vercel/node" }
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
   ],
   "rewrites": [
-    { "source": "/api/parse-query", "destination": "/api/parse-query.js" },
-    { "source": "/api/create-subpersona", "destination": "/api/create-subpersona.js" },
-    { "source": "/api/compress-memory", "destination": "/api/compress-memory.js" },
-    { "source": "/api/context-recap", "destination": "/api/context-recap.js" },
-    { "source": "/api/summarize-logs", "destination": "/api/summarize-logs.js" },
-    { "source": "/api/autonomous", "destination": "/api/autonomous.js" },
-    { "source": "/api/feedback/all", "destination": "/api/feedback/all.js" },
-    { "source": "/api/feedback/summary", "destination": "/api/feedback/summary.js" },
-    { "source": "/api/feedback/submit", "destination": "/api/feedback/submit.js" }
+    {
+      "source": "/api/parse-query",
+      "destination": "/api/parse-query.js"
+    },
+    {
+      "source": "/api/create-subpersona",
+      "destination": "/api/create-subpersona.js"
+    },
+    {
+      "source": "/api/compress-memory",
+      "destination": "/api/compress-memory.js"
+    },
+    {
+      "source": "/api/context-recap",
+      "destination": "/api/context-recap.js"
+    },
+    {
+      "source": "/api/summarize-logs",
+      "destination": "/api/summarize-logs.js"
+    },
+    {
+      "source": "/api/autonomous",
+      "destination": "/api/autonomous.js"
+    },
+    {
+      "source": "/api/feedback/all",
+      "destination": "/api/feedback/all.js"
+    },
+    {
+      "source": "/api/feedback/summary",
+      "destination": "/api/feedback/summary.js"
+    },
+    {
+      "source": "/api/feedback/submit",
+      "destination": "/api/feedback/submit.js"
+    }
   ]
 }

@@ -3,8 +3,10 @@ info:
   title: HydraFlow Actions API
   description: >
     HydraFlow is an adaptive conversational assistant API for context management, query parsing,
-    dynamic sub-persona creation, memory compression, log summarization, and context recapping.
-  version: 1.3.0
+    dynamic sub-persona creation, memory compression, log summarization, context recapping,
+    and real-time gauge (instrument cluster) insights.
+  version: 1.4.0
+
 servers:
   - url: https://hydra-flow.vercel.app/api
     description: Deployed API server
@@ -91,6 +93,41 @@ components:
         firstFiveLines:
           type: string
           description: The first five lines of the log for a quick overview.
+
+    GaugeData:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: The user ID being monitored.
+        chatroom_id:
+          type: string
+          description: The chatroom ID or session reference.
+        contextSnapshot:
+          type: object
+          properties:
+            priority:
+              type: string
+              description: Current priority or context-level emphasis.
+            keywords:
+              type: array
+              items:
+                type: string
+              description: Keywords recognized in the context.
+        memoryUsage:
+          type: integer
+          description: The length of the conversation memory string.
+        headCount:
+          type: integer
+          description: Number of sub-personas (heads) currently active.
+        activeTasksCount:
+          type: integer
+          description: Number of tasks with at least one incomplete subtask.
+        limitationNotes:
+          type: array
+          items:
+            type: string
+          description: List of constraints or thresholds being applied.
 
     ServerErrorResponse:
       type: object
@@ -255,5 +292,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeedbackSummary'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /gauge:
+    get:
+      operationId: getGaugeData
+      summary: Retrieve real-time gauge (instrument cluster) info
+      description: >
+        Fetches a snapshot of HydraFlow's internal state for a given userId & chatroomId:
+        current context, memory usage, sub-persona (heads) count, and task progress.
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: string
+          required: false
+          description: The user ID. Defaults to "defaultUser" if omitted.
+        - in: query
+          name: chatroom_id
+          schema:
+            type: string
+          required: false
+          description: The chatroom/session ID. Defaults to "defaultChatroom" if omitted.
+      responses:
+        '200':
+          description: Successfully retrieved gauge data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GaugeData'
         '500':
           $ref: '#/components/responses/ServerError'

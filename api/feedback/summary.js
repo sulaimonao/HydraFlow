@@ -5,6 +5,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.DATABASE_URL;
 const supabaseKey = process.env.KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+const averageRating = totalFeedback > 0
+  ? (data.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback).toFixed(2)
+  : 'N/A';
+
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

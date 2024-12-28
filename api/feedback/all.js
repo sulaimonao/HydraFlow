@@ -5,6 +5,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.DATABASE_URL;
 const supabaseKey = process.env.KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+const { data, error } = await supabase
+  .from('feedback_entries')
+  .select('*')
+  .range(0, 9); // Fetch first 10 entries
+
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

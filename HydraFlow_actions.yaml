@@ -27,9 +27,6 @@ components:
         taskCard:
           type: object
           properties:
-            id:
-              type: string
-              description: Unique ID for the task card.
             goal:
               type: string
               description: Goal of the task.
@@ -41,50 +38,12 @@ components:
               items:
                 type: object
                 properties:
-                  id:
-                    type: string
-                    description: Unique ID for the subtask.
                   task:
                     type: string
                     description: Subtask description.
                   status:
                     type: string
                     description: Subtask status (e.g., pending, completed).
-                  dependencies:
-                    type: array
-                    items:
-                      type: string
-                    description: Dependencies for this subtask.
-
-    SubpersonaResponse:
-      type: object
-      properties:
-        subPersonaName:
-          type: string
-          description: Name assigned to the newly created sub-persona.
-        status:
-          type: string
-          description: Status of the sub-persona creation process.
-
-    MemoryCompressionResponse:
-      type: object
-      properties:
-        compressedMemory:
-          type: string
-          description: Compressed memory summary.
-
-    LogSummary:
-      type: object
-      properties:
-        totalEntries:
-          type: integer
-          description: Total number of log entries analyzed.
-        errorCount:
-          type: integer
-          description: Number of error-like patterns detected.
-        firstFiveLines:
-          type: string
-          description: The first five lines of the log for a quick overview.
 
     FeedbackEntry:
       type: object
@@ -120,6 +79,19 @@ components:
           items:
             $ref: '#/components/schemas/FeedbackEntry'
 
+    LogSummary:
+      type: object
+      properties:
+        totalEntries:
+          type: integer
+          description: Total number of log entries analyzed.
+        errorCount:
+          type: integer
+          description: Number of error-like patterns detected.
+        firstFiveLines:
+          type: string
+          description: The first five lines of the log for a quick overview.
+
     ServerErrorResponse:
       type: object
       properties:
@@ -138,15 +110,18 @@ components:
 paths:
   /parse-query:
     post:
-      summary: Parse a query into actionable keywords and tasks
       operationId: parseQuery
+      summary: Parse a query into actionable keywords and tasks
       description: Parses user-provided query to extract keywords and actionable tasks.
       requestBody:
+        description: User query to parse.
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - query
               properties:
                 query:
                   type: string
@@ -158,20 +133,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParseQueryResponse'
+        '400':
+          description: Invalid input; query missing or malformed.
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /compress-memory:
+  /create-subpersona:
     post:
-      summary: Compress and optimize memory
-      operationId: compressMemory
-      description: Compresses lengthy conversation memory for optimized context management.
+      operationId: createSubpersona
+      summary: Create a specialized sub-persona
+      description: Dynamically generates a specialized sub-persona for a specified task.
       requestBody:
+        description: Details for sub-persona creation.
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - task
+                - description
+              properties:
+                task:
+                  type: string
+                  description: The specific task the sub-persona will handle.
+                description:
+                  type: string
+                  description: A detailed description of the sub-persona's role.
+      responses:
+        '200':
+          description: Successfully created a sub-persona.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subPersonaName:
+                    type: string
+                    description: Name assigned to the newly created sub-persona.
+                  status:
+                    type: string
+                    description: The status of the sub-persona creation process.
+        '400':
+          description: Missing task or description fields.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /compress-memory:
+    post:
+      operationId: compressMemory
+      summary: Compress and optimize memory
+      description: Compresses lengthy conversation memory for optimized context management.
+      requestBody:
+        description: Full memory content to compress.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - memory
               properties:
                 memory:
                   type: string
@@ -182,14 +203,50 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MemoryCompressionResponse'
+                type: object
+                properties:
+                  compressedMemory:
+                    type: string
+                    description: Compressed memory summary.
+        '400':
+          description: Missing or invalid memory input.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /summarize-logs:
+    post:
+      operationId: summarizeLogs
+      summary: Summarize logs for patterns and errors
+      description: Analyzes log data to generate summaries of key patterns and errors.
+      requestBody:
+        description: Log data to summarize.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logs
+              properties:
+                logs:
+                  type: string
+                  description: Log data to analyze and summarize.
+      responses:
+        '200':
+          description: Successfully summarized logs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSummary'
+        '400':
+          description: Missing or invalid log data.
         '500':
           $ref: '#/components/responses/ServerError'
 
   /feedback/summary:
     get:
-      summary: Retrieve feedback summary
       operationId: getFeedbackSummary
+      summary: Retrieve feedback summary
       description: Fetches a summarized view of all feedback, including totals and averages.
       responses:
         '200':

@@ -1,28 +1,48 @@
-//context_state.js
-
-import { db } from "../../lib/db.js";
+// src/state/context_state.js
+import { supabase } from "../../lib/db.js"; // or however you export it
 
 let currentContext = {};
 const contextHistory = [];
 
 export async function updateContext(newData, userId, chatroomId) {
-  contextHistory.push({ ...currentContext }); // Save a snapshot before updating
+  // Save old context to history
+  contextHistory.push({ ...currentContext });
+  // Merge new
   currentContext = { ...currentContext, ...newData };
 
-  // Save context in the database
-  await db.contexts.update(
-    { userId, chatroomId },
-    { $set: currentContext },
-    { upsert: true }
-  );
+  // Upsert the context into the "contexts" table
+  const { error } = await supabase
+    .from("contexts")
+    .upsert({
+      userId,
+      chatroomId,
+      data: currentContext,             // store the entire object in JSON
+      updated_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error("Error updating context in Supabase:", error);
+  }
 
   return currentContext;
 }
 
 export async function getContext(userId, chatroomId) {
-  const context = await db.contexts.findOne({ userId, chatroomId });
-  if (context) {
-    currentContext = context;
+  // Single record by user/chat
+  const { data, error } = await supabase
+    .from("contexts")
+    .select("*")
+    .eq("userId", userId)
+    .eq("chatroomId", chatroomId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching context:", error);
+    return currentContext; // fallback
+  }
+
+  if (data?.data) {
+    currentContext = data.data; // Load from DB
   }
   return currentContext;
 }
@@ -32,4 +52,3 @@ export function getContextHistory() {
 }
 
 export { currentContext };
-

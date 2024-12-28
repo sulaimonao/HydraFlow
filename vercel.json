@@ -1,7 +1,8 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "src/**/*.js", "use": "@vercel/node" }
   ],
   "rewrites": [
     { "source": "/api/parse-query", "destination": "/api/parse-query.js" },

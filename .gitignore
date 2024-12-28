@@ -16,3 +16,4 @@ vercel_root_dir_checker.py
 lib/db_SupaBase.txt
 lib/.env
 .vercel
+test.txt

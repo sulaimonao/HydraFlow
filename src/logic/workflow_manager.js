@@ -1,5 +1,6 @@
 // src/logic/workflow_manager.js
 
+import { gatherGaugeData } from "./gauge_logic.js"; // NEW import
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
@@ -16,19 +17,17 @@ import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory } from "../state/memory_state.js";
 
-/** 
- * IMPORT the new condition checks we just added:
- */
 import {
   shouldCompressMemory,
   canCreateNewHead,
 } from "./conditions.js";
 
 /**
- * UPDATED orchestrateContextWorkflow
- * 
- * Now accepts an optional `tokenCount` parameter for memory compression decisions.
- * Also checks head count to see if new sub-personas can be created safely.
+ * Orchestrates the entire workflow:
+ *  - parse query
+ *  - execute tasks
+ *  - update memory & context
+ *  - gather final gauge data for self-awareness
  */
 export const orchestrateContextWorkflow = async ({
   query,
@@ -37,7 +36,6 @@ export const orchestrateContextWorkflow = async ({
   feedback,
   user_id,
   chatroom_id,
-  /** new optional param for token usage */
   tokenCount = 0,
 }) => {
   try {
@@ -45,30 +43,31 @@ export const orchestrateContextWorkflow = async ({
     const activeHeadTasks = [];
     const updatedContext = {};
 
-    // Retrieve memory and heads from the database
+    // Retrieve memory and heads from the DB
     const existingMemory = await getMemory(user_id, chatroom_id);
     const heads = await getHeads(user_id, chatroom_id);
-    const headCount = heads.length; // how many sub-personas currently exist
+    const headCount = heads.length;
 
     // Parse the query
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords || [];
     updatedContext.actionItems = actionItems || [];
 
-    // Append the query to memory
+    // Append the user query to memory
     const updatedMemory = await appendMemory(query, user_id, chatroom_id);
     updatedContext.memory = updatedMemory;
 
     // Create a task card
     const taskCard = createTaskCard(query, actionItems);
 
-    // === GAUGE CHECKS (NEW) ===
-    // 1) If token usage is above our limit, compress memory automatically
+    // === GAUGE-LIKE CHECKS ===
+    // 1) If token usage is above limit, auto-compress memory
     if (shouldCompressMemory(tokenCount) && existingMemory && existingMemory.length > 1000) {
       const compressed = compressMemory(existingMemory);
       updatedContext.memory = compressed.compressedMemory;
       response.compressedDueToTokens = true;
-      // Mark a subtask if relevant
+
+      // Mark compress subtask if it exists
       const compressSubtask = taskCard.subtasks.find((t) => t.task === "compress memory");
       if (compressSubtask) {
         compressSubtask.status = "completed";
@@ -76,20 +75,15 @@ export const orchestrateContextWorkflow = async ({
       response.compressedMemory = compressed.compressedMemory;
     }
 
-    // 2) If the user wants to create a new sub-persona, 
-    //    check if we haven't reached the max heads limit
-    //    (Your existing code might handle sub-persona creation automatically, but 
-    //     here's an example of how you'd incorporate canCreateNewHead() if relevant.)
+    // 2) If user wants to create-subpersona, check max heads
     if (actionItems.includes("create-subpersona")) {
       if (!canCreateNewHead(headCount)) {
         response.headLimitReached = true;
-        // We can skip creating sub-persona, or give a warning
         console.warn("Max heads limit reached. Cannot create a new sub-persona.");
       }
-      // else continue with creation in the taskHandlers block (below)
     }
 
-    // Task Handlers (existing)
+    // === TASK HANDLERS ===
     const taskHandlers = {
       "summarize logs": async () => {
         if (logs) {
@@ -98,13 +92,12 @@ export const orchestrateContextWorkflow = async ({
           assignHeadTask(subPersona.headId, result);
           activeHeadTasks.push(subPersona.headId);
 
-          // Update task card status
+          // Mark subtask as completed
           taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
           response.logsSummary = result;
         }
       },
       "compress memory": async () => {
-        // Original condition if memory is too large
         if (existingMemory && existingMemory.length > 1000) {
           const compressed = compressMemory(existingMemory);
           updatedContext.memory = compressed.compressedMemory;
@@ -119,7 +112,7 @@ export const orchestrateContextWorkflow = async ({
       },
     };
 
-    // Execute tasks
+    // Execute the tasks
     for (const action of actionItems) {
       if (taskHandlers[action]) {
         await taskHandlers[action]();
@@ -128,17 +121,21 @@ export const orchestrateContextWorkflow = async ({
       }
     }
 
-    // Prune sub-personas and finalize context
+    // Prune sub-personas if any
     for (const headId of activeHeadTasks) {
       const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
       updatedContext.memory = updatedMainMemory;
     }
 
-    // Generate the context digest, update context
+    // Generate a context digest & finalize the updated context
     response.contextDigest = generateContextDigest(updatedContext.memory);
     const context = updateContext(updatedContext);
 
-    // Finalize response for the user
+    // === GATHER GAUGE DATA FOR SELF-AWARENESS ===
+    const gaugeData = await gatherGaugeData({ user_id, chatroom_id }); // <== NEW
+    response.gaugeData = gaugeData;
+
+    // === Final user-facing response ===
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
@@ -146,9 +143,10 @@ export const orchestrateContextWorkflow = async ({
       context,
       taskCard,
       actionsPerformed: response,
+      gaugeData, // pass the gauge data to be displayed
     });
 
-    // Prompt for feedback after task completion
+    // Prompt for feedback if done
     if (taskCard && taskCard.status === "completed") {
       response.feedbackPrompt = {
         message: "How was the workflow? Please provide your feedback (e.g., 'Great job! 5').",
@@ -156,7 +154,7 @@ export const orchestrateContextWorkflow = async ({
       };
     }
 
-    // Collect feedback if provided
+    // If user gave feedback, store it
     if (feedback) {
       await collectFeedback({
         responseId: Date.now().toString(),

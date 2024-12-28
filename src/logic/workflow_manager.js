@@ -13,29 +13,30 @@ import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
+import { getHeads } from "../state/heads_state.js";
+import { appendMemory, getMemory } from "../state/memory_state.js";
 
-export const orchestrateContextWorkflow = async ({
-  query,
-  memory,
-  logs,
-  feedback,
-  userId,
-  chatroomId,
-}) => {
+export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback, userId, chatroomId }) => {
   try {
     const response = {};
     const activeHeadTasks = [];
     const updatedContext = {};
 
+    // Retrieve memory and heads from the database
+    const existingMemory = await getMemory(userId, chatroomId);
+    const heads = await getHeads(userId, chatroomId);
+
     // Parse the query
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords || [];
     updatedContext.actionItems = actionItems || [];
-    updatedContext.userId = userId;
-    updatedContext.chatroomId = chatroomId;
 
-    // Create a task card tied to the user and chatroom
-    const taskCard = createTaskCard({ goal: query, actionItems, userId, chatroomId });
+    // Append the query to memory
+    const updatedMemory = await appendMemory(query, userId, chatroomId);
+    updatedContext.memory = updatedMemory;
+
+    // Create a task card
+    const taskCard = createTaskCard(query, actionItems);
 
     // Task Handlers
     const taskHandlers = {
@@ -52,8 +53,8 @@ export const orchestrateContextWorkflow = async ({
         }
       },
       "compress memory": async () => {
-        if (memory && memory.length > 1000) {
-          const compressed = compressMemory(memory);
+        if (existingMemory && existingMemory.length > 1000) {
+          const compressed = compressMemory(existingMemory);
           updatedContext.memory = compressed.compressedMemory;
           taskCard.subtasks.find((t) => t.task === "compress memory").status = "completed";
           response.compressedMemory = compressed.compressedMemory;
@@ -108,8 +109,6 @@ export const orchestrateContextWorkflow = async ({
         responseId: Date.now().toString(),
         userFeedback: feedback.comment,
         rating: feedback.rating,
-        userId,
-        chatroomId,
       });
     }
 

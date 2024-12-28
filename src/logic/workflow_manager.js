@@ -16,7 +16,30 @@ import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory } from "../state/memory_state.js";
 
-export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback, userId, chatroomId }) => {
+/** 
+ * IMPORT the new condition checks we just added:
+ */
+import {
+  shouldCompressMemory,
+  canCreateNewHead,
+} from "./conditions.js";
+
+/**
+ * UPDATED orchestrateContextWorkflow
+ * 
+ * Now accepts an optional `tokenCount` parameter for memory compression decisions.
+ * Also checks head count to see if new sub-personas can be created safely.
+ */
+export const orchestrateContextWorkflow = async ({
+  query,
+  memory,
+  logs,
+  feedback,
+  userId,
+  chatroomId,
+  /** new optional param for token usage */
+  tokenCount = 0,
+}) => {
   try {
     const response = {};
     const activeHeadTasks = [];
@@ -25,6 +48,7 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
     // Retrieve memory and heads from the database
     const existingMemory = await getMemory(userId, chatroomId);
     const heads = await getHeads(userId, chatroomId);
+    const headCount = heads.length; // how many sub-personas currently exist
 
     // Parse the query
     const { keywords, actionItems } = parseQuery(query);
@@ -38,7 +62,34 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
     // Create a task card
     const taskCard = createTaskCard(query, actionItems);
 
-    // Task Handlers
+    // === GAUGE CHECKS (NEW) ===
+    // 1) If token usage is above our limit, compress memory automatically
+    if (shouldCompressMemory(tokenCount) && existingMemory && existingMemory.length > 1000) {
+      const compressed = compressMemory(existingMemory);
+      updatedContext.memory = compressed.compressedMemory;
+      response.compressedDueToTokens = true;
+      // Mark a subtask if relevant
+      const compressSubtask = taskCard.subtasks.find((t) => t.task === "compress memory");
+      if (compressSubtask) {
+        compressSubtask.status = "completed";
+      }
+      response.compressedMemory = compressed.compressedMemory;
+    }
+
+    // 2) If the user wants to create a new sub-persona, 
+    //    check if we haven't reached the max heads limit
+    //    (Your existing code might handle sub-persona creation automatically, but 
+    //     here's an example of how you'd incorporate canCreateNewHead() if relevant.)
+    if (actionItems.includes("create-subpersona")) {
+      if (!canCreateNewHead(headCount)) {
+        response.headLimitReached = true;
+        // We can skip creating sub-persona, or give a warning
+        console.warn("Max heads limit reached. Cannot create a new sub-persona.");
+      }
+      // else continue with creation in the taskHandlers block (below)
+    }
+
+    // Task Handlers (existing)
     const taskHandlers = {
       "summarize logs": async () => {
         if (logs) {
@@ -53,6 +104,7 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
         }
       },
       "compress memory": async () => {
+        // Original condition if memory is too large
         if (existingMemory && existingMemory.length > 1000) {
           const compressed = compressMemory(existingMemory);
           updatedContext.memory = compressed.compressedMemory;
@@ -82,10 +134,11 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
       updatedContext.memory = updatedMainMemory;
     }
 
+    // Generate the context digest, update context
     response.contextDigest = generateContextDigest(updatedContext.memory);
     const context = updateContext(updatedContext);
 
-    // Finalize response
+    // Finalize response for the user
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,

@@ -7,34 +7,34 @@ import { db } from "../lib/db.js"; // Your Supabase or DB interface
 import { STATUS } from "../src/util/constants.js";
 
 /**
- * This route expects `userId` and `chatroomId` as query parameters:
- *    GET /api/gauge?userId=someUser&chatroomId=someChatroom
+ * This route expects `user_id` and `chatroom_id` as query parameters:
+ *    GET /api/gauge?user_id=someUser&chatroom_id=someChatroom
  * 
  * If those are optional in your setup, you can default them accordingly.
  */
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      const { userId, chatroomId } = req.query;
+      const { user_id, chatroom_id } = req.query;
 
-      // Fallback if none provided (you can remove these if userId/chatroomId must be required)
-      const safeUserId = userId || "defaultUser";
-      const safeChatroomId = chatroomId || "defaultChatroom";
+      // Fallback if none provided (you can remove these if user_id/chatroom_id must be required)
+      const safeuser_id = user_id || "defaultUser";
+      const safechatroom_id = chatroom_id || "defaultChatroom";
 
       // 1) Retrieve context (priority, keywords, etc.)
-      const context = await getContext(safeUserId, safeChatroomId);
+      const context = await getContext(safeuser_id, safechatroom_id);
 
       // 2) Retrieve memory (entire conversation or partial)
-      const memory = await getMemory(safeUserId, safeChatroomId);
+      const memory = await getMemory(safeuser_id, safechatroom_id);
 
       // 3) Retrieve heads (sub-personas) 
-      const heads = await getHeads(safeUserId, safeChatroomId);
+      const heads = await getHeads(safeuser_id, safechatroom_id);
       const headCount = heads.length;
 
       // 4) Retrieve all tasks from the DB (task_cards)
       //    Depending on your code, you might need an existing function or direct query.
       //    For example, if you have db.task_cards as a Mongo-like object:
-      const allTasks = await db.task_cards.find({ userId: safeUserId, chatroomId: safeChatroomId }).toArray();
+      const allTasks = await db.task_cards.find({ user_id: safeuser_id, chatroom_id: safechatroom_id }).toArray();
 
       // In your system, each "task" might have subtasks. Let's find any tasks that are incomplete:
       const activeTasks = allTasks.filter(task => {
@@ -49,8 +49,8 @@ export default async function handler(req, res) {
       const gaugeData = {
         status: STATUS.SUCCESS,
         environment,
-        userId: safeUserId,
-        chatroomId: safeChatroomId,
+        user_id: safeuser_id,
+        chatroom_id: safechatroom_id,
         contextSnapshot: {
           priority: context.priority || "Normal",
           keywords: context.keywords || [],

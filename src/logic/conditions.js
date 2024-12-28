@@ -62,11 +62,11 @@ const needsContextRecap = (conversationLength, userEngagement) => {
 /** 
  * Existing condition: checks for pending dependencies in a particular task 
  */
-const hasPendingDependencies = (taskId, userId, chatroomId) => {
-  const taskCard = getTaskCard(taskId, userId, chatroomId);
+const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
+  const taskCard = getTaskCard(taskId, user_id, chatroom_id);
 
   if (!taskCard) {
-    console.warn(`Task ${taskId} not found for user ${userId} in chatroom ${chatroomId}`);
+    console.warn(`Task ${taskId} not found for user ${user_id} in chatroom ${chatroom_id}`);
     return false;
   }
 

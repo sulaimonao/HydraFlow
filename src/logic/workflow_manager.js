@@ -35,8 +35,8 @@ export const orchestrateContextWorkflow = async ({
   memory,
   logs,
   feedback,
-  userId,
-  chatroomId,
+  user_id,
+  chatroom_id,
   /** new optional param for token usage */
   tokenCount = 0,
 }) => {
@@ -46,8 +46,8 @@ export const orchestrateContextWorkflow = async ({
     const updatedContext = {};
 
     // Retrieve memory and heads from the database
-    const existingMemory = await getMemory(userId, chatroomId);
-    const heads = await getHeads(userId, chatroomId);
+    const existingMemory = await getMemory(user_id, chatroom_id);
+    const heads = await getHeads(user_id, chatroom_id);
     const headCount = heads.length; // how many sub-personas currently exist
 
     // Parse the query
@@ -56,7 +56,7 @@ export const orchestrateContextWorkflow = async ({
     updatedContext.actionItems = actionItems || [];
 
     // Append the query to memory
-    const updatedMemory = await appendMemory(query, userId, chatroomId);
+    const updatedMemory = await appendMemory(query, user_id, chatroom_id);
     updatedContext.memory = updatedMemory;
 
     // Create a task card

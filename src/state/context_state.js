@@ -4,7 +4,7 @@ import { supabase } from "../../lib/db.js";
 let currentContext = {};
 const contextHistory = [];
 
-export async function updateContext(newData, userId, chatroomId) {
+export async function updateContext(newData, user_id, chatroom_id) {
   // Save old context to history
   contextHistory.push({ ...currentContext });
   // Merge new
@@ -14,8 +14,8 @@ export async function updateContext(newData, userId, chatroomId) {
   const { error } = await supabase
     .from("contexts")
     .upsert({
-      userId,
-      chatroomId,
+      user_id,
+      chatroom_id,
       data: currentContext,             // store the entire object in JSON
       updated_at: new Date().toISOString(),
     });
@@ -27,13 +27,13 @@ export async function updateContext(newData, userId, chatroomId) {
   return currentContext;
 }
 
-export async function getContext(userId, chatroomId) {
+export async function getContext(user_id, chatroom_id) {
   // Single record by user/chat
   const { data, error } = await supabase
     .from("contexts")
     .select("*")
-    .eq("userId", userId)
-    .eq("chatroomId", chatroomId)
+    .eq("user_id", user_id)
+    .eq("chatroom_id", chatroom_id)
     .single();
 
   if (error) {

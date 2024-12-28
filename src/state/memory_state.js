@@ -3,15 +3,15 @@ import { supabase } from "../../lib/db.js";
 
 let memory = ""; // local fallback
 
-export async function appendMemory(newMemory, userId, chatroomId) {
+export async function appendMemory(newMemory, user_id, chatroom_id) {
   memory += ` ${newMemory}`;
 
   // Upsert into "memories" table
   const { error } = await supabase
     .from("memories")
     .upsert({
-      userId,
-      chatroomId,
+      user_id,
+      chatroom_id,
       memory,                     // store the updated memory string
       updated_at: new Date().toISOString(),
     });
@@ -23,13 +23,13 @@ export async function appendMemory(newMemory, userId, chatroomId) {
   return memory;
 }
 
-export async function getMemory(userId, chatroomId) {
+export async function getMemory(user_id, chatroom_id) {
   // Retrieve from DB
   const { data, error } = await supabase
     .from("memories")
     .select("*")
-    .eq("userId", userId)
-    .eq("chatroomId", chatroomId)
+    .eq("user_id", user_id)
+    .eq("chatroom_id", chatroom_id)
     .single();
 
   if (error) {

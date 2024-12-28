@@ -3,13 +3,13 @@ import { supabase } from "../../lib/db.js";
 
 const heads = []; // In-memory fallback
 
-export async function addHead(name, status, userId, chatroomId) {
+export async function addHead(name, status, user_id, chatroom_id) {
   const newHead = {
     name,
     status,
     createdAt: Date.now(),
-    userId,
-    chatroomId,
+    user_id,
+    chatroom_id,
   };
 
   // Insert into "heads" table
@@ -27,13 +27,13 @@ export async function addHead(name, status, userId, chatroomId) {
   return newHead;
 }
 
-export async function getHeads(userId, chatroomId) {
+export async function getHeads(user_id, chatroom_id) {
   // Attempt to retrieve from DB
   const { data, error } = await supabase
     .from("heads")
     .select("*")
-    .eq("userId", userId)
-    .eq("chatroomId", chatroomId);
+    .eq("user_id", user_id)
+    .eq("chatroom_id", chatroom_id);
 
   if (error) {
     console.error("Error fetching heads from Supabase:", error);

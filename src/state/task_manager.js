@@ -4,7 +4,7 @@ import { db } from "../../lib/db.js";
 
 let tasks = []; // In-memory task storage (fallback for testing or offline mode)
 
-export const createTaskCard = async (goal, subtasks, userId, chatroomId) => {
+export const createTaskCard = async (goal, subtasks, user_id, chatroom_id) => {
   const taskCard = {
     id: `task_${Date.now()}`,
     goal,
@@ -16,8 +16,8 @@ export const createTaskCard = async (goal, subtasks, userId, chatroomId) => {
       dependencies: [],
     })),
     createdAt: new Date().toISOString(),
-    userId,
-    chatroomId,
+    user_id,
+    chatroom_id,
   };
 
   // Store taskCard in the database
@@ -27,8 +27,8 @@ export const createTaskCard = async (goal, subtasks, userId, chatroomId) => {
   return taskCard;
 };
 
-export const addDependency = async (taskId, dependencyId, userId, chatroomId) => {
-  const task = await db.task_cards.findOne({ id: taskId, userId, chatroomId });
+export const addDependency = async (taskId, dependencyId, user_id, chatroom_id) => {
+  const task = await db.task_cards.findOne({ id: taskId, user_id, chatroom_id });
   if (!task) throw new Error(`Task ${taskId} not found`);
 
   task.subtasks.forEach((subtask) => {
@@ -38,13 +38,13 @@ export const addDependency = async (taskId, dependencyId, userId, chatroomId) =>
   });
 
   await db.task_cards.update(
-    { id: taskId, userId, chatroomId },
+    { id: taskId, user_id, chatroom_id },
     { $set: { subtasks: task.subtasks } }
   );
 };
 
-export const updateTaskStatus = async (taskId, status, userId, chatroomId) => {
-  const task = await db.task_cards.findOne({ id: taskId, userId, chatroomId });
+export const updateTaskStatus = async (taskId, status, user_id, chatroom_id) => {
+  const task = await db.task_cards.findOne({ id: taskId, user_id, chatroom_id });
   if (!task) throw new Error(`Task ${taskId} not found`);
 
   task.subtasks.forEach((subtask) => {
@@ -52,14 +52,14 @@ export const updateTaskStatus = async (taskId, status, userId, chatroomId) => {
   });
 
   await db.task_cards.update(
-    { id: taskId, userId, chatroomId },
+    { id: taskId, user_id, chatroom_id },
     { $set: { subtasks: task.subtasks } }
   );
 };
 
-export const getTaskCard = async (taskId, userId, chatroomId) => {
+export const getTaskCard = async (taskId, user_id, chatroom_id) => {
   return (
-    (await db.task_cards.findOne({ id: taskId, userId, chatroomId })) ||
+    (await db.task_cards.findOne({ id: taskId, user_id, chatroom_id })) ||
     tasks.find((t) => t.id === taskId) // Fallback for in-memory tasks
   );
 };

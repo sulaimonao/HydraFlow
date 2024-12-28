@@ -5,7 +5,7 @@ import {
     fetchTaskCards,
     updateSubtaskStatus,
     deleteTaskCard,
-  } from '../../lib/db.js';
+  } from '../lib/db.js';
   
   export default async function handler(req, res) {
     try {

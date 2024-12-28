@@ -1,10 +1,10 @@
 // api/gauge.js
 
-import { getContext } from "../../src/state/context_state.js";
-import { getMemory } from "../../src/state/memory_state.js";
-import { getHeads } from "../../src/state/heads_state.js";
-import { db } from "../../lib/db.js"; // Your Supabase or DB interface
-import { STATUS } from "../../src/util/constants.js";
+import { getContext } from "../src/state/context_state.js";
+import { getMemory } from "../src/state/memory_state.js";
+import { getHeads } from "../src/state/heads_state.js";
+import { db } from "../lib/db.js"; // Your Supabase or DB interface
+import { STATUS } from "../src/util/constants.js";
 
 /**
  * This route expects `userId` and `chatroomId` as query parameters:

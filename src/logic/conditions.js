@@ -1,4 +1,4 @@
-// Enhanced conditions.js
+// src/logic/conditions.js
 import { currentContext } from "../state/context_state.js";
 import { getTaskCard } from "../state/task_manager.js";
 
@@ -37,11 +37,11 @@ const needsContextRecap = (conversationLength, userEngagement) => {
   );
 };
 
-const hasPendingDependencies = (taskId) => {
-  const taskCard = getTaskCard(taskId);
+const hasPendingDependencies = (taskId, userId, chatroomId) => {
+  const taskCard = getTaskCard(taskId, userId, chatroomId);
 
   if (!taskCard) {
-    console.warn(`Task ${taskId} not found`);
+    console.warn(`Task ${taskId} not found for user ${userId} in chatroom ${chatroomId}`);
     return false;
   }
 

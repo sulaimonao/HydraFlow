@@ -13,10 +13,15 @@ import { createTaskCard } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
-// Include collectFeedback for collecting user feedback
-import { collectFeedback } from "../actions/feedback_collector.js";
 
-export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback }) => {
+export const orchestrateContextWorkflow = async ({
+  query,
+  memory,
+  logs,
+  feedback,
+  userId,
+  chatroomId,
+}) => {
   try {
     const response = {};
     const activeHeadTasks = [];
@@ -26,9 +31,11 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords || [];
     updatedContext.actionItems = actionItems || [];
+    updatedContext.userId = userId;
+    updatedContext.chatroomId = chatroomId;
 
-    // Create a task card
-    const taskCard = createTaskCard(query, actionItems);
+    // Create a task card tied to the user and chatroom
+    const taskCard = createTaskCard({ goal: query, actionItems, userId, chatroomId });
 
     // Task Handlers
     const taskHandlers = {
@@ -101,6 +108,8 @@ export const orchestrateContextWorkflow = async ({ query, memory, logs, feedback
         responseId: Date.now().toString(),
         userFeedback: feedback.comment,
         rating: feedback.rating,
+        userId,
+        chatroomId,
       });
     }
 

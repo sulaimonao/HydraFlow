@@ -30,14 +30,14 @@ export default async function handler(req, res) {
       const headCount = heads.length;
 
       // 5) Retrieve tasks from supabase "task_cards" table
-      //    Filter by user_id, chatroom_id if your table has those columns
       const { data: allTasks, error: taskError } = await supabase
         .from("task_cards")
         .select(`
           *,
           subtasks (
             *,
-            task_dependencies (*)
+            task_dependencies!task_dependencies_depends_on_fkey (*),
+            task_dependencies!task_dependencies_subtask_id_fkey (*)
           )
         `)
         .eq("user_id", safeUserId)
@@ -51,7 +51,6 @@ export default async function handler(req, res) {
       const tasksArray = allTasks || [];
 
       // 6) Figure out how many tasks are "active"
-      //    e.g., any subtask not completed
       const activeTasks = tasksArray.filter((task) => {
         return (
           task.subtasks &&
@@ -67,7 +66,6 @@ export default async function handler(req, res) {
         user_id: safeUserId,
         chatroom_id: safeChatroomId,
         contextSnapshot: {
-          // If your context object has "priority" or "keywords", include them
           priority: context.priority || "Normal",
           keywords: context.keywords || [],
         },
@@ -77,7 +75,6 @@ export default async function handler(req, res) {
         limitationNotes: [
           "Example: Max heads = 5",
           "Token limit = 1000 (conditions.js)", 
-          // Add or remove constraints as you like
         ],
       };
 

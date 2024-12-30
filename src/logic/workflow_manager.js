@@ -1,6 +1,5 @@
 // src/logic/workflow_manager.js
 
-import { gatherGaugeData } from "./gauge_logic.js";
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
@@ -16,6 +15,7 @@ import { generateFinalResponse } from "../actions/response_generator.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory } from "../state/memory_state.js";
+import { gatherGaugeData } from "./gauge_logic.js";
 
 import {
   shouldCompressMemory,
@@ -132,7 +132,7 @@ export const orchestrateContextWorkflow = async ({
     const context = updateContext(updatedContext);
 
     // === GATHER GAUGE DATA FOR SELF-AWARENESS ===
-    const gaugeData = await gatherGaugeData({ user_id, chatroom_id }); // <== NEW
+    const gaugeData = await gatherGaugeData({ user_id, chatroom_id });
     response.gaugeData = gaugeData;
 
     // === Final user-facing response ===

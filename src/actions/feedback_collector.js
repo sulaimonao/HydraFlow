@@ -1,5 +1,4 @@
 // src/actions/feedback_collector.js
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.DATABASE_URL;

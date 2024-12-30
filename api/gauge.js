@@ -1,5 +1,4 @@
 // api/gauge.js
-
 import { fetchGaugeData } from "../lib/db.js";
 import { STATUS } from "../src/util/constants.js";
 
@@ -11,6 +10,14 @@ export default async function handler(req, res) {
       const safeChatroomId = chatroom_id || "defaultChatroom";
 
       const gaugeData = await fetchGaugeData({ userId: safeUserId, chatroomId: safeChatroomId });
+      console.log(`Gauge data fetched for user ${safeUserId} in chatroom ${safeChatroomId}:`, gaugeData);
+
+      if (!gaugeData) {
+        return res.status(404).json({
+          status: STATUS.ERROR,
+          message: "Gauge data not found for the provided identifiers.",
+        });
+      }
 
       return res.status(200).json({
         status: STATUS.SUCCESS,
@@ -20,7 +27,10 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error("Error in gauge route:", error);
-      return res.status(500).json({ status: STATUS.ERROR, error: "Internal server error." });
+      return res.status(500).json({
+        status: STATUS.ERROR,
+        error: "Internal server error.",
+      });
     }
   } else {
     res.setHeader("Allow", ["GET"]);

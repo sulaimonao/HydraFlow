@@ -20,6 +20,7 @@ export default async (req, res) => {
     const { compressedMemory } = compressMemory(combinedMemory);
 
     // Update memory in the database
+    console.log(`Updating memory for user ${user_id} in chatroom ${chatroom_id}`);
     await appendMemory({ userId: user_id, chatroomId: chatroom_id, memoryChunk: compressedMemory });
 
     return res.status(200).json({ compressedMemory, message: "Memory compressed successfully." });

@@ -1,5 +1,5 @@
 // api/feedback.js
-import { insertFeedback, getFeedbackLog, generateFeedbackSummary } from '../../lib/db.js';
+import { insertFeedback, getFeedbackLog, generateFeedbackSummary, fetchFeedbackByUser } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   try {
@@ -9,6 +9,13 @@ export default async function handler(req, res) {
       if (!userFeedback || !rating) {
         return res.status(400).json({ error: 'Feedback and rating are required.' });
       }
+
+      // Check for duplicate feedback
+      const existingFeedback = await fetchFeedbackByUser(userFeedback);
+      if (existingFeedback) {
+        return res.status(409).json({ error: 'Duplicate feedback entry detected.' });
+      }
+
       const feedback = await insertFeedback({ userFeedback, rating });
       return res.status(201).json({ message: 'Feedback submitted successfully.', feedback });
     } else if (req.method === 'GET') {

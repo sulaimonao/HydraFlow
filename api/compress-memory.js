@@ -1,6 +1,6 @@
 // api/compress-memory.js
 import { compressMemory } from "../src/actions/memory_compressor.js";
-import { appendMemory } from "../lib/db.js";
+import { appendMemory, fetchMemory } from "../lib/db.js";
 
 export default async (req, res) => {
   try {
@@ -12,7 +12,14 @@ export default async (req, res) => {
       });
     }
 
-    const compressedMemory = compressMemory(memory).compressedMemory;
+    // Fetch existing memory to avoid overwriting
+    const existingMemory = await fetchMemory({ userId: user_id, chatroomId: chatroom_id });
+
+    // Compress combined memory
+    const combinedMemory = `${existingMemory} ${memory}`;
+    const { compressedMemory } = compressMemory(combinedMemory);
+
+    // Update memory in the database
     await appendMemory({ userId: user_id, chatroomId: chatroom_id, memoryChunk: compressedMemory });
 
     return res.status(200).json({ compressedMemory, message: "Memory compressed successfully." });

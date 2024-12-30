@@ -1,10 +1,10 @@
-// Consolidated memory_compressor.js
+// src/actions/memory_compressor.js
 
 // Deduplicates and compresses text-based memory
 export function compressTextMemory(memory) {
-  const sentences = memory.split(". ").map((sentence) => sentence.trim());
+  const sentences = memory.split(/\.\s+/).map((sentence) => sentence.trim());
   const uniqueSentences = [...new Set(sentences)];
-  const summarizedContent = uniqueSentences.slice(0, 3).join(". ") + "...";
+  const summarizedContent = uniqueSentences.slice(0, 5).join(". ") + (uniqueSentences.length > 5 ? "..." : "");
   return { compressedMemory: summarizedContent };
 }
 

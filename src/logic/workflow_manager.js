@@ -1,6 +1,6 @@
 // src/logic/workflow_manager.js
 
-import { gatherGaugeData } from "./gauge_logic.js"; // NEW import
+import { gatherGaugeData } from "./gauge_logic.js";
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";

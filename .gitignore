@@ -18,3 +18,4 @@ lib/.env
 .vercel
 test.txt
 Privacy_policy.md
+.env

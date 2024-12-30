@@ -3,6 +3,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "winston": "^3.8.2"
   }
 }

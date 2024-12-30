@@ -1,5 +1,5 @@
 import express from "express";
-import { getFeedbackLog, generateFeedbackSummary } from "../actions/feedback_collector.js";
+import { getFeedbackLog, generateFeedbackSummary } from "../src/actions/feedback_collector.js";
 
 const router = express.Router();
 

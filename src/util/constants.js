@@ -1,4 +1,4 @@
-// constants.js
+// util/constants.js
 export const API_ENDPOINTS = {
     PARSE_QUERY: '/api/parse-query',
     COMPRESS_MEMORY: '/api/compress-memory',

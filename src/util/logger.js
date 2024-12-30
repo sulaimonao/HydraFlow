@@ -1,15 +1,30 @@
-// logger.js
+// util/logger.js
+import winston from "winston";
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.json(),
+  transports: [new winston.transports.Console()],
+});
+
 export function logInfo(message) {
-    console.log(`[INFO]: ${message}`);
+  logger.info({ message });
+}
+
+export function logError(message) {
+  logger.error({ message });
+}
+
+export function logDebug(message) {
+  if (process.env.NODE_ENV === "development") {
+    logger.debug({ message });
   }
-  
-  export function logError(message) {
-    console.error(`[ERROR]: ${message}`);
-  }
-  
-  export function logDebug(message) {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(`[DEBUG]: ${message}`);
-    }
-  }
-  
+}
+
+export function logDbQuery(queryDetails, results) {
+  logger.info({
+    message: "Database query executed",
+    queryDetails,
+    results,
+  });
+}

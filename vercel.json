@@ -12,6 +12,10 @@
       "destination": "/api/parse-query.js"
     },
     {
+      "source": "/api/task",
+      "destination": "/api/task.js"
+    },    
+    {
       "source": "/api/create-subpersona",
       "destination": "/api/create-subpersona.js"
     },

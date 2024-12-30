@@ -1,36 +1,24 @@
-// create-subpersona.js
+// api/create-subpersona.js
+
+import { addHead } from "../src/state/heads_state.js";
 
 export default async (req, res) => {
   try {
-    const { task, description } = req.body;
+    const { task, description, user_id, chatroom_id } = req.body;
 
-    // Input validation
-    if (!task || !description) {
-      return res.status(400).json({ error: "Task and description are required." });
+    if (!task || !description || !user_id || !chatroom_id) {
+      return res.status(400).json({
+        error: "Task, description, user_id, and chatroom_id are required.",
+      });
     }
 
-    // Generate unique sub-persona metadata
-    const timestamp = Date.now();
-    const subPersonaName = `${task.replace(/ /g, "").toLowerCase()}_${timestamp}`;
-    const subPersonaData = {
-      name: subPersonaName,
-      taskDescription: description,
-      status: "active",
-      createdAt: new Date(timestamp).toISOString(),
-    };
+    const newHead = await addHead(task, description, user_id, chatroom_id);
 
-    // Log creation (or replace with database logic)
-    console.log("Sub-Persona Created:", subPersonaData);
-
-    // Return sub-persona details
-    return res.status(200).json({
-      subPersonaName: subPersonaData.name,
-      description: subPersonaData.taskDescription,
-      status: subPersonaData.status,
-      createdAt: subPersonaData.createdAt,
-      metadata: {
-        taskId: timestamp,
-      },
+    return res.status(201).json({
+      subPersonaName: newHead.name,
+      description: newHead.taskDescription,
+      status: newHead.status,
+      createdAt: newHead.createdAt,
       message: "Sub-persona created successfully.",
     });
   } catch (error) {

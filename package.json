@@ -2,7 +2,7 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
-    "winston": "^3.8.2", 
-    "dotenv": "^16.0.3" 
+    "dotenv": "^16.4.7",
+    "winston": "^3.8.2"
   }
 }

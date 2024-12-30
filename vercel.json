@@ -46,6 +46,10 @@
     {
       "source": "/api/gauge",
       "destination": "/api/gauge.js"
+    },
+    {
+      "source": "/api/test-db",
+      "destination": "/api/test-db.js"
     }
   ]
 }

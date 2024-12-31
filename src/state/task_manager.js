@@ -1,12 +1,10 @@
-// src/state/task_manager.js
-
 import {
   insertTaskCard,
   fetchTaskCardsWithSubtasks,
-  updateSubtasks,
+  updateSubtasksStatus,
+  logDebugIssue,
 } from "../util/db_helpers.js";
 import { logInfo, logError } from "../util/logger.js";
-import { logDebugIssue } from "../util/db_helpers.js";
 
 /**
  * Creates a new task card and subtasks for a user in a chatroom.
@@ -63,7 +61,7 @@ export const updateTaskStatus = async (taskId, status, user_id, chatroom_id) => 
       status,
     }));
 
-    await updateSubtasks(updatedSubtasks.map((sub) => sub.id), status);
+    await updateSubtasksStatus(updatedSubtasks.map((sub) => sub.id), status);
     logInfo(`Task (ID: ${taskId}) status updated to "${status}".`);
 
     return { ...taskToUpdate, subtasks: updatedSubtasks };

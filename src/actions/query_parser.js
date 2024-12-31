@@ -1,4 +1,4 @@
-//src/actions/query_parser.js
+// src/actions/query_parser.js
 
 import { createTaskCard } from "../state/task_manager.js";
 
@@ -11,6 +11,9 @@ export const parseQuery = (query) => {
     "summarize logs": /summarize logs|analyze logs|log summary/i,
     "compress memory": /compress memory|optimize memory|reduce memory/i,
     "create head": /create head|initialize head|new head/i,
+    "context recap": /recap context|context summary|refresh context/i,
+    "collect feedback": /feedback collection|user feedback|collect feedback/i,
+    "debug logs": /analyze debug logs|debug log summary|log errors/i,
   };
 
   // Extract action items from query
@@ -34,4 +37,3 @@ export const parseQuery = (query) => {
 
   return { keywords, actionItems, taskCardId: null };
 };
-

@@ -1,22 +1,15 @@
 // summarize-logs.js
-
-import winston from "winston";
+import { logInfo, logError } from "../src/util/logger.js";
 
 export default async function handler(req, res) {
-  if (req.method === "POST") {
-    try {
+  try {
+    if (req.method === "POST") {
       const { logs } = req.body;
 
-      if (!logs) {
-        return res.status(400).json({ error: "Logs are required." });
+      // Validate input
+      if (!logs || typeof logs !== "string") {
+        return res.status(400).json({ error: "A valid logs string is required." });
       }
-
-      // Set up the logger
-      const logger = winston.createLogger({
-        level: "info",
-        format: winston.format.json(),
-        transports: [new winston.transports.Console()],
-      });
 
       // Analyze logs
       const errorPattern = /error|fail|exception/i;
@@ -32,15 +25,20 @@ export default async function handler(req, res) {
         firstFiveLines: `${firstFiveLines}...`,
       };
 
-      // Log the analysis
-      logger.info("Logs analyzed", summaryReport);
+      // Log the analysis summary
+      logInfo("Logs analyzed successfully.", summaryReport);
 
-      res.status(200).json({ summaryReport });
-    } catch (error) {
-      console.error("Error in summarize-logs:", error);
-      res.status(500).json({ error: "Failed to summarize logs." });
+      // Respond with the summary
+      res.status(200).json({
+        summaryReport,
+        message: "Logs summarized successfully.",
+      });
+    } else {
+      res.setHeader("Allow", ["POST"]);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-  } else {
-    res.status(405).json({ error: "Method Not Allowed" });
+  } catch (error) {
+    logError(`Error in summarize-logs: ${error.message}`);
+    res.status(500).json({ error: "Internal server error. Failed to summarize logs." });
   }
 }

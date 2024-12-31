@@ -1,5 +1,6 @@
 // api/create-subpersona.js
 import { addHead, fetchExistingHead } from "../src/state/heads_state.js";
+import { fetchTemplate } from "../src/state/templates_state.js"; // Import fetchTemplate function
 
 export default async (req, res) => {
   try {
@@ -17,7 +18,26 @@ export default async (req, res) => {
       return res.status(409).json({ error: "Duplicate head entry detected." });
     }
 
-    const newHead = await addHead(task, description, user_id, chatroom_id);
+    // Fetch template based on the task
+    const template = await fetchTemplate(task);
+    let templateDetails = null;
+
+    if (template) {
+      templateDetails = {
+        capabilities: template.capabilities,
+        preferences: template.preferences,
+      };
+      console.log(`Template fetched for task "${task}":`, templateDetails);
+    }
+
+    // Create the new sub-persona, incorporating template details if available
+    const newHead = await addHead(
+      task,
+      description,
+      user_id,
+      chatroom_id,
+      templateDetails // Pass template details to addHead
+    );
 
     // Update gauge after creating the sub-persona
     const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
@@ -28,6 +48,7 @@ export default async (req, res) => {
       description: newHead.taskDescription,
       status: newHead.status,
       createdAt: newHead.createdAt,
+      templateUsed: template ? template.name : null, // Include template name if used
       gauge: gaugeData,
       message: "Sub-persona created successfully.",
     });

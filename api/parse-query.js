@@ -1,4 +1,6 @@
 // api/parse-query.js
+import { createTaskCard } from "../src/state/task_manager.js";
+import { logInfo, logError } from "../src/util/logger.js";
 
 export default async (req, res) => {
   try {
@@ -6,8 +8,11 @@ export default async (req, res) => {
 
     // Input validation
     if (!query || typeof query !== "string") {
+      logError("Invalid query string received.");
       return res.status(400).json({ error: "A valid query string is required." });
     }
+
+    logInfo(`Parsing query: ${query}`);
 
     // Initialize tasks and details
     const actionItems = [];
@@ -26,26 +31,23 @@ export default async (req, res) => {
         personaDescriptionMatch?.[1] || "Generic persona for dynamic user interaction.";
     }
 
+    // Determine priority based on query content
+    const priority = query.toLowerCase().includes("urgent") ? "High" : "Normal";
+
     // Construct a structured task card
-    const taskCard = {
-      goal: query,
-      priority: "High", // Default priority for tasks
-      subtasks: actionItems.map((item) => ({
-        task: item,
-        status: "pending",
-        description: extractedDetails[item] || "No additional details provided.",
-      })),
-    };
+    const taskCard = createTaskCard(query, actionItems, priority, extractedDetails);
+
+    logInfo("Query parsed successfully and task card created.");
 
     // Respond with structured data
     res.status(200).json({
-      keywords: query.split(" "), // Basic keyword extraction
+      keywords: query.split(" ").filter((word) => word.length > 2), // Basic keyword extraction
       actionItems,
       taskCard,
       message: "Query parsed successfully.",
     });
   } catch (error) {
-    console.error("Error in parse-query:", error);
+    logError(`Error in parse-query: ${error.message}`);
     res.status(500).json({ error: "Failed to parse query. Please try again." });
   }
 };

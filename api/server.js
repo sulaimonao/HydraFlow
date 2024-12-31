@@ -1,25 +1,33 @@
 // api/server.js
-
 import express from "express";
 import cors from "cors";
 import feedbackRoutes from "./routes/feedback.js";
+import { logInfo, logError } from "../src/util/logger.js";
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// API Routes
-app.use("/api/feedback", feedbackRoutes);
-
+// Logging Middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  logInfo(`${req.method} ${req.url}`);
   next();
 });
 
-// Start the server
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// API Routes
+app.use("/api/feedback", feedbackRoutes);
+// Additional routes can be added here (e.g., /api/context, /api/tasks)
+
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  logError(`Error: ${err.message}`);
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
 });
 
-
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  logInfo(`Server running on port ${PORT}`);
+});

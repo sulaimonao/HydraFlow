@@ -5,7 +5,7 @@ info:
     HydraFlow is an adaptive conversational assistant API for context management, query parsing,
     dynamic sub-persona creation, memory compression, log summarization, context recapping,
     and real-time gauge (instrument cluster) insights.
-  version: 1.5.0
+  version: 1.5.1
 
 servers:
   - url: https://hydra-flow.vercel.app/api
@@ -66,21 +66,6 @@ components:
           format: date-time
           description: Time of feedback submission.
 
-    FeedbackSummary:
-      type: object
-      properties:
-        totalFeedback:
-          type: integer
-          description: Total number of feedback entries.
-        averageRating:
-          type: number
-          format: float
-          description: Average rating from all feedback entries.
-        feedbackEntries:
-          type: array
-          items:
-            $ref: '#/components/schemas/FeedbackEntry'
-
     LogSummary:
       type: object
       properties:
@@ -129,6 +114,20 @@ components:
             type: string
           description: List of constraints or thresholds being applied.
 
+    CompressedMemory:
+      type: object
+      properties:
+        compressedMemory:
+          type: string
+          description: Resulting compressed memory after optimization.
+
+    Recap:
+      type: object
+      properties:
+        recap:
+          type: string
+          description: A summarized recap of the context and memory.
+
     ServerErrorResponse:
       type: object
       properties:
@@ -149,7 +148,6 @@ paths:
     post:
       operationId: parseQuery
       summary: Parse a query into actionable keywords and tasks
-      description: Parses user-provided query to extract keywords and actionable tasks.
       requestBody:
         description: User query to parse.
         required: true
@@ -179,7 +177,6 @@ paths:
     post:
       operationId: createSubpersona
       summary: Create a specialized sub-persona
-      description: Dynamically generates a specialized sub-persona for a specified task.
       requestBody:
         description: Details for sub-persona creation.
         required: true
@@ -190,6 +187,8 @@ paths:
               required:
                 - task
                 - description
+                - user_id
+                - chatroom_id
               properties:
                 task:
                   type: string
@@ -197,34 +196,15 @@ paths:
                 description:
                   type: string
                   description: A detailed description of the sub-persona's role.
+                user_id:
+                  type: string
+                  description: The user ID creating the sub-persona.
+                chatroom_id:
+                  type: string
+                  description: The chatroom ID where the sub-persona will operate.
       responses:
         '201':
           description: Successfully created a sub-persona.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  subPersonaName:
-                    type: string
-                    description: Name assigned to the newly created sub-persona.
-                  status:
-                    type: string
-                    description: The status of the sub-persona creation process.
-                  gauge:
-                    $ref: '#/components/schemas/GaugeData'
-        '400':
-          description: Missing task or description fields.
-        '409':
-          description: Duplicate sub-persona detected.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message indicating duplicate entry.
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -232,7 +212,6 @@ paths:
     post:
       operationId: compressMemory
       summary: Compress and optimize memory
-      description: Compresses lengthy conversation memory for optimized context management.
       requestBody:
         description: Full memory content to compress.
         required: true
@@ -252,80 +231,38 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  compressedMemory:
-                    type: string
-                    description: Compressed memory summary.
-        '400':
-          description: Missing or invalid memory input.
+                $ref: '#/components/schemas/CompressedMemory'
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /feedback:
+  /context-recap:
     post:
-      operationId: submitFeedback
-      summary: Submit feedback
-      description: Submit user feedback along with a rating.
+      operationId: contextRecap
+      summary: Generate a context recap
       requestBody:
-        description: User feedback and rating.
+        description: Details for generating a context recap.
         required: true
         content:
           application/json:
             schema:
               type: object
               required:
-                - userFeedback
-                - rating
+                - user_id
+                - chatroom_id
               properties:
-                userFeedback:
+                user_id:
                   type: string
-                  description: Feedback text provided by the user.
-                rating:
-                  type: integer
-                  minimum: 1
-                  maximum: 5
-                  description: Rating given by the user (1-5).
-      responses:
-        '201':
-          description: Feedback submitted successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    description: Success message.
-                  feedback:
-                    $ref: '#/components/schemas/FeedbackEntry'
-        '400':
-          description: Missing feedback or rating fields.
-        '409':
-          description: Duplicate feedback detected.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message indicating duplicate feedback.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /feedback/summary:
-    get:
-      operationId: getFeedbackSummary
-      summary: Retrieve feedback summary
-      description: Fetches a summarized view of all feedback, including totals and averages.
+                  description: The user ID.
+                chatroom_id:
+                  type: string
+                  description: The chatroom ID.
       responses:
         '200':
-          description: Successfully retrieved feedback summary.
+          description: Successfully generated context recap.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeedbackSummary'
+                $ref: '#/components/schemas/Recap'
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -333,22 +270,15 @@ paths:
     get:
       operationId: getGaugeData
       summary: Retrieve real-time gauge (instrument cluster) info
-      description: >
-        Fetches a snapshot of HydraFlow's internal state for a given userId & chatroomId:
-        current context, memory usage, sub-persona (heads) count, and task progress.
       parameters:
         - in: query
           name: user_id
           schema:
             type: string
-          required: false
-          description: The user ID. Defaults to "defaultUser" if omitted.
         - in: query
           name: chatroom_id
           schema:
             type: string
-          required: false
-          description: The chatroom/session ID. Defaults to "defaultChatroom" if omitted.
       responses:
         '200':
           description: Successfully retrieved gauge data.

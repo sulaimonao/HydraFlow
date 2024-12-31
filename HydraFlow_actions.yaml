@@ -5,7 +5,7 @@ info:
     HydraFlow is an adaptive conversational assistant API for context management, query parsing,
     dynamic sub-persona creation, memory compression, log summarization, context recapping,
     and real-time gauge (instrument cluster) insights.
-  version: 1.4.0
+  version: 1.5.0
 
 servers:
   - url: https://hydra-flow.vercel.app/api
@@ -198,7 +198,7 @@ paths:
                   type: string
                   description: A detailed description of the sub-persona's role.
       responses:
-        '200':
+        '201':
           description: Successfully created a sub-persona.
           content:
             application/json:
@@ -211,8 +211,20 @@ paths:
                   status:
                     type: string
                     description: The status of the sub-persona creation process.
+                  gauge:
+                    $ref: '#/components/schemas/GaugeData'
         '400':
           description: Missing task or description fields.
+        '409':
+          description: Duplicate sub-persona detected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating duplicate entry.
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -250,33 +262,55 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /summarize-logs:
+  /feedback:
     post:
-      operationId: summarizeLogs
-      summary: Summarize logs for patterns and errors
-      description: Analyzes log data to generate summaries of key patterns and errors.
+      operationId: submitFeedback
+      summary: Submit feedback
+      description: Submit user feedback along with a rating.
       requestBody:
-        description: Log data to summarize.
+        description: User feedback and rating.
         required: true
         content:
           application/json:
             schema:
               type: object
               required:
-                - logs
+                - userFeedback
+                - rating
               properties:
-                logs:
+                userFeedback:
                   type: string
-                  description: Log data to analyze and summarize.
+                  description: Feedback text provided by the user.
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Rating given by the user (1-5).
       responses:
-        '200':
-          description: Successfully summarized logs.
+        '201':
+          description: Feedback submitted successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogSummary'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message.
+                  feedback:
+                    $ref: '#/components/schemas/FeedbackEntry'
         '400':
-          description: Missing or invalid log data.
+          description: Missing feedback or rating fields.
+        '409':
+          description: Duplicate feedback detected.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating duplicate feedback.
         '500':
           $ref: '#/components/responses/ServerError'
 

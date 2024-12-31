@@ -1,4 +1,4 @@
-//main.js
+// main.js
 
 import express from "express";
 import fetch from "node-fetch";
@@ -9,12 +9,12 @@ app.use(express.json());
 const API_BASE_URL = "https://hydra-flow.vercel.app/api";
 
 // Helper function for API calls
-async function callApi(endpoint, payload) {
+async function callApi(endpoint, payload = {}, method = "POST") {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "POST",
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: method === "POST" ? JSON.stringify(payload) : null,
     });
 
     if (!response.ok) {
@@ -30,23 +30,36 @@ async function callApi(endpoint, payload) {
 
 // Action handlers for each actionItem
 const actionHandlers = {
-  "create-subpersona": async () => {
+  "create-subpersona": async (details) => {
     return await callApi("/create-subpersona", {
-      task: "speak like a Pokémon",
-      description: "This sub-persona communicates like a Pokémon.",
+      task: details.task || "default task",
+      description: details.description || "Default sub-persona description",
     });
   },
-  "compress-memory": async () => {
-    return await callApi("/compress-memory", {
-      memory: "A long conversation history.",
+  "compress-memory": async (details) => {
+    const memory = details.memory || "Default memory chunk.";
+    return await callApi("/compress-memory", { memory });
+  },
+  "summarize-logs": async (details) => {
+    return await callApi("/summarize-logs", {
+      logs: details.logs || "Default log content.",
     });
+  },
+  "context-recap": async (details) => {
+    return await callApi("/utils?action=recap", {
+      history: details.history || [],
+      compressedMemory: details.compressedMemory || "Default compressed memory.",
+    });
+  },
+  "gauge-data": async (details) => {
+    return await callApi(`/gauge?user_id=${details.user_id}&chatroom_id=${details.chatroom_id}`, {}, "GET");
   },
   // Add new action handlers here as needed
 };
 
 app.post("/api/autonomous", async (req, res) => {
   try {
-    const { query } = req.body;
+    const { query, details } = req.body;
 
     if (!query) {
       return res.status(400).json({ error: "Query is required." });
@@ -61,7 +74,7 @@ app.post("/api/autonomous", async (req, res) => {
     // Step 2: Execute actions dynamically
     for (const action of actionItems) {
       if (actionHandlers[action]) {
-        results[action] = await actionHandlers[action]();
+        results[action] = await actionHandlers[action](details || {});
       } else {
         console.warn(`Unknown action: ${action}`);
       }

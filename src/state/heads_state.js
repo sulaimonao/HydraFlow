@@ -1,45 +1,53 @@
 // src/state/heads_state.js
-import { addHead, fetchExistingHead } from "../src/state/heads_state.js";
+import { addHead, fetchExistingHead } from "../util/db_helpers.js";
+import { fetchGaugeData } from "../lib/db.js";
+import { logInfo, logError } from "../util/logger.js";
+import { logDebugIssue } from "../util/db_helpers.js";
 
-export default async (req, res) => {
+/**
+ * Creates or fetches a head (sub-persona) for a user.
+ *
+ * @param {string} task - The task name or function of the sub-persona.
+ * @param {string} description - Description for the sub-persona's purpose.
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - The new or existing head object.
+ */
+export async function createOrFetchHead(task, description, user_id, chatroom_id) {
   try {
-    const { task, description, user_id, chatroom_id } = req.body;
-
-    console.log("Request received with body:", req.body);
-
-    if (!task || !description || !user_id || !chatroom_id) {
-      console.error("Missing required fields:", { task, description, user_id, chatroom_id });
-      return res.status(400).json({
-        error: "Task, description, user_id, and chatroom_id are required.",
-      });
-    }
-
-    // Check for duplicate heads
+    // Check for existing head
     const existingHead = await fetchExistingHead(task, user_id, chatroom_id);
-    console.log("Existing head check result:", existingHead);
-
     if (existingHead) {
-      return res.status(409).json({ error: "Duplicate head entry detected." });
+      logInfo(`Existing head found for task "${task}" in chatroom "${chatroom_id}".`);
+      return existingHead;
     }
 
-    // Create new head
+    // Otherwise, create a new head
     const newHead = await addHead(task, description, user_id, chatroom_id);
-    console.log("New head created:", newHead);
-
-    // Fetch updated gauge data
-    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
-    console.log("Gauge data fetched:", gaugeData);
-
-    return res.status(201).json({
-      subPersonaName: newHead.name,
-      description: newHead.taskDescription,
-      status: newHead.status,
-      createdAt: newHead.createdAt,
-      gauge: gaugeData,
-      message: "Sub-persona created successfully.",
-    });
+    logInfo(`New head created for user ${user_id} in chatroom ${chatroom_id}`, { newHead });
+    return newHead;
   } catch (error) {
-    console.error("Error in create-subpersona:", error.message, error.stack);
-    return res.status(500).json({ error: "Failed to create sub-persona. Please try again." });
+    logError(`Failed to create or fetch head: ${error.message}`);
+    await logDebugIssue(user_id, null, "Heads State Failure", error.message);
+    throw error;
   }
-};
+}
+
+/**
+ * Fetches updated gauge data after sub-persona creation or modifications.
+ *
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object|null} - Gauge data or null if unavailable.
+ */
+export async function getUpdatedGaugeData(user_id, chatroom_id) {
+  try {
+    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
+    logInfo("Gauge data fetched successfully.", { gaugeData });
+    return gaugeData;
+  } catch (error) {
+    logError(`Failed to fetch gauge data: ${error.message}`);
+    await logDebugIssue(user_id, null, "Gauge Data Failure", error.message);
+    return null;
+  }
+}

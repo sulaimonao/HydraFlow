@@ -5,9 +5,9 @@ export const generateFinalResponse = ({
   taskCard,
   actionsPerformed,
   feedbackPrompt,
-  gaugeData,       // <-- newly added field
-  userInput,       // if you want to show the original user input
-  compressedMemory // if you want to show compressed memory
+  gaugeData,       // Newly added field
+  userInput,       // Display original user input
+  compressedMemory // Display compressed memory if applicable
 }) => {
   const response = [];
 

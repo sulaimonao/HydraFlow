@@ -1,8 +1,16 @@
 // src/util/db_helpers.js
+
 import { supabase } from "../../lib/db.js";
 import { logError } from "./logger.js";
 
-// Fetch all tasks with subtasks and dependencies
+/**
+ * Fetches all tasks along with their subtasks and dependencies for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - An array of task objects with their subtasks.
+ * @throws {Error} - If fetching tasks fails.
+ */
 export async function fetchAllTasksWithDetails(userId, chatroomId) {
   try {
     const { data, error } = await supabase
@@ -25,7 +33,15 @@ export async function fetchAllTasksWithDetails(userId, chatroomId) {
   }
 }
 
-// Fetch gauge data for a user and chatroom
+/**
+ * Fetches the gauge data for a specific user and chatroom.
+ *
+ * @param {Object} params - Parameters for fetching gauge data.
+ * @param {string} params.userId - The user ID.
+ * @param {string} params.chatroomId - The chatroom ID.
+ * @returns {Object} - The gauge data object.
+ * @throws {Error} - If fetching gauge data fails.
+ */
 export async function fetchGaugeData({ userId, chatroomId }) {
   try {
     const { data, error } = await supabase
@@ -50,7 +66,14 @@ export async function fetchGaugeData({ userId, chatroomId }) {
   }
 }
 
-// Fetch memory for a user and chatroom
+/**
+ * Fetches the memory for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {string} - The concatenated memory string.
+ * @throws {Error} - If fetching memory fails.
+ */
 export async function fetchMemory(userId, chatroomId) {
   try {
     const { data, error } = await supabase
@@ -67,7 +90,14 @@ export async function fetchMemory(userId, chatroomId) {
   }
 }
 
-// Insert or update memory
+/**
+ * Inserts or updates memory for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @param {string} memory - The memory content to upsert.
+ * @throws {Error} - If upserting memory fails.
+ */
 export async function upsertMemory(userId, chatroomId, memory) {
   try {
     const { error } = await supabase
@@ -86,7 +116,13 @@ export async function upsertMemory(userId, chatroomId, memory) {
   }
 }
 
-// Update subtasks status in bulk
+/**
+ * Updates the status of multiple subtasks in bulk.
+ *
+ * @param {Array} subtaskIds - An array of subtask IDs to update.
+ * @param {string} status - The new status to set (e.g., 'completed').
+ * @throws {Error} - If updating subtasks fails.
+ */
 export async function updateSubtasksStatus(subtaskIds, status) {
   try {
     const { error } = await supabase
@@ -101,7 +137,14 @@ export async function updateSubtasksStatus(subtaskIds, status) {
   }
 }
 
-// Fetch task cards with subtasks
+/**
+ * Fetches task cards along with their subtasks for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - An array of task cards with their subtasks.
+ * @throws {Error} - If fetching task cards fails.
+ */
 export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
   try {
     const { data, error } = await supabase
@@ -123,7 +166,14 @@ export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
   }
 }
 
-// Fetch contexts for a specific user and chatroom
+/**
+ * Fetches contexts for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - An array of context objects.
+ * @throws {Error} - If fetching contexts fails.
+ */
 export async function fetchContexts(userId, chatroomId) {
   try {
     const { data, error } = await supabase
@@ -140,7 +190,15 @@ export async function fetchContexts(userId, chatroomId) {
   }
 }
 
-// Log debug issues
+/**
+ * Logs debug issues for a specific user and context.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} contextId - The context ID.
+ * @param {string} issue - The issue description.
+ * @param {string} resolution - The resolution or steps taken.
+ * @throws {Error} - If logging the debug issue fails.
+ */
 export async function logDebugIssue(userId, contextId, issue, resolution) {
   try {
     const { error } = await supabase
@@ -160,7 +218,12 @@ export async function logDebugIssue(userId, contextId, issue, resolution) {
   }
 }
 
-// Fetch all templates
+/**
+ * Fetches all templates from the database.
+ *
+ * @returns {Array} - An array of template objects.
+ * @throws {Error} - If fetching templates fails.
+ */
 export async function fetchAllTemplates() {
   try {
     const { data, error } = await supabase
@@ -175,7 +238,14 @@ export async function fetchAllTemplates() {
   }
 }
 
-// Insert or update a feedback entry
+/**
+ * Inserts or updates a feedback entry in the database.
+ *
+ * @param {string} responseId - The ID of the response.
+ * @param {string} userFeedback - The user's feedback.
+ * @param {number} rating - The rating provided by the user.
+ * @throws {Error} - If inserting/updating the feedback entry fails.
+ */
 export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
   try {
     const { error } = await supabase
@@ -194,16 +264,5 @@ export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
   }
 }
 
-// Export all helpers
-export {
-  fetchAllTasksWithDetails,
-  fetchGaugeData,
-  fetchMemory,
-  upsertMemory,
-  updateSubtasksStatus,
-  fetchContexts,
-  logDebugIssue,
-  fetchAllTemplates,
-  upsertFeedbackEntry,
-  fetchTaskCardsWithSubtasks,
-};
+// Removed the redundant re-export block.
+// Each function is already exported as a named export.

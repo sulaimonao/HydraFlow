@@ -1,15 +1,82 @@
 // src/util/db_helpers.js
-
 import { supabase } from "../../lib/db.js";
 import { logError } from "./logger.js";
 
 /**
- * Fetches all tasks along with their subtasks and dependencies for a specific user and chatroom.
+ * Inserts a new task card into the database.
+ *
+ * @param {Object} taskCard - The task card details to insert.
+ * @returns {Object} - The inserted task card object.
+ * @throws {Error} - If the insertion fails.
+ */
+export async function insertTaskCard(taskCard) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .insert(taskCard)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error inserting task card: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in insertTaskCard: ${error.message}`, { taskCard });
+    throw error;
+  }
+}
+
+/**
+ * Fetches task cards along with their subtasks for a specific user and chatroom.
  *
  * @param {string} userId - The user ID.
  * @param {string} chatroomId - The chatroom ID.
- * @returns {Array} - An array of task objects with their subtasks.
- * @throws {Error} - If fetching tasks fails.
+ * @returns {Array} - An array of task cards with their subtasks.
+ * @throws {Error} - If fetching task cards fails.
+ */
+export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id, goal, priority, active, created_at,
+        subtasks (
+          id, description, status, created_at
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
+  }
+}
+
+/**
+ * Updates the status of multiple subtasks in bulk.
+ *
+ * @param {Array<number>} subtaskIds - An array of subtask IDs to update.
+ * @param {string} status - The new status to set (e.g., 'completed').
+ * @throws {Error} - If updating subtasks fails.
+ */
+export async function updateSubtasksStatus(subtaskIds, status) {
+  try {
+    const { error } = await supabase
+      .from("subtasks")
+      .update({ status })
+      .in("id", subtaskIds);
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error updating subtasks: ${error.message}`, { subtaskIds });
+    throw new Error(`Error updating subtasks: ${error.message}`);
+  }
+}
+
+/**
+ * Fetches all tasks with subtasks and dependencies for a specific user and chatroom.
  */
 export async function fetchAllTasksWithDetails(userId, chatroomId) {
   try {

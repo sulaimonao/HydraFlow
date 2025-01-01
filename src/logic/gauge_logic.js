@@ -12,7 +12,7 @@ import { supabase } from "../../lib/db.js";
  *  - number of heads (sub-personas)
  *  - number of active tasks
  */
-export async function gatherGaugeData({ user_id, chatroom_id }) {
+import { fetchGaugeData } from './db_helpers.js';
   // 1) Retrieve context & memory from your state modules
   const c = await getContext(user_id, chatroom_id);
   const m = await getMemory(user_id, chatroom_id);

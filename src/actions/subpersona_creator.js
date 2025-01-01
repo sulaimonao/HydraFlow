@@ -67,4 +67,4 @@ function pruneHead(headId, mainMemory) {
   return { error: "Head not found for pruning", headId };
 }
 
-export { createSubpersona, assignHeadTask, pruneHead };
+import { default } from './db_helpers.js';

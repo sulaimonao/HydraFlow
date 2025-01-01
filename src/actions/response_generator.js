@@ -1,6 +1,6 @@
 // src/actions/response_generator.js
 
-export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed }) => {
+import { generateFinalResponse } from './db_helpers.js';
     const response = [];
   
     // Include context digest summary

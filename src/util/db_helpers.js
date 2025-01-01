@@ -50,19 +50,25 @@ export async function fetchGaugeData({ userId, chatroomId }) {
   }
 }
 
+// Additional helpers
 export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
   // Implementation of the fetchTaskCardsWithSubtasks function
 }
 
-// Export the helpers
-export {
+// Export other utilities
+export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed }) => {
+  // Implementation here
+};
+
+export async function gatherGaugeData({ user_id, chatroom_id }) {
+  // Implementation here
+}
+
+// Example for a default export (if needed, otherwise omit this)
+export default {
   fetchAllTasksWithDetails,
   fetchGaugeData,
-  fetchMemory,
-  upsertMemory,
-  updateSubtasksStatus,
-  fetchContexts,
-  logDebugIssue,
-  fetchAllTemplates,
-  upsertFeedbackEntry,
+  fetchTaskCardsWithSubtasks,
+  generateFinalResponse,
+  gatherGaugeData,
 };

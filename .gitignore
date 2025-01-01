@@ -21,3 +21,6 @@ Privacy_policy.md
 .env
 visuli-workflow.png
 lib/Visualized Schema.png
+check-duplicates.mjs
+find-duplicates.mjs
+fix-duplicates-consolidate.mjs

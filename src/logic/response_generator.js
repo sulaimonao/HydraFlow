@@ -1,6 +1,6 @@
 // src/logic/response_generator.js
 
-export const generateFinalResponse = ({
+import { generateFinalResponse } from './db_helpers.js';
   contextDigest,
   taskCard,
   actionsPerformed,

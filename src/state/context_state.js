@@ -67,4 +67,4 @@ export function getContextHistory() {
 }
 
 // The current in-memory context object
-export { currentContext };
+import { default } from './db_helpers.js';

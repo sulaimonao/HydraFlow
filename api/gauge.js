@@ -3,7 +3,7 @@ import { fetchGaugeData } from "../util/db_helpers.js";
 import { STATUS } from "../src/util/constants.js";
 import { logInfo, logError } from "../src/util/logger.js";
 
-export default async function handler(req, res) {
+import { fetchGaugeData } from './db_helpers.js';
   try {
     if (req.method === "GET") {
       // Extract and validate query parameters

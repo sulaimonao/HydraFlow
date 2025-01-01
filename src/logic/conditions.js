@@ -102,7 +102,7 @@ const isUrgentTask = (taskPriority) => {
   return taskPriority === "High";
 };
 
-export {
+import { default } from './db_helpers.js';
   COMPRESSION_THRESHOLD,
   INITIAL_COMPRESSION_THRESHOLD,
   TOKEN_LIMIT,

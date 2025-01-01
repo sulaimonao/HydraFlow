@@ -47,7 +47,7 @@ export async function insertTaskCard(taskCard) {
 }
 
 /**
- * Fetches task cards along with their subtasks for a specific user and chatroom.
+ * Fetches all task cards with subtasks for a specific user and chatroom.
  *
  * @param {string} userId - The user ID.
  * @param {string} chatroomId - The chatroom ID.
@@ -70,13 +70,18 @@ export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
     if (error) throw error;
     return data;
   } catch (error) {
-    logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
+    logError(`Error fetching task cards: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching task cards: ${error.message}`);
   }
 }
 
 /**
  * Fetches all tasks with subtasks and dependencies for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - Array of task cards with subtasks and dependencies.
+ * @throws {Error} - If fetching task cards fails.
  */
 export async function fetchAllTasksWithDetails(userId, chatroomId) {
   try {
@@ -95,8 +100,8 @@ export async function fetchAllTasksWithDetails(userId, chatroomId) {
     if (error) throw error;
     return data;
   } catch (error) {
-    logError(`Error fetching tasks: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching tasks: ${error.message}`);
+    logError(`Error fetching detailed tasks: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching detailed tasks: ${error.message}`);
   }
 }
 
@@ -184,87 +189,6 @@ export async function upsertMemory(userId, chatroomId, memory) {
 }
 
 /**
- * Fetches task cards along with their subtasks for a specific user and chatroom.
- *
- * @param {string} userId - The user ID.
- * @param {string} chatroomId - The chatroom ID.
- * @returns {Array} - An array of task cards with their subtasks.
- * @throws {Error} - If fetching task cards fails.
- */
-export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
-  try {
-    const { data, error } = await supabase
-      .from("task_cards")
-      .select(`
-        id, goal, priority, active, created_at,
-        subtasks (
-          id, description, status, created_at
-        )
-      `)
-      .eq("user_id", userId)
-      .eq("chatroom_id", chatroomId);
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
-  }
-}
-
-/**
- * Fetches contexts for a specific user and chatroom.
- *
- * @param {string} userId - The user ID.
- * @param {string} chatroomId - The chatroom ID.
- * @returns {Array} - An array of context objects.
- * @throws {Error} - If fetching contexts fails.
- */
-export async function fetchContexts(userId, chatroomId) {
-  try {
-    const { data, error } = await supabase
-      .from("contexts")
-      .select("data, updated_at")
-      .eq("user_id", userId)
-      .eq("chatroom_id", chatroomId);
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logError(`Error fetching contexts: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching contexts: ${error.message}`);
-  }
-}
-
-/**
- * Logs debug issues for a specific user and context.
- *
- * @param {string} userId - The user ID.
- * @param {string} contextId - The context ID.
- * @param {string} issue - The issue description.
- * @param {string} resolution - The resolution or steps taken.
- * @throws {Error} - If logging the debug issue fails.
- */
-export async function logDebugIssue(userId, contextId, issue, resolution) {
-  try {
-    const { error } = await supabase
-      .from("debug_logs")
-      .insert({
-        user_id: userId,
-        context_id: contextId,
-        issue,
-        resolution,
-        timestamp: new Date().toISOString(),
-      });
-
-    if (error) throw error;
-  } catch (error) {
-    logError(`Error logging debug issue: ${error.message}`, { userId, contextId });
-    throw new Error(`Error logging debug issue: ${error.message}`);
-  }
-}
-
-/**
  * Fetches all templates from the database.
  *
  * @returns {Array} - An array of template objects.
@@ -309,6 +233,3 @@ export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
     throw new Error(`Error inserting/updating feedback entry: ${error.message}`);
   }
 }
-
-// Removed the redundant re-export block.
-// Each function is already exported as a named export.

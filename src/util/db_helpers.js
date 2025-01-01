@@ -233,3 +233,48 @@ export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
     throw new Error(`Error inserting/updating feedback entry: ${error.message}`);
   }
 }
+
+/**
+ * Adds a new head (sub-persona) to the database.
+ *
+ * @param {string} task - The task or role of the head.
+ * @param {string} description - A description of the head's purpose.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Object} - The newly added head object.
+ * @throws {Error} - If the insertion fails.
+ */
+export async function addHead(task, description, userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("heads")
+      .insert({
+        task,
+        description,
+        user_id: userId,
+        chatroom_id: chatroomId,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error adding head: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in addHead: ${error.message}`, { task, userId, chatroomId });
+    throw error;
+  }
+}
+
+export {
+  insertTaskCard,
+  fetchTaskCardsWithSubtasks,
+  updateSubtasksStatus,
+  fetchAllTasksWithDetails,
+  fetchGaugeData,
+  fetchMemory,
+  upsertMemory,
+  fetchAllTemplates,
+  upsertFeedbackEntry,
+  addHead, // Newly added function
+};

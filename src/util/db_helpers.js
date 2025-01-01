@@ -1,3 +1,4 @@
+// src/util/db_helpers.js
 import { supabase } from "../../lib/db.js";
 import { logError } from "./logger.js";
 
@@ -21,28 +22,6 @@ export async function fetchAllTasksWithDetails(userId, chatroomId) {
   } catch (error) {
     logError(`Error fetching tasks: ${error.message}`, { userId, chatroomId });
     throw new Error(`Error fetching tasks: ${error.message}`);
-  }
-}
-
-// Fetch task cards with subtasks
-export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
-  try {
-    const { data, error } = await supabase
-      .from("task_cards")
-      .select(`
-        id, goal, priority, active, created_at,
-        subtasks (
-          id, description, status, created_at
-        )
-      `)
-      .eq("user_id", userId)
-      .eq("chatroom_id", chatroomId);
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
   }
 }
 
@@ -71,16 +50,8 @@ export async function fetchGaugeData({ userId, chatroomId }) {
   }
 }
 
-// Export all helpers
+// Export other helpers if required
 export {
   fetchAllTasksWithDetails,
-  fetchMemory,
-  upsertMemory,
-  updateSubtasksStatus,
-  fetchContexts,
-  logDebugIssue,
-  fetchAllTemplates,
-  upsertFeedbackEntry,
-  fetchTaskCardsWithSubtasks,
   fetchGaugeData,
 };

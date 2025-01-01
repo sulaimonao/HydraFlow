@@ -31,9 +31,9 @@ export default async (req, res) => {
       feedback,
       user_id,
       chatroom_id,
-      tokenCount: gaugeData.tokenCount,
-      priority: gaugeData.priority,
-      activeTasks: gaugeData.activeTasksCount,
+      tokenCount: gaugeData.tokenCount || 0,
+      priority: gaugeData.priority || "Normal",
+      activeTasks: gaugeData.activeTasksCount || 0,
     });
 
     logInfo(`Autonomous workflow completed for user ${user_id} in chatroom ${chatroom_id}.`);

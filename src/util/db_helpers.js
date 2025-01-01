@@ -1,5 +1,4 @@
 // src/util/db_helpers.js
-
 import { supabase } from "../../lib/db.js";
 import { logError } from "./logger.js";
 
@@ -23,6 +22,31 @@ export async function fetchAllTasksWithDetails(userId, chatroomId) {
   } catch (error) {
     logError(`Error fetching tasks: ${error.message}`, { userId, chatroomId });
     throw new Error(`Error fetching tasks: ${error.message}`);
+  }
+}
+
+// Fetch gauge data for a user and chatroom
+export async function fetchGaugeData({ userId, chatroomId }) {
+  try {
+    const { data, error } = await supabase
+      .from("gauge_data")
+      .select("contextSnapshot, memoryUsage, headCount, activeTasksCount, limitationNotes")
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data.contextSnapshot,
+      memoryUsage: data.memoryUsage,
+      headCount: data.headCount,
+      activeTasksCount: data.activeTasksCount,
+      limitationNotes: data.limitationNotes || [],
+    };
+  } catch (error) {
+    logError(`Error fetching gauge data: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching gauge data: ${error.message}`);
   }
 }
 
@@ -62,43 +86,6 @@ export async function upsertMemory(userId, chatroomId, memory) {
   }
 }
 
-// Add a new head
-export async function addHead({ userId, chatroomId, headData }) {
-  try {
-    const { data, error } = await supabase
-      .from("heads")
-      .insert({
-        user_id: userId,
-        chatroom_id: chatroomId,
-        ...headData,
-      });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logError(`Error adding head: ${error.message}`, { userId, chatroomId, headData });
-    throw new Error(`Error adding head: ${error.message}`);
-  }
-}
-
-// Fetch an existing head
-export async function fetchExistingHead({ userId, chatroomId }) {
-  try {
-    const { data, error } = await supabase
-      .from("heads")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("chatroom_id", chatroomId)
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logError(`Error fetching existing head: ${error.message}`, { userId, chatroomId });
-    throw new Error(`Error fetching existing head: ${error.message}`);
-  }
-}
-
 // Update subtasks status in bulk
 export async function updateSubtasksStatus(subtaskIds, status) {
   try {
@@ -114,12 +101,109 @@ export async function updateSubtasksStatus(subtaskIds, status) {
   }
 }
 
-// Other utility functions...
+// Fetch task cards with subtasks
+export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id, goal, priority, active, created_at,
+        subtasks (
+          id, description, status, created_at
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
+  }
+}
+
+// Fetch contexts for a specific user and chatroom
+export async function fetchContexts(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("contexts")
+      .select("data, updated_at")
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching contexts: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching contexts: ${error.message}`);
+  }
+}
+
+// Log debug issues
+export async function logDebugIssue(userId, contextId, issue, resolution) {
+  try {
+    const { error } = await supabase
+      .from("debug_logs")
+      .insert({
+        user_id: userId,
+        context_id: contextId,
+        issue,
+        resolution,
+        timestamp: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error logging debug issue: ${error.message}`, { userId, contextId });
+    throw new Error(`Error logging debug issue: ${error.message}`);
+  }
+}
+
+// Fetch all templates
+export async function fetchAllTemplates() {
+  try {
+    const { data, error } = await supabase
+      .from("templates")
+      .select("id, name, configuration, created_at");
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching templates: ${error.message}`);
+    throw new Error(`Error fetching templates: ${error.message}`);
+  }
+}
+
+// Insert or update a feedback entry
+export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
+  try {
+    const { error } = await supabase
+      .from("feedback_entries")
+      .upsert({
+        response_id: responseId,
+        user_feedback: userFeedback,
+        rating,
+        timestamp: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error inserting/updating feedback entry: ${error.message}`, { responseId });
+    throw new Error(`Error inserting/updating feedback entry: ${error.message}`);
+  }
+}
+
+// Export all helpers
 export {
   fetchAllTasksWithDetails,
+  fetchGaugeData,
   fetchMemory,
   upsertMemory,
   updateSubtasksStatus,
-  addHead,
-  fetchExistingHead,
+  fetchContexts,
+  logDebugIssue,
+  fetchAllTemplates,
+  upsertFeedbackEntry,
+  fetchTaskCardsWithSubtasks,
 };

@@ -2,7 +2,8 @@
 import { fetchMemory } from "../src/util/db_helpers.js";
 import { logInfo, logError } from "../src/util/logger.js";
 
-export default async function handler(req, res) {
+export async function compressMemoryHandler(req, res)
+ {
   try {
     if (req.method !== "POST") {
       logError("Invalid HTTP method used for context-recap endpoint.");

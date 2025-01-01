@@ -1,7 +1,6 @@
 // src/logic/conditions.js
 
-import { currentContext } from "../state/context_state.js";
-import { getTaskCard } from "../state/task_manager.js";
+import { fetchExistingHead } from '../util/db_helpers.js'; // Correct named import
 
 /**
  * Existing thresholds
@@ -11,7 +10,6 @@ const INITIAL_COMPRESSION_THRESHOLD = 10;
 
 /**
  * NEW token limit and max heads
- * (Feel free to change the values as you like)
  */
 const TOKEN_LIMIT = 1000;
 const MAX_HEADS = 5;
@@ -19,37 +17,37 @@ const MAX_HEADS = 5;
 /**
  * Existing condition: determines if we should create a head
  */
-const shouldCreateHead = (actionItems) => {
-  return actionItems.includes("create head");
+export const shouldCreateHead = (actionItems) => {
+  return actionItems.includes('create head');
 };
 
 /**
  * Existing condition: determines if we should summarize logs
  */
-const shouldSummarizeLogs = (actionItems) => {
-  return actionItems.includes("summarize logs");
+export const shouldSummarizeLogs = (actionItems) => {
+  return actionItems.includes('summarize logs');
 };
 
 /**
  * Existing condition: determines if memory compression is needed based on
  * conversation length plus priority
  */
-const shouldCompress = (actionItems, conversationLength) => {
-  const contextPriority = currentContext.priority || "Normal";
+export const shouldCompress = (actionItems, conversationLength) => {
+  const contextPriority = currentContext.priority || 'Normal';
   const adjustedThreshold =
-    contextPriority === "High" ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
+    contextPriority === 'High' ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
 
-  return actionItems.includes("summarize") && conversationLength > adjustedThreshold;
+  return actionItems.includes('summarize') && conversationLength > adjustedThreshold;
 };
 
 /**
  * Existing condition: determines if a context recap is needed based on
  * conversation length and user engagement
  */
-const needsContextRecap = (conversationLength, userEngagement) => {
-  const contextGoal = currentContext.goal || "General";
+export const needsContextRecap = (conversationLength, userEngagement) => {
+  const contextGoal = currentContext.goal || 'General';
 
-  if (contextGoal === "Complex") {
+  if (contextGoal === 'Complex') {
     return true;
   }
 
@@ -62,7 +60,7 @@ const needsContextRecap = (conversationLength, userEngagement) => {
 /**
  * Existing condition: checks for pending dependencies in a particular task
  */
-const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
+export const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
   const taskCard = getTaskCard(taskId, user_id, chatroom_id);
 
   if (!taskCard) {
@@ -76,45 +74,28 @@ const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
 /**
  * NEW condition: checks if we should compress memory due to high token usage
  */
-const shouldCompressMemory = (tokenCount) => {
+export const shouldCompressMemory = (tokenCount) => {
   return tokenCount > TOKEN_LIMIT;
 };
 
 /**
  * NEW condition: checks if we can create a new head or if we've reached max
  */
-const canCreateNewHead = (headCount) => {
+export const canCreateNewHead = (headCount) => {
   return headCount < MAX_HEADS;
 };
 
 /**
  * NEW condition: checks if the current context is ready for further actions
  */
-const isContextReady = () => {
-  const contextStatus = currentContext.status || "active";
-  return contextStatus === "active";
+export const isContextReady = () => {
+  const contextStatus = currentContext.status || 'active';
+  return contextStatus === 'active';
 };
 
 /**
  * NEW condition: determines if the task requires urgent processing
  */
-const isUrgentTask = (taskPriority) => {
-  return taskPriority === "High";
-};
-
-import { default } from './db_helpers.js';
-  COMPRESSION_THRESHOLD,
-  INITIAL_COMPRESSION_THRESHOLD,
-  TOKEN_LIMIT,
-  MAX_HEADS,
-  shouldCreateHead,
-  shouldSummarizeLogs,
-  shouldCompress,
-  needsContextRecap,
-  hasPendingDependencies,
-  /** New exports below */
-  shouldCompressMemory,
-  canCreateNewHead,
-  isContextReady,
-  isUrgentTask,
+export const isUrgentTask = (taskPriority) => {
+  return taskPriority === 'High';
 };

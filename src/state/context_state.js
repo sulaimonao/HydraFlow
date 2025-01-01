@@ -1,8 +1,8 @@
 // src/state/context_state.js
 
-import { fetchContext, upsertContext } from "../util/db_helpers.js";
-import { logInfo, logError } from "../util/logger.js";
-import { logDebugIssue } from "../util/db_helpers.js";
+import { fetchContext, upsertContext } from '../util/db_helpers.js';
+import { logInfo, logError } from '../util/logger.js';
+import { logDebugIssue } from '../util/db_helpers.js'; // Already imported earlier
 
 let currentContext = {};
 const contextHistory = [];
@@ -23,17 +23,17 @@ export async function updateContext(newData, userId, chatroomId) {
 
     // Merge new data into context
     currentContext = { ...currentContext, ...newData };
-    logInfo("Context updated in memory.", { newData, userId, chatroomId });
+    logInfo('Context updated in memory.', { newData, userId, chatroomId });
 
     // Persist the updated context
     await upsertContext(userId, chatroomId, currentContext);
-    logInfo("Context persisted to database.", { userId, chatroomId });
+    logInfo('Context persisted to database.', { userId, chatroomId });
 
     return currentContext;
   } catch (error) {
     logError(`Failed to update context: ${error.message}`);
     // Optionally store a debug log for context update failures
-    await logDebugIssue(userId, null, "Context Update Failure", error.message);
+    await logDebugIssue(userId, null, 'Context Update Failure', error.message);
     throw error;
   }
 }
@@ -48,11 +48,11 @@ export async function updateContext(newData, userId, chatroomId) {
 export async function getContext(userId, chatroomId) {
   try {
     const ctx = await fetchContext(userId, chatroomId);
-    logInfo("Context fetched from database.", { userId, chatroomId, ctx });
+    logInfo('Context fetched from database.', { userId, chatroomId, ctx });
     return ctx;
   } catch (error) {
     logError(`Failed to fetch context: ${error.message}`);
-    await logDebugIssue(userId, null, "Context Fetch Failure", error.message);
+    await logDebugIssue(userId, null, 'Context Fetch Failure', error.message);
     throw error;
   }
 }
@@ -65,6 +65,3 @@ export async function getContext(userId, chatroomId) {
 export function getContextHistory() {
   return contextHistory;
 }
-
-// The current in-memory context object
-import { default } from './db_helpers.js';

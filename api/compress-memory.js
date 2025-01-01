@@ -3,7 +3,7 @@ import { compressMemory } from "../src/actions/memory_compressor.js";
 import { fetchMemory, upsertMemory } from "../src/util/db_helpers.js";
 import { logInfo, logError } from "../src/util/logger.js";
 
-export default async (req, res) => {
+export async function compressMemoryHandler(req, res) {
   try {
     const { memory, user_id, chatroom_id } = req.body;
 

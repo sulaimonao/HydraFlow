@@ -50,15 +50,9 @@ export async function fetchGaugeData({ userId, chatroomId }) {
   }
 }
 
-// Other helper functions
-export async function fetchMemory(userId, chatroomId) { /* Implementation */ }
-export async function upsertMemory(userId, chatroomId, memory) { /* Implementation */ }
-export async function updateSubtasksStatus(subtaskIds, status) { /* Implementation */ }
-export async function fetchContexts(userId, chatroomId) { /* Implementation */ }
-export async function logDebugIssue(userId, contextId, issue, resolution) { /* Implementation */ }
-export async function fetchAllTemplates() { /* Implementation */ }
-export async function upsertFeedbackEntry(responseId, userFeedback, rating) { /* Implementation */ }
-export async function fetchTaskCardsWithSubtasks(userId, chatroomId) { /* Implementation */ }
+export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
+  // Implementation of the fetchTaskCardsWithSubtasks function
+}
 
 // Export the helpers
 export {
@@ -71,5 +65,4 @@ export {
   logDebugIssue,
   fetchAllTemplates,
   upsertFeedbackEntry,
-  fetchTaskCardsWithSubtasks, // Only once!
 };

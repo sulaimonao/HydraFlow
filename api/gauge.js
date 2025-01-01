@@ -3,13 +3,21 @@ import { fetchGaugeData } from "../util/db_helpers.js";
 import { STATUS } from "../src/util/constants.js";
 import { logInfo, logError } from "../src/util/logger.js";
 
-import { fetchGaugeData } from './db_helpers.js';
+export default async function gaugeHandler(req, res) {
   try {
     if (req.method === "GET") {
       // Extract and validate query parameters
       const { user_id, chatroom_id } = req.query;
-      const safeUserId = user_id || "defaultUser";
-      const safeChatroomId = chatroom_id || "defaultChatroom";
+      if (!user_id || !chatroom_id) {
+        logError("Missing required query parameters: user_id or chatroom_id.");
+        return res.status(400).json({
+          status: STATUS.ERROR,
+          message: "Missing required query parameters: user_id and chatroom_id are mandatory.",
+        });
+      }
+
+      const safeUserId = user_id;
+      const safeChatroomId = chatroom_id;
 
       logInfo(`Fetching gauge data for user ${safeUserId} in chatroom ${safeChatroomId}.`);
 
@@ -24,9 +32,6 @@ import { fetchGaugeData } from './db_helpers.js';
           message: "Gauge data not found for the provided identifiers.",
         });
       }
-
-      // Log successful retrieval
-      logInfo(`Gauge data retrieved successfully for user ${safeUserId} in chatroom ${safeChatroomId}.`, gaugeData);
 
       // Respond with gauge data
       return res.status(200).json({

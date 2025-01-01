@@ -1,5 +1,4 @@
 // src/logic/gauge_logic.js
-
 import { getContext } from "../state/context_state.js";
 import { getMemory } from "../state/memory_state.js";
 import { getHeads } from "../state/heads_state.js";
@@ -7,52 +6,53 @@ import { supabase } from "../../lib/db.js";
 
 /**
  * Gathers an instrument cluster / gauge snapshot for the given user & chatroom:
- *  - context priority, keywords
- *  - memory usage
- *  - number of heads (sub-personas)
- *  - number of active tasks
+ *  - Context priority and keywords
+ *  - Memory usage
+ *  - Number of heads (sub-personas)
+ *  - Number of active tasks
+ *
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - A consolidated snapshot of gauge data.
+ * @throws {Error} - If any data retrieval fails.
  */
-import { fetchGaugeData } from './db_helpers.js';
-  // 1) Retrieve context & memory from your state modules
-  const c = await getContext(user_id, chatroom_id);
-  const m = await getMemory(user_id, chatroom_id);
+export async function generateGaugeSnapshot(user_id, chatroom_id) {
+  try {
+    // 1) Retrieve context and memory from state modules
+    const context = await getContext(user_id, chatroom_id);
+    const memory = await getMemory(user_id, chatroom_id);
 
-  // 2) Retrieve heads (sub-personas) from heads_state
-  const heads = await getHeads(user_id, chatroom_id);
-  const headCount = heads.length;
+    // 2) Retrieve heads (sub-personas) from heads_state
+    const heads = await getHeads(user_id, chatroom_id);
+    const headCount = heads.length;
 
-  // 3) Retrieve tasks from "task_cards"
-  //    (assuming your table has columns user_id, chatroom_id)
-  const { data: allTasks = [], error } = await supabase
-    .from("task_cards")
-    .select(`
-      *,
-      subtasks (
-        *,
-        task_dependencies (*)
-      )
-    `)
-    .eq("user_id", user_id)
-    .eq("chatroom_id", chatroom_id);
+    // 3) Retrieve active tasks from "task_cards"
+    const { data: activeTasks, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id,
+        subtasks (
+          id, status
+        )
+      `)
+      .eq("user_id", user_id)
+      .eq("chatroom_id", chatroom_id)
+      .filter("subtasks.status", "neq", "completed"); // Filter for active subtasks
 
-  if (error) {
-    console.error("Error fetching tasks for gauge:", error);
+    if (error) {
+      throw new Error(`Error fetching tasks: ${error.message}`);
+    }
+
+    // 4) Consolidate gauge data
+    return {
+      priority: context.priority || "Normal",
+      keywords: context.keywords || [],
+      memoryUsage: memory.length,
+      headCount,
+      activeTasksCount: activeTasks.length,
+    };
+  } catch (error) {
+    console.error("Error generating gauge snapshot:", error);
+    throw new Error(`Failed to generate gauge snapshot: ${error.message}`);
   }
-
-  // 4) Find active tasks (i.e., tasks that have at least one incomplete subtask)
-  const activeTasks = allTasks.filter(
-    (task) => 
-      task.subtasks && 
-      task.subtasks.some((st) => st.status !== "completed")
-  );
-
-  // 5) Return the consolidated gauge data
-  return {
-    // e.g., if context has a "priority" or "keywords" field
-    priority: c.priority || "Normal",
-    keywords: c.keywords || [],
-    memoryUsage: m.length,
-    headCount,
-    activeTasksCount: activeTasks.length,
-  };
 }

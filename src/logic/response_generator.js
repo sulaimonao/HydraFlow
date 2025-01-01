@@ -1,26 +1,42 @@
 // src/logic/response_generator.js
-
-import { generateFinalResponse } from './db_helpers.js';
+/**
+ * Generates a final response string based on various inputs.
+ *
+ * @param {Object} params - The input parameters for the response.
+ * @param {Object} params.contextDigest - Summary of the context, including memory entries and highlights.
+ * @param {Object} params.taskCard - Task card details with subtasks.
+ * @param {Object} params.actionsPerformed - Actions performed and their results.
+ * @param {Object} params.feedbackPrompt - Feedback message and hint.
+ * @param {Object} params.gaugeData - System awareness metrics like priority, memory usage, and active tasks.
+ * @param {string} params.userInput - Original user query (optional).
+ * @param {string} params.compressedMemory - Compressed memory string (optional).
+ * @returns {string} - A formatted response string.
+ */
+export function generateFinalResponse({
   contextDigest,
   taskCard,
   actionsPerformed,
   feedbackPrompt,
-  gaugeData,       // Newly added field
-  userInput,       // Display original user input
-  compressedMemory // Display compressed memory if applicable
-}) => {
+  gaugeData,
+  userInput,
+  compressedMemory,
+}) {
   const response = [];
 
-  // (Existing) Show context digest
+  // Helper function to format lists
+  const formatList = (items) =>
+    items.map((item, index) => `  ${index + 1}. ${item}`).join("\n");
+
+  // Show context digest
   if (contextDigest) {
     response.push(
-      `### Context Digest:\n- Total Memory Entries: ${contextDigest.totalEntries}\n- Highlights:\n${contextDigest.highlights
-        .map((entry, index) => `  ${index + 1}. ${entry}`)
-        .join("\n")}`
+      `### Context Digest:\n- Total Memory Entries: ${contextDigest.totalEntries}\n- Highlights:\n${formatList(
+        contextDigest.highlights || []
+      )}`
     );
   }
 
-  // (Existing) Show task card
+  // Show task card
   if (taskCard) {
     response.push(`### Task Card: ${taskCard.goal}`);
     taskCard.subtasks.forEach((subtask) => {
@@ -28,20 +44,20 @@ import { generateFinalResponse } from './db_helpers.js';
     });
   }
 
-  // (Existing) Show results of actions performed
+  // Show actions performed
   if (actionsPerformed) {
     response.push("### Actions Performed:");
-    Object.keys(actionsPerformed).forEach((key) => {
-      response.push(`- **${key}**: ${JSON.stringify(actionsPerformed[key], null, 2)}`);
+    Object.entries(actionsPerformed).forEach(([key, value]) => {
+      response.push(`- **${key}**: ${JSON.stringify(value, null, 2)}`);
     });
   }
 
-  // (Existing) Show feedback prompt
+  // Show feedback prompt
   if (feedbackPrompt) {
     response.push(`### Feedback Prompt:\n${feedbackPrompt.message}\nHint: ${feedbackPrompt.hint}`);
   }
 
-  // (NEW) Show gauge data block if present
+  // Show gauge data
   if (gaugeData) {
     response.push("### System Awareness:");
     response.push(`- Priority: ${gaugeData.priority}`);
@@ -51,7 +67,7 @@ import { generateFinalResponse } from './db_helpers.js';
     response.push(`- Active Tasks: ${gaugeData.activeTasksCount}`);
   }
 
-  // (Optional) Display userInput or compressedMemory if you want
+  // Optional: Show user input or compressed memory
   if (userInput) {
     response.push(`### Original User Query:\n${userInput}`);
   }
@@ -62,4 +78,4 @@ import { generateFinalResponse } from './db_helpers.js';
 
   // Combine into final string
   return response.join("\n\n");
-};
+}

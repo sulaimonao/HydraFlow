@@ -53,5 +53,13 @@ export async function fetchGaugeData({ userId, chatroomId }) {
 // Export other helpers if required
 export {
   fetchAllTasksWithDetails,
-  fetchGaugeData,
+  fetchMemory,
+  upsertMemory,
+  updateSubtasksStatus,
+  fetchContexts,
+  logDebugIssue,
+  fetchAllTemplates,
+  upsertFeedbackEntry,
+  fetchTaskCardsWithSubtasks,
+  fetchGaugeData, // Ensure this is not repeated.
 };

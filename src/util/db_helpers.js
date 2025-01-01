@@ -3,6 +3,27 @@ import { supabase } from "../../lib/db.js";
 import { logError } from "./logger.js";
 
 /**
+ * Updates the status of multiple subtasks in bulk.
+ *
+ * @param {Array<number>} subtaskIds - An array of subtask IDs to update.
+ * @param {string} status - The new status to set (e.g., 'completed').
+ * @throws {Error} - If updating subtasks fails.
+ */
+export async function updateSubtasksStatus(subtaskIds, status) {
+  try {
+    const { error } = await supabase
+      .from("subtasks")
+      .update({ status })
+      .in("id", subtaskIds);
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error updating subtasks: ${error.message}`, { subtaskIds });
+    throw new Error(`Error updating subtasks: ${error.message}`);
+  }
+}
+
+/**
  * Inserts a new task card into the database.
  *
  * @param {Object} taskCard - The task card details to insert.
@@ -51,27 +72,6 @@ export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
   } catch (error) {
     logError(`Error fetching task cards with subtasks: ${error.message}`, { userId, chatroomId });
     throw new Error(`Error fetching task cards with subtasks: ${error.message}`);
-  }
-}
-
-/**
- * Updates the status of multiple subtasks in bulk.
- *
- * @param {Array<number>} subtaskIds - An array of subtask IDs to update.
- * @param {string} status - The new status to set (e.g., 'completed').
- * @throws {Error} - If updating subtasks fails.
- */
-export async function updateSubtasksStatus(subtaskIds, status) {
-  try {
-    const { error } = await supabase
-      .from("subtasks")
-      .update({ status })
-      .in("id", subtaskIds);
-
-    if (error) throw error;
-  } catch (error) {
-    logError(`Error updating subtasks: ${error.message}`, { subtaskIds });
-    throw new Error(`Error updating subtasks: ${error.message}`);
   }
 }
 
@@ -180,27 +180,6 @@ export async function upsertMemory(userId, chatroomId, memory) {
   } catch (error) {
     logError(`Error updating memory: ${error.message}`, { userId, chatroomId });
     throw new Error(`Error updating memory: ${error.message}`);
-  }
-}
-
-/**
- * Updates the status of multiple subtasks in bulk.
- *
- * @param {Array} subtaskIds - An array of subtask IDs to update.
- * @param {string} status - The new status to set (e.g., 'completed').
- * @throws {Error} - If updating subtasks fails.
- */
-export async function updateSubtasksStatus(subtaskIds, status) {
-  try {
-    const { error } = await supabase
-      .from("subtasks")
-      .update({ status })
-      .in("id", subtaskIds);
-
-    if (error) throw error;
-  } catch (error) {
-    logError(`Error updating subtasks: ${error.message}`, { subtaskIds });
-    throw new Error(`Error updating subtasks: ${error.message}`);
   }
 }
 

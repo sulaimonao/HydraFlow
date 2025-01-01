@@ -1,5 +1,5 @@
 // api/gauge.js
-import { fetchGaugeData } from "../lib/db.js";
+import { fetchGaugeData } from "../util/db_helpers.js";
 import { STATUS } from "../src/util/constants.js";
 import { logInfo, logError } from "../src/util/logger.js";
 

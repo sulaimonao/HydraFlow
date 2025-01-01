@@ -1,6 +1,6 @@
 // src/state/heads_state.js
 import { addHead, fetchExistingHead } from "../util/db_helpers.js";
-import { fetchGaugeData } from "../../lib/db.js";
+import { fetchGaugeData } from "../util/db_helpers.js";
 import { logInfo, logError } from "../util/logger.js";
 import { logDebugIssue } from "../util/db_helpers.js";
 

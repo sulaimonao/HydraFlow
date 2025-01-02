@@ -24,3 +24,4 @@ lib/Visualized Schema.png
 check-duplicates.mjs
 find-duplicates.mjs
 fix-duplicates-consolidate.mjs
+collected_project_data.txt

@@ -6,7 +6,6 @@ export default async (req, res) => {
   try {
     const { query } = req.body;
 
-    // Input validation
     if (!query || typeof query !== "string") {
       logError("Invalid query string received.");
       return res.status(400).json({ error: "A valid query string is required." });
@@ -14,11 +13,9 @@ export default async (req, res) => {
 
     logInfo(`Parsing query: ${query}`);
 
-    // Initialize tasks and details
     const actionItems = [];
     const extractedDetails = {};
 
-    // Extract specific actions based on keywords
     if (/summarize.*logs/i.test(query)) {
       actionItems.push("summarize-logs");
       extractedDetails["summarize-logs"] = "Summarize the provided logs for key patterns and errors.";
@@ -31,17 +28,14 @@ export default async (req, res) => {
         personaDescriptionMatch?.[1] || "Generic persona for dynamic user interaction.";
     }
 
-    // Determine priority based on query content
     const priority = query.toLowerCase().includes("urgent") ? "High" : "Normal";
 
-    // Construct a structured task card
     const taskCard = createTaskCard(query, actionItems, priority, extractedDetails);
 
     logInfo("Query parsed successfully and task card created.");
 
-    // Respond with structured data
     res.status(200).json({
-      keywords: query.split(" ").filter((word) => word.length > 2), // Basic keyword extraction
+      keywords: query.split(" ").filter((word) => word.length > 2),
       actionItems,
       taskCard,
       message: "Query parsed successfully.",

@@ -1,10 +1,9 @@
 // api/gauge.js
-import { fetchGaugeData, STATUS, logInfo, logError} from "..src/util";
+import { fetchGaugeData, STATUS, logInfo, logError } from "../src/util";
 
 export default async function gaugeHandler(req, res) {
   try {
     if (req.method === "GET") {
-      // Extract and validate query parameters
       const { user_id, chatroom_id } = req.query;
       if (!user_id || !chatroom_id) {
         logError("Missing required query parameters: user_id or chatroom_id.");
@@ -19,10 +18,8 @@ export default async function gaugeHandler(req, res) {
 
       logInfo(`Fetching gauge data for user ${safeUserId} in chatroom ${safeChatroomId}.`);
 
-      // Fetch gauge data from the database
       const gaugeData = await fetchGaugeData({ userId: safeUserId, chatroomId: safeChatroomId });
 
-      // Handle the case where no gauge data is found
       if (!gaugeData) {
         logInfo(`No gauge data found for user ${safeUserId} in chatroom ${safeChatroomId}.`);
         return res.status(404).json({
@@ -31,7 +28,6 @@ export default async function gaugeHandler(req, res) {
         });
       }
 
-      // Respond with gauge data
       return res.status(200).json({
         status: STATUS.SUCCESS,
         user_id: safeUserId,
@@ -39,13 +35,11 @@ export default async function gaugeHandler(req, res) {
         ...gaugeData,
       });
     } else {
-      // Handle unsupported HTTP methods
       res.setHeader("Allow", ["GET"]);
       logError(`Unsupported method ${req.method} on gauge route.`);
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
   } catch (error) {
-    // Handle unexpected errors
     logError(`Error in gauge route: ${error.message}`);
     return res.status(500).json({
       status: STATUS.ERROR,

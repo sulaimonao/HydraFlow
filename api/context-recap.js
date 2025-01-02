@@ -1,8 +1,7 @@
-// context-recap.js
-import { fetchMemory, logInfo, logError  } from "../src/util";
+// api/context-recap.js
+import { fetchMemory, logInfo, logError } from "../src/util";
 
-export async function compressMemoryHandler(req, res)
- {
+export async function contextRecapHandler(req, res) {
   try {
     if (req.method !== "POST") {
       logError("Invalid HTTP method used for context-recap endpoint.");
@@ -36,4 +35,4 @@ export async function compressMemoryHandler(req, res)
     logError(`Error in context-recap: ${error.message}`);
     return res.status(500).json({ error: "Internal server error." });
   }
-}
+};

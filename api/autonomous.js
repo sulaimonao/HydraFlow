@@ -8,7 +8,7 @@ export default async (req, res) => {
 
     if (!query || !user_id || !chatroom_id) {
       return res.status(400).json({
-        error: "Query, user_id, and chatroom_id are required.",
+        error: "Missing required fields: query, user_id, or chatroom_id.",
       });
     }
 

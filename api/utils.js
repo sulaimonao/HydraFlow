@@ -13,12 +13,10 @@ export default async function handler(req, res) {
     if (action === "compress") {
       const { memory } = req.body;
 
-      // Validate input
       if (!memory || typeof memory !== "string") {
         return res.status(400).json({ error: "A valid memory string is required for compression." });
       }
 
-      // Perform memory compression
       const { compressedMemory } = compressMemory(memory);
 
       logInfo("Memory successfully compressed.");
@@ -26,7 +24,6 @@ export default async function handler(req, res) {
     } else if (action === "recap") {
       const { history, compressedMemory } = req.body;
 
-      // Validate input
       if (!history || !Array.isArray(history)) {
         return res.status(400).json({ error: "A valid history array is required for context recap." });
       }
@@ -35,7 +32,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "A valid compressed memory string is required for context recap." });
       }
 
-      // Perform context recap
       const recap = await contextRecap(history, compressedMemory);
 
       logInfo("Context recap generated successfully.");
@@ -45,6 +41,6 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     logError(`Error in utils API: ${error.message}`);
-    res.status(500).json({ error: "Internal server error. Please try again." });
+    return res.status(500).json({ error: "Internal server error. Please try again." });
   }
 }

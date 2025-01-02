@@ -13,19 +13,19 @@ export async function compressMemoryHandler(req, res) {
       });
     }
 
-    // Fetch existing memory
     logInfo(`Fetching memory for user ${user_id} in chatroom ${chatroom_id}`);
     const existingMemory = await fetchMemory(user_id, chatroom_id) || "";
 
-    // Combine and compress memory
     const combinedMemory = `${existingMemory} ${memory}`.trim();
     const { compressedMemory } = compressMemory(combinedMemory);
 
-    // Update memory in the database
     logInfo(`Updating memory for user ${user_id} in chatroom ${chatroom_id}`);
     await upsertMemory(user_id, chatroom_id, compressedMemory);
 
-    return res.status(200).json({ compressedMemory, message: "Memory compressed successfully." });
+    return res.status(200).json({
+      compressedMemory,
+      message: "Memory compressed successfully.",
+    });
   } catch (error) {
     logError(`Error in compress-memory: ${error.message}`);
     return res.status(500).json({ error: "Failed to compress memory. Please try again." });

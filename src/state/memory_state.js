@@ -3,7 +3,7 @@
 import { fetchMemory, upsertMemory,
   logInfo, logError,
   logDebugIssue 
- } from "../util";
+ } from "../util/index";
 
 /**
  * Appends new memory to the existing memory for a user in a chatroom.

@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/db.js";
-import { logError } from "./logger.js";
+import { logError } from "./index";
 
 /**
  * Updates the status of multiple subtasks in bulk.

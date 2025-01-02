@@ -1,6 +1,6 @@
 // api/utils.js
-import { compressMemory, contextRecap } from "../src/actions";
-import { logInfo, logError } from "../src/util";
+import { compressMemory, contextRecap } from "../src/actions/index";
+import { logInfo, logError } from "../src/util/index";
 
 export default async function handler(req, res) {
   try {

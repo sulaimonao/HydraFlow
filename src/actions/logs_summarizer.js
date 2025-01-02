@@ -1,6 +1,6 @@
 // src/actions/logs_summarizer.js
 
-import { callApiWithRetry } from './action_caller.js';
+import { callApiWithRetry } from './index';
 
 /**
  * Summarizes logs by making an API call to the specified endpoint.

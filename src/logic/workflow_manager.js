@@ -5,15 +5,15 @@ import { parseQuery, compressMemory, generateContextDigest,
    createSubpersona,
    assignHeadTask,
    pruneHead,
-   summarizeLogs, } from "../actions";
+   summarizeLogs, } from "../actions/index";
 import { updateContext, createTaskCard, getHeads,
   appendMemory, getMemory
- } from "../state";
-import { gatherGaugeData } from "./gauge_logic.js";
+ } from "../state/index";
+import { gatherGaugeData } from "./index";
 import {
   shouldCompressMemory,
   canCreateNewHead,
-} from "./conditions.js";
+} from "./index";
 
 /**
  * Orchestrates the entire workflow:

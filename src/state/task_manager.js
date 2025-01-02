@@ -4,7 +4,7 @@ import {
   updateSubtasksStatus,
   logDebugIssue,
   logInfo, logError,
-} from "../util";
+} from "../util/index";
 
 /**
  * Creates a new task card and subtasks for a user in a chatroom.

@@ -1,5 +1,5 @@
 // summarize-logs.js
-import { logInfo, logError } from "../src/util";
+import { logInfo, logError } from "../src/util/index";
 
 export default async function handler(req, res) {
   try {

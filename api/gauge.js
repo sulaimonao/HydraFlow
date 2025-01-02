@@ -1,5 +1,5 @@
 // api/gauge.js
-import { fetchGaugeData, STATUS, logInfo, logError } from "../src/util";
+import { fetchGaugeData, STATUS, logInfo, logError } from "../src/util/index";
 
 export default async function gaugeHandler(req, res) {
   try {

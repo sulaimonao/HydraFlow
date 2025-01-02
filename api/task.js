@@ -6,7 +6,7 @@ import {
   updateSubtasks,
   markTaskCardInactive,
   logInfo, logError
-} from "../util";
+} from "../util/index";
 
 export default async function handler(req, res) {
   try {

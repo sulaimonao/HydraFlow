@@ -1,6 +1,6 @@
 // src/logic/conditions.js
 
-import { fetchExistingHead } from '../util'; 
+import { fetchExistingHead } from '../util/index'; 
 
 /**
  * Existing thresholds

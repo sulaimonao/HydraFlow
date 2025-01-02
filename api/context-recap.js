@@ -1,5 +1,5 @@
 // api/context-recap.js
-import { fetchMemory, logInfo, logError } from "../src/util/index";
+import { fetchMemory, logInfo, logError } from "../src/util/index.js";
 
 export async function contextRecapHandler(req, res) {
   try {

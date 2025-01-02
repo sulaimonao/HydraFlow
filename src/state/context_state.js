@@ -2,7 +2,7 @@
 
 import { fetchContext, upsertContext,
   logInfo, logError, logDebugIssue
- } from '../util/index';
+ } from '../util/index.js';
 
 let currentContext = {};
 const contextHistory = [];

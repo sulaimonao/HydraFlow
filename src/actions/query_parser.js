@@ -1,6 +1,6 @@
 // src/actions/query_parser.js
 
-import { createTaskCard } from "../state/index";
+import { createTaskCard } from "../state/index.js";
 
 export const parseQuery = (query) => {
   const keywords = [];

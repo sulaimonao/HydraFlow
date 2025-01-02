@@ -1,6 +1,6 @@
 // api/autonomous.js
-import { orchestrateContextWorkflow } from "../src/logic/index";
-import { fetchGaugeData, logInfo, logError } from "../src/util/index";
+import { orchestrateContextWorkflow } from "../src/logic/index.js";
+import { fetchGaugeData, logInfo, logError } from "../src/util/.js";
 
 export default async (req, res) => {
   try {

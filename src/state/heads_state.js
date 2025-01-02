@@ -1,7 +1,7 @@
 // src/state/heads_state.js
 import { addHead, fetchExistingHead, fetchGaugeData, logDebugIssue,
   logInfo, logError
- } from "../util/index";
+ } from "../util/index.js";
 
 /**
  * Creates or fetches a head (sub-persona) for a user.

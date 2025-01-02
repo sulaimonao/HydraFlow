@@ -1,6 +1,6 @@
 // api/compress-memory.js
-import { compressMemory } from "../src/actions/index";
-import { fetchMemory, upsertMemory, logInfo, logError } from "../src/util/index";
+import { compressMemory } from "../src/actions/index.js";
+import { fetchMemory, upsertMemory, logInfo, logError } from "../src/util/index.js";
 
 export async function compressMemoryHandler(req, res) {
   try {

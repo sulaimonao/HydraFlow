@@ -1,6 +1,6 @@
 // api/parse-query.js
-import { createTaskCard } from "../src/state/index";
-import { logInfo, logError } from "../src/util/index";
+import { createTaskCard } from "../src/state/index.js";
+import { logInfo, logError } from "../src/util/index.js";
 
 export default async (req, res) => {
   try {

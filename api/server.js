@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import feedbackRoutes from "./routes";
 import { healthCheck } from "./lib/db";
-import { logInfo, logError } from "../src/util/index";
+import { logInfo, logError } from "../src/util/index.js";
 
 const app = express();
 

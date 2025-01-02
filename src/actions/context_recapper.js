@@ -1,6 +1,6 @@
 // src/actions/context_recapper.js
 
-import { callApiWithRetry } from './index';
+import { callApiWithRetry } from './index.js';
 
 /**
  * Summarizes the context history and combines it with compressed memory.

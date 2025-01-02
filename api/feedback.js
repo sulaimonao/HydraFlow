@@ -6,7 +6,7 @@ import {
   fetchFeedbackByUser,
   logInfo,
   logError,
-} from "../src/util/index";
+} from "../src/util/index.js";
 
 export default async function handler(req, res) {
   try {

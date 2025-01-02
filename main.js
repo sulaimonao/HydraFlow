@@ -6,7 +6,7 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-const API_BASE_URL = "https://hydra-flow.vercel.app/api";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api";
 
 // Helper function for API calls
 async function callApi(endpoint, payload = {}, method = "POST") {
@@ -18,7 +18,10 @@ async function callApi(endpoint, payload = {}, method = "POST") {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to call ${endpoint}: ${response.statusText}`);
+      const errorDetail = await response.text();
+      throw new Error(
+        `Failed to call ${endpoint}: ${response.status} ${response.statusText} - ${errorDetail}`
+      );
     }
 
     return await response.json();
@@ -87,6 +90,8 @@ app.post("/api/autonomous", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
+

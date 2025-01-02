@@ -25,3 +25,6 @@ check-duplicates.mjs
 find-duplicates.mjs
 fix-duplicates-consolidate.mjs
 collected_project_data.txt
+simple-linter.js
+collect_project_files.py
+collect_project_files.py

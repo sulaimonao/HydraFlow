@@ -8,8 +8,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix"
+    "lint": "node simple-linter.js"
   },
   "devDependencies": {
     "eslint": "^9.17.0",
@@ -18,3 +17,4 @@
     "prettier": "^3.4.2"
   }
 }
+

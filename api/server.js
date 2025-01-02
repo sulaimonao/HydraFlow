@@ -1,8 +1,8 @@
 // api/server.js
 import express from "express";
 import cors from "cors";
-import feedbackRoutes from "./routes/feedback.js";
-import { logInfo, logError } from "../src/util/logger.js";
+import feedbackRoutes from "./routes";
+import { logInfo, logError } from "../src/util";
 
 const app = express();
 

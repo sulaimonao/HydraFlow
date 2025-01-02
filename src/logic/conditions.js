@@ -1,6 +1,6 @@
 // src/logic/conditions.js
 
-import { fetchExistingHead } from '../util/db_helpers.js'; // Correct named import
+import { fetchExistingHead } from '../util'; 
 
 /**
  * Existing thresholds

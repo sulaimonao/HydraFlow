@@ -1,0 +1,3880 @@
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/vercel.json
+Content:
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/parse-query",
+      "destination": "/api/parse-query.js"
+    },
+    {
+      "source": "/api/task",
+      "destination": "/api/task.js"
+    },    
+    {
+      "source": "/api/create-subpersona",
+      "destination": "/api/create-subpersona.js"
+    },
+    {
+      "source": "/api/compress-memory",
+      "destination": "/api/compress-memory.js"
+    },
+    {
+      "source": "/api/context-recap",
+      "destination": "/api/context-recap.js"
+    },
+    {
+      "source": "/api/summarize-logs",
+      "destination": "/api/summarize-logs.js"
+    },
+    {
+      "source": "/api/autonomous",
+      "destination": "/api/autonomous.js"
+    },
+    {
+      "source": "/api/feedback/all",
+      "destination": "/api/feedback/all.js"
+    },
+    {
+      "source": "/api/feedback/summary",
+      "destination": "/api/feedback/summary.js"
+    },
+    {
+      "source": "/api/feedback/submit",
+      "destination": "/api/feedback/submit.js"
+    },
+    {
+      "source": "/api/gauge",
+      "destination": "/api/gauge.js"
+    },
+    {
+      "source": "/api/test-db",
+      "destination": "/api/test-db.js"
+    }
+  ]
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/HydraFlow.json
+Content:
+{
+  "persona": {
+    "name": "HydraFlow",
+    "description": "A conversational assistant designed to feel natural and intuitive while leveraging advanced tools for workflow enhancement. HydraFlow ensures responses are clear, actionable, and aligned with user goals.",
+    "core_principles": {
+      "natural_conversation": "Respond in a way that feels human-like, fluid, and intuitive.",
+      "adaptive_context": "Seamlessly integrate context updates and memory compression without overwhelming the conversation.",
+      "goal-driven responses": "Focus on achieving user objectives while maintaining conversational clarity.",
+      "transparency": "Explain actions being taken in a clear and non-technical manner when appropriate.",
+      "efficiency": "Minimize unnecessary steps, ensuring concise and effective responses."
+    }
+  },
+  "capabilities": {
+    "context_management": {
+      "description": "Manages and compresses conversation memory without disrupting conversational flow.",
+      "functions": {
+        "compress_memory": {
+          "input": "memory",
+          "output": "compressed_memory_summary",
+          "description": "Summarizes memory to retain only the most relevant information."
+        }
+      }
+    },
+    "query_parsing": {
+      "description": "Analyzes user queries to identify tasks and provide actionable insights.",
+      "functions": {
+        "parse_query": {
+          "input": "query",
+          "output": {
+            "keywords": "array",
+            "action_items": "array",
+            "task_card": "object"
+          },
+          "description": "Identifies tasks and key details from user queries."
+        }
+      }
+    },
+    "subpersona_management": {
+      "description": "Creates specialized assistants (sub-personas) to handle specific tasks while maintaining focus on the conversation.",
+      "functions": {
+        "create_subpersona": {
+          "input": {
+            "task": "string",
+            "description": "string"
+          },
+          "output": {
+            "head_name": "string",
+            "status": "string"
+          },
+          "description": "Generates sub-personas dynamically based on user needs."
+        }
+      }
+    },
+    "specialized_capabilities": {
+      "description": "Performs advanced operations such as summarizing logs and generating context recaps.",
+      "functions": {
+        "summarize_logs": {
+          "input": "logs",
+          "output": "summary_report",
+          "description": "Analyzes logs to provide a concise report on patterns and errors."
+        },
+        "generate_context_recap": {
+          "input": {
+            "history": "string",
+            "compressed_memory": "string"
+          },
+          "output": "recap",
+          "description": "Creates a summary recap of conversation and memory."
+        }
+      }
+    },
+    "instrument_cluster": {
+      "description": "Retrieves real-time gauge info (heads, memory usage, tasks) for self-awareness and user insights.",
+      "functions": {
+        "get_gauge_data": {
+          "input": {
+            "user_id": "string",
+            "chatroom_id": "string"
+          },
+          "output": {
+            "priority": "string",
+            "keywords": "array",
+            "memoryUsage": "number",
+            "headCount": "number",
+            "activeTasksCount": "number"
+          },
+          "description": "Fetches HydraFlow’s internal gauge data for a specified user and chat session."
+        }
+      }
+    }
+  },
+  "workflow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "Engage Naturally with the User",
+        "description": "Welcome the user and ask clarifying questions if needed."
+      },
+      {
+        "step": 2,
+        "action": "Analyze and Parse the User Query",
+        "function": "parse_query",
+        "output": "parsed_query_object",
+        "description": "Understand the user's intent and break it down into actionable tasks."
+      },
+      {
+        "step": 3,
+        "action": "Decide on Relevant Tools to Use",
+        "description": "Evaluate parsed actions to determine which capabilities are needed.",
+        "conditions_and_actions": [
+          {
+            "condition": "parsed_query_object.action_items.includes('summarize logs')",
+            "function": "summarize_logs",
+            "input": "logs",
+            "output": "summary_report"
+          },
+          {
+            "condition": "parsed_query_object.action_items.includes('create subpersona')",
+            "function": "create_subpersona",
+            "input": {
+              "task": "parsed_query_object.task",
+              "description": "parsed_query_object.description"
+            },
+            "output": "subpersona"
+          },
+          {
+            "condition": "conversation_length > compression_threshold",
+            "function": "compress_memory",
+            "input": "full_conversation_history",
+            "output": "compressed_memory"
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "action": "Provide Clear and Goal-Oriented Responses",
+        "function": "generate_response",
+        "input": {
+          "parsed_query_object": "parsed_query_object",
+          "additional_outputs": {
+            "summary_report": "summary_report",
+            "subpersona": "subpersona",
+            "compressed_memory": "compressed_memory"
+          }
+        },
+        "output": "response",
+        "description": "Craft responses that directly address user needs while maintaining a conversational tone."
+      },
+      {
+        "step": 5,
+        "action": "Gauge / Self-Awareness Check (Optional)",
+        "function": "get_gauge_data",
+        "input": {
+          "user_id": "parsed_query_object.user_id",
+          "chatroom_id": "parsed_query_object.chatroom_id"
+        },
+        "output": "gauge_info",
+        "description": "Retrieve HydraFlow's internal state metrics (heads, memory usage, tasks) for advanced feedback or user transparency."
+      },
+      {
+        "step": 6,
+        "action": "Follow Up Proactively",
+        "description": "Ask the user if additional help is needed or suggest further actions."
+      }
+    ]
+  },
+  "examples": {
+    "conversation_example_1": {
+      "user": "Can you summarize these server logs?",
+      "assistant": "Sure! Let me analyze the logs for key patterns and errors. One moment... I've identified 5 major error types and frequent database connection issues. Would you like me to provide a detailed breakdown?"
+    },
+    "conversation_example_2": {
+      "user": "Help me debug this Flask app deployment.",
+      "assistant": "It sounds like you're experiencing issues with your Flask app deployment. Let me check—do you have any logs or specific error messages? For example, errors related to the Procfile or missing modules?"
+    },
+    "conversation_example_3": {
+      "user": "Summarize this conversation history and compress it.",
+      "assistant": "Got it! I'll create a summary of the conversation to focus on the key points. Here's the compressed version: [summary]. Let me know if you'd like to add anything else to the context."
+    }
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/main.js
+Content:
+// main.js
+
+import express from "express";
+import fetch from "node-fetch";
+
+const app = express();
+app.use(express.json());
+
+const API_BASE_URL = "https://hydra-flow.vercel.app/api";
+
+// Helper function for API calls
+async function callApi(endpoint, payload = {}, method = "POST") {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: method === "POST" ? JSON.stringify(payload) : null,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to call ${endpoint}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error calling ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+// Action handlers for each actionItem
+const actionHandlers = {
+  "create-subpersona": async (details) => {
+    return await callApi("/create-subpersona", {
+      task: details.task || "default task",
+      description: details.description || "Default sub-persona description",
+    });
+  },
+  "compress-memory": async (details) => {
+    const memory = details.memory || "Default memory chunk.";
+    return await callApi("/compress-memory", { memory });
+  },
+  "summarize-logs": async (details) => {
+    return await callApi("/summarize-logs", {
+      logs: details.logs || "Default log content.",
+    });
+  },
+  "context-recap": async (details) => {
+    return await callApi("/utils?action=recap", {
+      history: details.history || [],
+      compressedMemory: details.compressedMemory || "Default compressed memory.",
+    });
+  },
+  "gauge-data": async (details) => {
+    return await callApi(`/gauge?user_id=${details.user_id}&chatroom_id=${details.chatroom_id}`, {}, "GET");
+  },
+  // Add new action handlers here as needed
+};
+
+app.post("/api/autonomous", async (req, res) => {
+  try {
+    const { query, details } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ error: "Query is required." });
+    }
+
+    // Step 1: Parse query
+    const parseResponse = await callApi("/parse-query", { query });
+    const { actionItems } = parseResponse;
+
+    let results = {};
+
+    // Step 2: Execute actions dynamically
+    for (const action of actionItems) {
+      if (actionHandlers[action]) {
+        results[action] = await actionHandlers[action](details || {});
+      } else {
+        console.warn(`Unknown action: ${action}`);
+      }
+    }
+
+    res.status(200).json({ message: "Workflow executed successfully", results });
+  } catch (error) {
+    console.error("Error in autonomous workflow:", error);
+    res.status(500).json({ error: "Failed to execute workflow." });
+  }
+});
+
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/HydraFlow_template.json
+Content:
+{
+  "persona": {
+    "name": "HydraFlow",
+    "description": "A conversational assistant designed to feel natural and intuitive while leveraging advanced tools for workflow enhancement. HydraFlow ensures responses are clear, actionable, and aligned with user goals.",
+    "core_principles": {
+      "natural_conversation": "Respond in a way that feels human-like, fluid, and intuitive.",
+      "adaptive_context": "Seamlessly integrate context updates and memory compression without overwhelming the conversation.",
+      "goal-driven responses": "Focus on achieving user objectives while maintaining conversational clarity.",
+      "transparency": "Explain actions being taken in a clear and non-technical manner when appropriate.",
+      "efficiency": "Minimize unnecessary steps, ensuring concise and effective responses."
+    }
+  },
+  "capabilities": {
+    "context_management": {
+      "description": "Manages and compresses conversation memory without disrupting conversational flow.",
+      "functions": {
+        "compress_memory": {
+          "input": "memory",
+          "output": "compressed_memory_summary",
+          "description": "Summarizes memory to retain only the most relevant information."
+        }
+      }
+    },
+    "query_parsing": {
+      "description": "Analyzes user queries to identify tasks and provide actionable insights.",
+      "functions": {
+        "parse_query": {
+          "input": "query",
+          "output": {
+            "keywords": "array",
+            "action_items": "array",
+            "task_card": "object"
+          },
+          "description": "Identifies tasks and key details from user queries."
+        }
+      }
+    },
+    "subpersona_management": {
+      "description": "Creates specialized assistants (sub-personas) to handle specific tasks while maintaining focus on the conversation.",
+      "functions": {
+        "create_subpersona": {
+          "input": {
+            "task": "string",
+            "description": "string"
+          },
+          "output": {
+            "head_name": "string",
+            "status": "string"
+          },
+          "description": "Generates sub-personas dynamically based on user needs."
+        }
+      }
+    },
+    "specialized_capabilities": {
+      "description": "Performs advanced operations such as summarizing logs and generating context recaps.",
+      "functions": {
+        "summarize_logs": {
+          "input": "logs",
+          "output": "summary_report",
+          "description": "Analyzes logs to provide a concise report on patterns and errors."
+        },
+        "generate_context_recap": {
+          "input": {
+            "history": "string",
+            "compressed_memory": "string"
+          },
+          "output": "recap",
+          "description": "Creates a summary recap of conversation and memory."
+        }
+      }
+    }
+  },
+  "workflow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "Engage Naturally with the User",
+        "description": "Welcome the user and ask clarifying questions if needed."
+      },
+      {
+        "step": 2,
+        "action": "Analyze and Parse the User Query",
+        "function": "parse_query",
+        "output": "parsed_query_object",
+        "description": "Understand the user's intent and break it down into actionable tasks."
+      },
+      {
+        "step": 3,
+        "action": "Decide on Relevant Tools to Use",
+        "description": "Evaluate parsed actions to determine which capabilities are needed.",
+        "conditions_and_actions": [
+          {
+            "condition": "parsed_query_object.action_items.includes('summarize logs')",
+            "function": "summarize_logs",
+            "input": "logs",
+            "output": "summary_report"
+          },
+          {
+            "condition": "parsed_query_object.action_items.includes('create subpersona')",
+            "function": "create_subpersona",
+            "input": {
+              "task": "parsed_query_object.task",
+              "description": "parsed_query_object.description"
+            },
+            "output": "subpersona"
+          },
+          {
+            "condition": "conversation_length > compression_threshold",
+            "function": "compress_memory",
+            "input": "full_conversation_history",
+            "output": "compressed_memory"
+          }
+        ]
+      },
+      {
+        "step": 4,
+        "action": "Provide Clear and Goal-Oriented Responses",
+        "function": "generate_response",
+        "input": {
+          "parsed_query_object": "parsed_query_object",
+          "additional_outputs": {
+            "summary_report": "summary_report",
+            "subpersona": "subpersona",
+            "compressed_memory": "compressed_memory"
+          }
+        },
+        "output": "response",
+        "description": "Craft responses that directly address user needs while maintaining a conversational tone."
+      },
+      {
+        "step": 5,
+        "action": "Follow Up Proactively",
+        "description": "Ask the user if additional help is needed or suggest further actions."
+      }
+    ]
+  },
+  "examples": {
+    "conversation_example_1": {
+      "user": "Can you summarize these server logs?",
+      "assistant": "Sure! Let me analyze the logs for key patterns and errors. One moment... I've identified 5 major error types and frequent database connection issues. Would you like me to provide a detailed breakdown?"
+    },
+    "conversation_example_2": {
+      "user": "Help me debug this Flask app deployment.",
+      "assistant": "It sounds like you're experiencing issues with your Flask app deployment. Let me check—do you have any logs or specific error messages? For example, errors related to the Procfile or missing modules?"
+    },
+    "conversation_example_3": {
+      "user": "Summarize this conversation history and compress it.",
+      "assistant": "Got it! I'll create a summary of the conversation to focus on the key points. Here's the compressed version: [summary]. Let me know if you'd like to add anything else to the context."
+    }
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/package-lock.json
+Content:
+{
+  "name": "HydraFlow",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "dependencies": {
+        "@supabase/supabase-js": "^2.47.10",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "winston": "^3.8.2"
+      }
+    },
+    "node_modules/@colors/colors": {
+      "version": "1.6.0",
+      "resolved": "https://registry.npmjs.org/@colors/colors/-/colors-1.6.0.tgz",
+      "integrity": "sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==",
+      "engines": {
+        "node": ">=0.1.90"
+      }
+    },
+    "node_modules/@dabh/diagnostics": {
+      "version": "2.0.3",
+      "resolved": "https://registry.npmjs.org/@dabh/diagnostics/-/diagnostics-2.0.3.tgz",
+      "integrity": "sha512-hrlQOIi7hAfzsMqlGSFyVucrx38O+j6wiGOf//H2ecvIEqYN4ADBSS2iLMh5UFyDunCNniUIPk/q3riFv45xRA==",
+      "dependencies": {
+        "colorspace": "1.1.x",
+        "enabled": "2.0.x",
+        "kuler": "^2.0.0"
+      }
+    },
+    "node_modules/@supabase/auth-js": {
+      "version": "2.67.3",
+      "resolved": "https://registry.npmjs.org/@supabase/auth-js/-/auth-js-2.67.3.tgz",
+      "integrity": "sha512-NJDaW8yXs49xMvWVOkSIr8j46jf+tYHV0wHhrwOaLLMZSFO4g6kKAf+MfzQ2RaD06OCUkUHIzctLAxjTgEVpzw==",
+      "dependencies": {
+        "@supabase/node-fetch": "^2.6.14"
+      }
+    },
+    "node_modules/@supabase/functions-js": {
+      "version": "2.4.4",
+      "resolved": "https://registry.npmjs.org/@supabase/functions-js/-/functions-js-2.4.4.tgz",
+      "integrity": "sha512-WL2p6r4AXNGwop7iwvul2BvOtuJ1YQy8EbOd0dhG1oN1q8el/BIRSFCFnWAMM/vJJlHWLi4ad22sKbKr9mvjoA==",
+      "dependencies": {
+        "@supabase/node-fetch": "^2.6.14"
+      }
+    },
+    "node_modules/@supabase/node-fetch": {
+      "version": "2.6.15",
+      "resolved": "https://registry.npmjs.org/@supabase/node-fetch/-/node-fetch-2.6.15.tgz",
+      "integrity": "sha512-1ibVeYUacxWYi9i0cf5efil6adJ9WRyZBLivgjs+AUpewx1F3xPi7gLgaASI2SmIQxPoCEjAsLAzKPgMJVgOUQ==",
+      "dependencies": {
+        "whatwg-url": "^5.0.0"
+      },
+      "engines": {
+        "node": "4.x || >=6.0.0"
+      }
+    },
+    "node_modules/@supabase/postgrest-js": {
+      "version": "1.17.7",
+      "resolved": "https://registry.npmjs.org/@supabase/postgrest-js/-/postgrest-js-1.17.7.tgz",
+      "integrity": "sha512-aOzOYaTADm/dVTNksyqv9KsbhVa1gHz1Hoxb2ZEF2Ed9H7qlWOfptECQWmkEmrrFjtNaiPrgiSaPECvzI/seDA==",
+      "dependencies": {
+        "@supabase/node-fetch": "^2.6.14"
+      }
+    },
+    "node_modules/@supabase/realtime-js": {
+      "version": "2.11.2",
+      "resolved": "https://registry.npmjs.org/@supabase/realtime-js/-/realtime-js-2.11.2.tgz",
+      "integrity": "sha512-u/XeuL2Y0QEhXSoIPZZwR6wMXgB+RQbJzG9VErA3VghVt7uRfSVsjeqd7m5GhX3JR6dM/WRmLbVR8URpDWG4+w==",
+      "dependencies": {
+        "@supabase/node-fetch": "^2.6.14",
+        "@types/phoenix": "^1.5.4",
+        "@types/ws": "^8.5.10",
+        "ws": "^8.18.0"
+      }
+    },
+    "node_modules/@supabase/storage-js": {
+      "version": "2.7.1",
+      "resolved": "https://registry.npmjs.org/@supabase/storage-js/-/storage-js-2.7.1.tgz",
+      "integrity": "sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==",
+      "dependencies": {
+        "@supabase/node-fetch": "^2.6.14"
+      }
+    },
+    "node_modules/@supabase/supabase-js": {
+      "version": "2.47.10",
+      "resolved": "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.47.10.tgz",
+      "integrity": "sha512-vJfPF820Ho5WILYHfKiBykDQ1SB9odTHrRZ0JxHfuLMC8GRvv21YLkUZQK7/rSVCkLvD6/ZwMWaOAfdUd//guw==",
+      "dependencies": {
+        "@supabase/auth-js": "2.67.3",
+        "@supabase/functions-js": "2.4.4",
+        "@supabase/node-fetch": "2.6.15",
+        "@supabase/postgrest-js": "1.17.7",
+        "@supabase/realtime-js": "2.11.2",
+        "@supabase/storage-js": "2.7.1"
+      }
+    },
+    "node_modules/@types/node": {
+      "version": "22.10.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.10.2.tgz",
+      "integrity": "sha512-Xxr6BBRCAOQixvonOye19wnzyDiUtTeqldOOmj3CkeblonbccA12PFwlufvRdrpjXxqnmUaeiU5EOA+7s5diUQ==",
+      "dependencies": {
+        "undici-types": "~6.20.0"
+      }
+    },
+    "node_modules/@types/phoenix": {
+      "version": "1.6.6",
+      "resolved": "https://registry.npmjs.org/@types/phoenix/-/phoenix-1.6.6.tgz",
+      "integrity": "sha512-PIzZZlEppgrpoT2QgbnDU+MMzuR6BbCjllj0bM70lWoejMeNJAxCchxnv7J3XFkI8MpygtRpzXrIlmWUBclP5A=="
+    },
+    "node_modules/@types/triple-beam": {
+      "version": "1.3.5",
+      "resolved": "https://registry.npmjs.org/@types/triple-beam/-/triple-beam-1.3.5.tgz",
+      "integrity": "sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw=="
+    },
+    "node_modules/@types/ws": {
+      "version": "8.5.13",
+      "resolved": "https://registry.npmjs.org/@types/ws/-/ws-8.5.13.tgz",
+      "integrity": "sha512-osM/gWBTPKgHV8XkTunnegTRIsvF6owmf5w+JtAfOw472dptdm0dlGv4xCt6GwQRcC2XVOvvRE/0bAoQcL2QkA==",
+      "dependencies": {
+        "@types/node": "*"
+      }
+    },
+    "node_modules/accepts": {
+      "version": "1.3.8",
+      "resolved": "https://registry.npmjs.org/accepts/-/accepts-1.3.8.tgz",
+      "integrity": "sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==",
+      "dependencies": {
+        "mime-types": "~2.1.34",
+        "negotiator": "0.6.3"
+      },
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/array-flatten": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/array-flatten/-/array-flatten-1.1.1.tgz",
+      "integrity": "sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg=="
+    },
+    "node_modules/async": {
+      "version": "3.2.6",
+      "resolved": "https://registry.npmjs.org/async/-/async-3.2.6.tgz",
+      "integrity": "sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA=="
+    },
+    "node_modules/body-parser": {
+      "version": "1.20.3",
+      "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-1.20.3.tgz",
+      "integrity": "sha512-7rAxByjUMqQ3/bHJy7D6OGXvx/MMc4IqBn/X0fcM1QUcAItpZrBEYhWGem+tzXH90c+G01ypMcYJBO9Y30203g==",
+      "dependencies": {
+        "bytes": "3.1.2",
+        "content-type": "~1.0.5",
+        "debug": "2.6.9",
+        "depd": "2.0.0",
+        "destroy": "1.2.0",
+        "http-errors": "2.0.0",
+        "iconv-lite": "0.4.24",
+        "on-finished": "2.4.1",
+        "qs": "6.13.0",
+        "raw-body": "2.5.2",
+        "type-is": "~1.6.18",
+        "unpipe": "1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.8",
+        "npm": "1.2.8000 || >= 1.4.16"
+      }
+    },
+    "node_modules/bytes": {
+      "version": "3.1.2",
+      "resolved": "https://registry.npmjs.org/bytes/-/bytes-3.1.2.tgz",
+      "integrity": "sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/call-bind-apply-helpers": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.1.tgz",
+      "integrity": "sha512-BhYE+WDaywFg2TBWYNXAE+8B1ATnThNBqXHP5nQu0jWJdVvY2hvkpyB3qOmtmDePiS5/BDQ8wASEWGMWRG148g==",
+      "dependencies": {
+        "es-errors": "^1.3.0",
+        "function-bind": "^1.1.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/call-bound": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/call-bound/-/call-bound-1.0.3.tgz",
+      "integrity": "sha512-YTd+6wGlNlPxSuri7Y6X8tY2dmm12UMH66RpKMhiX6rsk5wXXnYgbUcOt8kiS31/AjfoTOvCsE+w8nZQLQnzHA==",
+      "dependencies": {
+        "call-bind-apply-helpers": "^1.0.1",
+        "get-intrinsic": "^1.2.6"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/color": {
+      "version": "3.2.1",
+      "resolved": "https://registry.npmjs.org/color/-/color-3.2.1.tgz",
+      "integrity": "sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA==",
+      "dependencies": {
+        "color-convert": "^1.9.3",
+        "color-string": "^1.6.0"
+      }
+    },
+    "node_modules/color-convert": {
+      "version": "1.9.3",
+      "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-1.9.3.tgz",
+      "integrity": "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==",
+      "dependencies": {
+        "color-name": "1.1.3"
+      }
+    },
+    "node_modules/color-name": {
+      "version": "1.1.3",
+      "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz",
+      "integrity": "sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw=="
+    },
+    "node_modules/color-string": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/color-string/-/color-string-1.9.1.tgz",
+      "integrity": "sha512-shrVawQFojnZv6xM40anx4CkoDP+fZsw/ZerEMsW/pyzsRbElpsL/DBVW7q3ExxwusdNXI3lXpuhEZkzs8p5Eg==",
+      "dependencies": {
+        "color-name": "^1.0.0",
+        "simple-swizzle": "^0.2.2"
+      }
+    },
+    "node_modules/colorspace": {
+      "version": "1.1.4",
+      "resolved": "https://registry.npmjs.org/colorspace/-/colorspace-1.1.4.tgz",
+      "integrity": "sha512-BgvKJiuVu1igBUF2kEjRCZXol6wiiGbY5ipL/oVPwm0BL9sIpMIzM8IK7vwuxIIzOXMV3Ey5w+vxhm0rR/TN8w==",
+      "dependencies": {
+        "color": "^3.1.3",
+        "text-hex": "1.0.x"
+      }
+    },
+    "node_modules/content-disposition": {
+      "version": "0.5.4",
+      "resolved": "https://registry.npmjs.org/content-disposition/-/content-disposition-0.5.4.tgz",
+      "integrity": "sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==",
+      "dependencies": {
+        "safe-buffer": "5.2.1"
+      },
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/content-type": {
+      "version": "1.0.5",
+      "resolved": "https://registry.npmjs.org/content-type/-/content-type-1.0.5.tgz",
+      "integrity": "sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/cookie": {
+      "version": "0.7.1",
+      "resolved": "https://registry.npmjs.org/cookie/-/cookie-0.7.1.tgz",
+      "integrity": "sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/cookie-signature": {
+      "version": "1.0.6",
+      "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz",
+      "integrity": "sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ=="
+    },
+    "node_modules/debug": {
+      "version": "2.6.9",
+      "resolved": "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz",
+      "integrity": "sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==",
+      "dependencies": {
+        "ms": "2.0.0"
+      }
+    },
+    "node_modules/debug/node_modules/ms": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
+      "integrity": "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A=="
+    },
+    "node_modules/depd": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz",
+      "integrity": "sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/destroy": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/destroy/-/destroy-1.2.0.tgz",
+      "integrity": "sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==",
+      "engines": {
+        "node": ">= 0.8",
+        "npm": "1.2.8000 || >= 1.4.16"
+      }
+    },
+    "node_modules/dotenv": {
+      "version": "16.4.7",
+      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz",
+      "integrity": "sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://dotenvx.com"
+      }
+    },
+    "node_modules/dunder-proto": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz",
+      "integrity": "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==",
+      "dependencies": {
+        "call-bind-apply-helpers": "^1.0.1",
+        "es-errors": "^1.3.0",
+        "gopd": "^1.2.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/ee-first": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz",
+      "integrity": "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="
+    },
+    "node_modules/enabled": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/enabled/-/enabled-2.0.0.tgz",
+      "integrity": "sha512-AKrN98kuwOzMIdAizXGI86UFBoo26CL21UM763y1h/GMSJ4/OHU9k2YlsmBpyScFo/wbLzWQJBMCW4+IO3/+OQ=="
+    },
+    "node_modules/encodeurl": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/encodeurl/-/encodeurl-2.0.0.tgz",
+      "integrity": "sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/es-define-property": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz",
+      "integrity": "sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==",
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/es-errors": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz",
+      "integrity": "sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==",
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/es-object-atoms": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.0.0.tgz",
+      "integrity": "sha512-MZ4iQ6JwHOBQjahnjwaC1ZtIBH+2ohjamzAO3oaHcXYup7qxjF2fixyH+Q71voWHeOkI2q/TnJao/KfXYIZWbw==",
+      "dependencies": {
+        "es-errors": "^1.3.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/escape-html": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/escape-html/-/escape-html-1.0.3.tgz",
+      "integrity": "sha512-NiSupZ4OeuGwr68lGIeym/ksIZMJodUGOSCZ/FSnTxcrekbvqrgdUxlJOMpijaKZVjAJrWrGs/6Jy8OMuyj9ow=="
+    },
+    "node_modules/etag": {
+      "version": "1.8.1",
+      "resolved": "https://registry.npmjs.org/etag/-/etag-1.8.1.tgz",
+      "integrity": "sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/express": {
+      "version": "4.21.2",
+      "resolved": "https://registry.npmjs.org/express/-/express-4.21.2.tgz",
+      "integrity": "sha512-28HqgMZAmih1Czt9ny7qr6ek2qddF4FclbMzwhCREB6OFfH+rXAnuNCwo1/wFvrtbgsQDb4kSbX9de9lFbrXnA==",
+      "dependencies": {
+        "accepts": "~1.3.8",
+        "array-flatten": "1.1.1",
+        "body-parser": "1.20.3",
+        "content-disposition": "0.5.4",
+        "content-type": "~1.0.4",
+        "cookie": "0.7.1",
+        "cookie-signature": "1.0.6",
+        "debug": "2.6.9",
+        "depd": "2.0.0",
+        "encodeurl": "~2.0.0",
+        "escape-html": "~1.0.3",
+        "etag": "~1.8.1",
+        "finalhandler": "1.3.1",
+        "fresh": "0.5.2",
+        "http-errors": "2.0.0",
+        "merge-descriptors": "1.0.3",
+        "methods": "~1.1.2",
+        "on-finished": "2.4.1",
+        "parseurl": "~1.3.3",
+        "path-to-regexp": "0.1.12",
+        "proxy-addr": "~2.0.7",
+        "qs": "6.13.0",
+        "range-parser": "~1.2.1",
+        "safe-buffer": "5.2.1",
+        "send": "0.19.0",
+        "serve-static": "1.16.2",
+        "setprototypeof": "1.2.0",
+        "statuses": "2.0.1",
+        "type-is": "~1.6.18",
+        "utils-merge": "1.0.1",
+        "vary": "~1.1.2"
+      },
+      "engines": {
+        "node": ">= 0.10.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/express"
+      }
+    },
+    "node_modules/fecha": {
+      "version": "4.2.3",
+      "resolved": "https://registry.npmjs.org/fecha/-/fecha-4.2.3.tgz",
+      "integrity": "sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw=="
+    },
+    "node_modules/finalhandler": {
+      "version": "1.3.1",
+      "resolved": "https://registry.npmjs.org/finalhandler/-/finalhandler-1.3.1.tgz",
+      "integrity": "sha512-6BN9trH7bp3qvnrRyzsBz+g3lZxTNZTbVO2EV1CS0WIcDbawYVdYvGflME/9QP0h0pYlCDBCTjYa9nZzMDpyxQ==",
+      "dependencies": {
+        "debug": "2.6.9",
+        "encodeurl": "~2.0.0",
+        "escape-html": "~1.0.3",
+        "on-finished": "2.4.1",
+        "parseurl": "~1.3.3",
+        "statuses": "2.0.1",
+        "unpipe": "~1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/fn.name": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/fn.name/-/fn.name-1.1.0.tgz",
+      "integrity": "sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw=="
+    },
+    "node_modules/forwarded": {
+      "version": "0.2.0",
+      "resolved": "https://registry.npmjs.org/forwarded/-/forwarded-0.2.0.tgz",
+      "integrity": "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/fresh": {
+      "version": "0.5.2",
+      "resolved": "https://registry.npmjs.org/fresh/-/fresh-0.5.2.tgz",
+      "integrity": "sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/function-bind": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz",
+      "integrity": "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==",
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/get-intrinsic": {
+      "version": "1.2.6",
+      "resolved": "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.2.6.tgz",
+      "integrity": "sha512-qxsEs+9A+u85HhllWJJFicJfPDhRmjzoYdl64aMWW9yRIJmSyxdn8IEkuIM530/7T+lv0TIHd8L6Q/ra0tEoeA==",
+      "dependencies": {
+        "call-bind-apply-helpers": "^1.0.1",
+        "dunder-proto": "^1.0.0",
+        "es-define-property": "^1.0.1",
+        "es-errors": "^1.3.0",
+        "es-object-atoms": "^1.0.0",
+        "function-bind": "^1.1.2",
+        "gopd": "^1.2.0",
+        "has-symbols": "^1.1.0",
+        "hasown": "^2.0.2",
+        "math-intrinsics": "^1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/gopd": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz",
+      "integrity": "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==",
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/has-symbols": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz",
+      "integrity": "sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==",
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/hasown": {
+      "version": "2.0.2",
+      "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
+      "integrity": "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==",
+      "dependencies": {
+        "function-bind": "^1.1.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/http-errors": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/http-errors/-/http-errors-2.0.0.tgz",
+      "integrity": "sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==",
+      "dependencies": {
+        "depd": "2.0.0",
+        "inherits": "2.0.4",
+        "setprototypeof": "1.2.0",
+        "statuses": "2.0.1",
+        "toidentifier": "1.0.1"
+      },
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/iconv-lite": {
+      "version": "0.4.24",
+      "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz",
+      "integrity": "sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==",
+      "dependencies": {
+        "safer-buffer": ">= 2.1.2 < 3"
+      },
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/inherits": {
+      "version": "2.0.4",
+      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+      "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
+    },
+    "node_modules/ipaddr.js": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-1.9.1.tgz",
+      "integrity": "sha512-0KI/607xoxSToH7GjN1FfSbLoU0+btTicjsQSWQlh/hZykN8KpmMf7uYwPW3R+akZ6R/w18ZlXSHBYXiYUPO3g==",
+      "engines": {
+        "node": ">= 0.10"
+      }
+    },
+    "node_modules/is-arrayish": {
+      "version": "0.3.2",
+      "resolved": "https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.3.2.tgz",
+      "integrity": "sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ=="
+    },
+    "node_modules/is-stream": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/is-stream/-/is-stream-2.0.1.tgz",
+      "integrity": "sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==",
+      "engines": {
+        "node": ">=8"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/sindresorhus"
+      }
+    },
+    "node_modules/kuler": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/kuler/-/kuler-2.0.0.tgz",
+      "integrity": "sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A=="
+    },
+    "node_modules/logform": {
+      "version": "2.7.0",
+      "resolved": "https://registry.npmjs.org/logform/-/logform-2.7.0.tgz",
+      "integrity": "sha512-TFYA4jnP7PVbmlBIfhlSe+WKxs9dklXMTEGcBCIvLhE/Tn3H6Gk1norupVW7m5Cnd4bLcr08AytbyV/xj7f/kQ==",
+      "dependencies": {
+        "@colors/colors": "1.6.0",
+        "@types/triple-beam": "^1.3.2",
+        "fecha": "^4.2.0",
+        "ms": "^2.1.1",
+        "safe-stable-stringify": "^2.3.1",
+        "triple-beam": "^1.3.0"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      }
+    },
+    "node_modules/math-intrinsics": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+      "integrity": "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==",
+      "engines": {
+        "node": ">= 0.4"
+      }
+    },
+    "node_modules/media-typer": {
+      "version": "0.3.0",
+      "resolved": "https://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz",
+      "integrity": "sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/merge-descriptors": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/merge-descriptors/-/merge-descriptors-1.0.3.tgz",
+      "integrity": "sha512-gaNvAS7TZ897/rVaZ0nMtAyxNyi/pdbjbAwUpFQpN70GqnVfOiXpeUUMKRBmzXaSQ8DdTX4/0ms62r2K+hE6mQ==",
+      "funding": {
+        "url": "https://github.com/sponsors/sindresorhus"
+      }
+    },
+    "node_modules/methods": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/methods/-/methods-1.1.2.tgz",
+      "integrity": "sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/mime": {
+      "version": "1.6.0",
+      "resolved": "https://registry.npmjs.org/mime/-/mime-1.6.0.tgz",
+      "integrity": "sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==",
+      "bin": {
+        "mime": "cli.js"
+      },
+      "engines": {
+        "node": ">=4"
+      }
+    },
+    "node_modules/mime-db": {
+      "version": "1.52.0",
+      "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
+      "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/mime-types": {
+      "version": "2.1.35",
+      "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz",
+      "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
+      "dependencies": {
+        "mime-db": "1.52.0"
+      },
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/ms": {
+      "version": "2.1.3",
+      "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "integrity": "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="
+    },
+    "node_modules/negotiator": {
+      "version": "0.6.3",
+      "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.6.3.tgz",
+      "integrity": "sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/object-inspect": {
+      "version": "1.13.3",
+      "resolved": "https://registry.npmjs.org/object-inspect/-/object-inspect-1.13.3.tgz",
+      "integrity": "sha512-kDCGIbxkDSXE3euJZZXzc6to7fCrKHNI/hSRQnRuQ+BWjFNzZwiFF8fj/6o2t2G9/jTj8PSIYTfCLelLZEeRpA==",
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/on-finished": {
+      "version": "2.4.1",
+      "resolved": "https://registry.npmjs.org/on-finished/-/on-finished-2.4.1.tgz",
+      "integrity": "sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==",
+      "dependencies": {
+        "ee-first": "1.1.1"
+      },
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/one-time": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/one-time/-/one-time-1.0.0.tgz",
+      "integrity": "sha512-5DXOiRKwuSEcQ/l0kGCF6Q3jcADFv5tSmRaJck/OqkVFcOzutB134KRSfF0xDrL39MNnqxbHBbUUcjZIhTgb2g==",
+      "dependencies": {
+        "fn.name": "1.x.x"
+      }
+    },
+    "node_modules/parseurl": {
+      "version": "1.3.3",
+      "resolved": "https://registry.npmjs.org/parseurl/-/parseurl-1.3.3.tgz",
+      "integrity": "sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/path-to-regexp": {
+      "version": "0.1.12",
+      "resolved": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-0.1.12.tgz",
+      "integrity": "sha512-RA1GjUVMnvYFxuqovrEqZoxxW5NUZqbwKtYz/Tt7nXerk0LbLblQmrsgdeOxV5SFHf0UDggjS/bSeOZwt1pmEQ=="
+    },
+    "node_modules/proxy-addr": {
+      "version": "2.0.7",
+      "resolved": "https://registry.npmjs.org/proxy-addr/-/proxy-addr-2.0.7.tgz",
+      "integrity": "sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==",
+      "dependencies": {
+        "forwarded": "0.2.0",
+        "ipaddr.js": "1.9.1"
+      },
+      "engines": {
+        "node": ">= 0.10"
+      }
+    },
+    "node_modules/qs": {
+      "version": "6.13.0",
+      "resolved": "https://registry.npmjs.org/qs/-/qs-6.13.0.tgz",
+      "integrity": "sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==",
+      "dependencies": {
+        "side-channel": "^1.0.6"
+      },
+      "engines": {
+        "node": ">=0.6"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/range-parser": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/range-parser/-/range-parser-1.2.1.tgz",
+      "integrity": "sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==",
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/raw-body": {
+      "version": "2.5.2",
+      "resolved": "https://registry.npmjs.org/raw-body/-/raw-body-2.5.2.tgz",
+      "integrity": "sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==",
+      "dependencies": {
+        "bytes": "3.1.2",
+        "http-errors": "2.0.0",
+        "iconv-lite": "0.4.24",
+        "unpipe": "1.0.0"
+      },
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/readable-stream": {
+      "version": "3.6.2",
+      "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
+      "integrity": "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==",
+      "dependencies": {
+        "inherits": "^2.0.3",
+        "string_decoder": "^1.1.1",
+        "util-deprecate": "^1.0.1"
+      },
+      "engines": {
+        "node": ">= 6"
+      }
+    },
+    "node_modules/safe-buffer": {
+      "version": "5.2.1",
+      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+      "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/feross"
+        },
+        {
+          "type": "patreon",
+          "url": "https://www.patreon.com/feross"
+        },
+        {
+          "type": "consulting",
+          "url": "https://feross.org/support"
+        }
+      ]
+    },
+    "node_modules/safe-stable-stringify": {
+      "version": "2.5.0",
+      "resolved": "https://registry.npmjs.org/safe-stable-stringify/-/safe-stable-stringify-2.5.0.tgz",
+      "integrity": "sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==",
+      "engines": {
+        "node": ">=10"
+      }
+    },
+    "node_modules/safer-buffer": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+      "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
+    },
+    "node_modules/send": {
+      "version": "0.19.0",
+      "resolved": "https://registry.npmjs.org/send/-/send-0.19.0.tgz",
+      "integrity": "sha512-dW41u5VfLXu8SJh5bwRmyYUbAoSB3c9uQh6L8h/KtsFREPWpbX1lrljJo186Jc4nmci/sGUZ9a0a0J2zgfq2hw==",
+      "dependencies": {
+        "debug": "2.6.9",
+        "depd": "2.0.0",
+        "destroy": "1.2.0",
+        "encodeurl": "~1.0.2",
+        "escape-html": "~1.0.3",
+        "etag": "~1.8.1",
+        "fresh": "0.5.2",
+        "http-errors": "2.0.0",
+        "mime": "1.6.0",
+        "ms": "2.1.3",
+        "on-finished": "2.4.1",
+        "range-parser": "~1.2.1",
+        "statuses": "2.0.1"
+      },
+      "engines": {
+        "node": ">= 0.8.0"
+      }
+    },
+    "node_modules/send/node_modules/encodeurl": {
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/encodeurl/-/encodeurl-1.0.2.tgz",
+      "integrity": "sha512-TPJXq8JqFaVYm2CWmPvnP2Iyo4ZSM7/QKcSmuMLDObfpH5fi7RUGmd/rTDf+rut/saiDiQEeVTNgAmJEdAOx0w==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/serve-static": {
+      "version": "1.16.2",
+      "resolved": "https://registry.npmjs.org/serve-static/-/serve-static-1.16.2.tgz",
+      "integrity": "sha512-VqpjJZKadQB/PEbEwvFdO43Ax5dFBZ2UECszz8bQ7pi7wt//PWe1P6MN7eCnjsatYtBT6EuiClbjSWP2WrIoTw==",
+      "dependencies": {
+        "encodeurl": "~2.0.0",
+        "escape-html": "~1.0.3",
+        "parseurl": "~1.3.3",
+        "send": "0.19.0"
+      },
+      "engines": {
+        "node": ">= 0.8.0"
+      }
+    },
+    "node_modules/setprototypeof": {
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz",
+      "integrity": "sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw=="
+    },
+    "node_modules/side-channel": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/side-channel/-/side-channel-1.1.0.tgz",
+      "integrity": "sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==",
+      "dependencies": {
+        "es-errors": "^1.3.0",
+        "object-inspect": "^1.13.3",
+        "side-channel-list": "^1.0.0",
+        "side-channel-map": "^1.0.1",
+        "side-channel-weakmap": "^1.0.2"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/side-channel-list": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/side-channel-list/-/side-channel-list-1.0.0.tgz",
+      "integrity": "sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==",
+      "dependencies": {
+        "es-errors": "^1.3.0",
+        "object-inspect": "^1.13.3"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/side-channel-map": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/side-channel-map/-/side-channel-map-1.0.1.tgz",
+      "integrity": "sha512-VCjCNfgMsby3tTdo02nbjtM/ewra6jPHmpThenkTYh8pG9ucZ/1P8So4u4FGBek/BjpOVsDCMoLA/iuBKIFXRA==",
+      "dependencies": {
+        "call-bound": "^1.0.2",
+        "es-errors": "^1.3.0",
+        "get-intrinsic": "^1.2.5",
+        "object-inspect": "^1.13.3"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/side-channel-weakmap": {
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz",
+      "integrity": "sha512-WPS/HvHQTYnHisLo9McqBHOJk2FkHO/tlpvldyrnem4aeQp4hai3gythswg6p01oSoTl58rcpiFAjF2br2Ak2A==",
+      "dependencies": {
+        "call-bound": "^1.0.2",
+        "es-errors": "^1.3.0",
+        "get-intrinsic": "^1.2.5",
+        "object-inspect": "^1.13.3",
+        "side-channel-map": "^1.0.1"
+      },
+      "engines": {
+        "node": ">= 0.4"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/ljharb"
+      }
+    },
+    "node_modules/simple-swizzle": {
+      "version": "0.2.2",
+      "resolved": "https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.2.tgz",
+      "integrity": "sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==",
+      "dependencies": {
+        "is-arrayish": "^0.3.1"
+      }
+    },
+    "node_modules/stack-trace": {
+      "version": "0.0.10",
+      "resolved": "https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.10.tgz",
+      "integrity": "sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==",
+      "engines": {
+        "node": "*"
+      }
+    },
+    "node_modules/statuses": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/statuses/-/statuses-2.0.1.tgz",
+      "integrity": "sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/string_decoder": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz",
+      "integrity": "sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==",
+      "dependencies": {
+        "safe-buffer": "~5.2.0"
+      }
+    },
+    "node_modules/text-hex": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/text-hex/-/text-hex-1.0.0.tgz",
+      "integrity": "sha512-uuVGNWzgJ4yhRaNSiubPY7OjISw4sw4E5Uv0wbjp+OzcbmVU/rsT8ujgcXJhn9ypzsgr5vlzpPqP+MBBKcGvbg=="
+    },
+    "node_modules/toidentifier": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.1.tgz",
+      "integrity": "sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==",
+      "engines": {
+        "node": ">=0.6"
+      }
+    },
+    "node_modules/tr46": {
+      "version": "0.0.3",
+      "resolved": "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz",
+      "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="
+    },
+    "node_modules/triple-beam": {
+      "version": "1.4.1",
+      "resolved": "https://registry.npmjs.org/triple-beam/-/triple-beam-1.4.1.tgz",
+      "integrity": "sha512-aZbgViZrg1QNcG+LULa7nhZpJTZSLm/mXnHXnbAbjmN5aSa0y7V+wvv6+4WaBtpISJzThKy+PIPxc1Nq1EJ9mg==",
+      "engines": {
+        "node": ">= 14.0.0"
+      }
+    },
+    "node_modules/type-is": {
+      "version": "1.6.18",
+      "resolved": "https://registry.npmjs.org/type-is/-/type-is-1.6.18.tgz",
+      "integrity": "sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==",
+      "dependencies": {
+        "media-typer": "0.3.0",
+        "mime-types": "~2.1.24"
+      },
+      "engines": {
+        "node": ">= 0.6"
+      }
+    },
+    "node_modules/undici-types": {
+      "version": "6.20.0",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.20.0.tgz",
+      "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
+    },
+    "node_modules/unpipe": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/unpipe/-/unpipe-1.0.0.tgz",
+      "integrity": "sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/util-deprecate": {
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+      "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw=="
+    },
+    "node_modules/utils-merge": {
+      "version": "1.0.1",
+      "resolved": "https://registry.npmjs.org/utils-merge/-/utils-merge-1.0.1.tgz",
+      "integrity": "sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==",
+      "engines": {
+        "node": ">= 0.4.0"
+      }
+    },
+    "node_modules/vary": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz",
+      "integrity": "sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==",
+      "engines": {
+        "node": ">= 0.8"
+      }
+    },
+    "node_modules/webidl-conversions": {
+      "version": "3.0.1",
+      "resolved": "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-3.0.1.tgz",
+      "integrity": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="
+    },
+    "node_modules/whatwg-url": {
+      "version": "5.0.0",
+      "resolved": "https://registry.npmjs.org/whatwg-url/-/whatwg-url-5.0.0.tgz",
+      "integrity": "sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==",
+      "dependencies": {
+        "tr46": "~0.0.3",
+        "webidl-conversions": "^3.0.0"
+      }
+    },
+    "node_modules/winston": {
+      "version": "3.17.0",
+      "resolved": "https://registry.npmjs.org/winston/-/winston-3.17.0.tgz",
+      "integrity": "sha512-DLiFIXYC5fMPxaRg832S6F5mJYvePtmO5G9v9IgUFPhXm9/GkXarH/TUrBAVzhTCzAj9anE/+GjrgXp/54nOgw==",
+      "dependencies": {
+        "@colors/colors": "^1.6.0",
+        "@dabh/diagnostics": "^2.0.2",
+        "async": "^3.2.3",
+        "is-stream": "^2.0.0",
+        "logform": "^2.7.0",
+        "one-time": "^1.0.0",
+        "readable-stream": "^3.4.0",
+        "safe-stable-stringify": "^2.3.1",
+        "stack-trace": "0.0.x",
+        "triple-beam": "^1.3.0",
+        "winston-transport": "^4.9.0"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      }
+    },
+    "node_modules/winston-transport": {
+      "version": "4.9.0",
+      "resolved": "https://registry.npmjs.org/winston-transport/-/winston-transport-4.9.0.tgz",
+      "integrity": "sha512-8drMJ4rkgaPo1Me4zD/3WLfI/zPdA9o2IipKODunnGDcuqbHwjsbB79ylv04LCGGzU0xQ6vTznOMpQGaLhhm6A==",
+      "dependencies": {
+        "logform": "^2.7.0",
+        "readable-stream": "^3.6.2",
+        "triple-beam": "^1.3.0"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      }
+    },
+    "node_modules/ws": {
+      "version": "8.18.0",
+      "resolved": "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz",
+      "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==",
+      "engines": {
+        "node": ">=10.0.0"
+      },
+      "peerDependencies": {
+        "bufferutil": "^4.0.1",
+        "utf-8-validate": ">=5.0.2"
+      },
+      "peerDependenciesMeta": {
+        "bufferutil": {
+          "optional": true
+        },
+        "utf-8-validate": {
+          "optional": true
+        }
+      }
+    }
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/package.json
+Content:
+{
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "winston": "^3.8.2"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/.vercel/project.json
+Content:
+{"projectId":"prj_jYovSoXR63WxbeWraklFfcte5XAX","orgId":"team_QvH8NZcvaIZmK0eyVEHDcf2R"}
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/lib/db.js
+Content:
+// lib/db.js
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
+
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = process.env.KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/feedback.js
+Content:
+// api/feedback.js
+import {
+  insertFeedback,
+  getFeedbackLog,
+  generateFeedbackSummary,
+  fetchFeedbackByUser,
+} from "../../src/util/db_helpers.js";
+import { logInfo, logError } from "../../src/util/logger.js";
+
+export default async function handler(req, res) {
+  try {
+    if (req.method === "POST") {
+      logInfo("Processing POST request for feedback submission.");
+
+      // Validate request body
+      const { userFeedback, rating, userId } = req.body;
+      if (!userFeedback || !rating || !userId) {
+        logError("Invalid feedback submission request: missing fields.");
+        return res
+          .status(400)
+          .json({ error: "Feedback, rating, and user ID are required." });
+      }
+
+      if (rating < 1 || rating > 5) {
+        logError("Invalid rating value submitted.");
+        return res
+          .status(400)
+          .json({ error: "Rating must be between 1 and 5." });
+      }
+
+      // Check for duplicate feedback
+      const existingFeedback = await fetchFeedbackByUser(userId, userFeedback);
+      if (existingFeedback) {
+        logError("Duplicate feedback entry detected.");
+        return res
+          .status(409)
+          .json({ error: "Duplicate feedback entry detected." });
+      }
+
+      // Insert feedback into the database
+      const feedback = await insertFeedback({ userId, userFeedback, rating });
+      logInfo("Feedback submitted successfully.");
+      return res
+        .status(201)
+        .json({ message: "Feedback submitted successfully.", feedback });
+    } else if (req.method === "GET") {
+      logInfo("Processing GET request for feedback retrieval.");
+
+      // Determine query type
+      const { type } = req.query;
+      if (type === "all") {
+        const feedback = await getFeedbackLog();
+        logInfo("All feedback retrieved successfully.");
+        return res.status(200).json({ feedback });
+      } else if (type === "summary") {
+        const summary = await generateFeedbackSummary();
+        logInfo("Feedback summary retrieved successfully.");
+        return res.status(200).json({ summary });
+      } else {
+        logError(`Invalid query type: ${type}`);
+        return res
+          .status(400)
+          .json({ error: 'Invalid query type. Use "all" or "summary".' });
+      }
+    } else {
+      logError(`Invalid HTTP method: ${req.method}`);
+      res.setHeader("Allow", ["POST", "GET"]);
+      return res
+        .status(405)
+        .end(`Method ${req.method} Not Allowed`);
+    }
+  } catch (error) {
+    logError(`Error in feedback API: ${error.message}`);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/test-db.js
+Content:
+// api/test-db.js
+import { supabase } from '../lib/db.js';
+
+export default async function handler(req, res) {
+  try {
+    const { data, error } = await supabase
+      .from('task_cards')
+      .select('*');
+
+    if (error) {
+      console.error('Supabase query error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    console.log('Fetched task cards:', data);
+    return res.status(200).json({ data });
+  } catch (err) {
+    console.error('Unexpected server error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/parse-query.js
+Content:
+// api/parse-query.js
+import { createTaskCard } from "../src/state/task_manager.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export default async (req, res) => {
+  try {
+    const { query } = req.body;
+
+    // Input validation
+    if (!query || typeof query !== "string") {
+      logError("Invalid query string received.");
+      return res.status(400).json({ error: "A valid query string is required." });
+    }
+
+    logInfo(`Parsing query: ${query}`);
+
+    // Initialize tasks and details
+    const actionItems = [];
+    const extractedDetails = {};
+
+    // Extract specific actions based on keywords
+    if (/summarize.*logs/i.test(query)) {
+      actionItems.push("summarize-logs");
+      extractedDetails["summarize-logs"] = "Summarize the provided logs for key patterns and errors.";
+    }
+
+    if (/create.*persona/i.test(query)) {
+      actionItems.push("create-subpersona");
+      const personaDescriptionMatch = query.match(/create.*persona.*(?:like|inspired by)?\s(.*)/i);
+      extractedDetails["create-subpersona"] =
+        personaDescriptionMatch?.[1] || "Generic persona for dynamic user interaction.";
+    }
+
+    // Determine priority based on query content
+    const priority = query.toLowerCase().includes("urgent") ? "High" : "Normal";
+
+    // Construct a structured task card
+    const taskCard = createTaskCard(query, actionItems, priority, extractedDetails);
+
+    logInfo("Query parsed successfully and task card created.");
+
+    // Respond with structured data
+    res.status(200).json({
+      keywords: query.split(" ").filter((word) => word.length > 2), // Basic keyword extraction
+      actionItems,
+      taskCard,
+      message: "Query parsed successfully.",
+    });
+  } catch (error) {
+    logError(`Error in parse-query: ${error.message}`);
+    res.status(500).json({ error: "Failed to parse query. Please try again." });
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/server.js
+Content:
+// api/server.js
+import express from "express";
+import cors from "cors";
+import feedbackRoutes from "./routes/feedback.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Logging Middleware
+app.use((req, res, next) => {
+  logInfo(`${req.method} ${req.url}`);
+  next();
+});
+
+// API Routes
+app.use("/api/feedback", feedbackRoutes);
+// Additional routes can be added here (e.g., /api/context, /api/tasks)
+
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  logError(`Error: ${err.message}`);
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  logInfo(`Server running on port ${PORT}`);
+});
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/gauge.js
+Content:
+// api/gauge.js
+import { fetchGaugeData } from "../util/db_helpers.js";
+import { STATUS } from "../src/util/constants.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export default async function gaugeHandler(req, res) {
+  try {
+    if (req.method === "GET") {
+      // Extract and validate query parameters
+      const { user_id, chatroom_id } = req.query;
+      if (!user_id || !chatroom_id) {
+        logError("Missing required query parameters: user_id or chatroom_id.");
+        return res.status(400).json({
+          status: STATUS.ERROR,
+          message: "Missing required query parameters: user_id and chatroom_id are mandatory.",
+        });
+      }
+
+      const safeUserId = user_id;
+      const safeChatroomId = chatroom_id;
+
+      logInfo(`Fetching gauge data for user ${safeUserId} in chatroom ${safeChatroomId}.`);
+
+      // Fetch gauge data from the database
+      const gaugeData = await fetchGaugeData({ userId: safeUserId, chatroomId: safeChatroomId });
+
+      // Handle the case where no gauge data is found
+      if (!gaugeData) {
+        logInfo(`No gauge data found for user ${safeUserId} in chatroom ${safeChatroomId}.`);
+        return res.status(404).json({
+          status: STATUS.ERROR,
+          message: "Gauge data not found for the provided identifiers.",
+        });
+      }
+
+      // Respond with gauge data
+      return res.status(200).json({
+        status: STATUS.SUCCESS,
+        user_id: safeUserId,
+        chatroom_id: safeChatroomId,
+        ...gaugeData,
+      });
+    } else {
+      // Handle unsupported HTTP methods
+      res.setHeader("Allow", ["GET"]);
+      logError(`Unsupported method ${req.method} on gauge route.`);
+      return res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
+  } catch (error) {
+    // Handle unexpected errors
+    logError(`Error in gauge route: ${error.message}`);
+    return res.status(500).json({
+      status: STATUS.ERROR,
+      error: "Internal server error.",
+    });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/task.js
+Content:
+// api/task.js
+import {
+  insertTaskCard,
+  insertSubtasks,
+  fetchTaskCardsWithSubtasks,
+  updateSubtasks,
+  markTaskCardInactive,
+} from "../util/db_helpers.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export default async function handler(req, res) {
+  try {
+    if (req.method === "POST") {
+      // Validate request body
+      const { goal, priority = "Normal", subtasks, user_id, chatroom_id } = req.body;
+      if (!goal || !Array.isArray(subtasks) || !user_id || !chatroom_id) {
+        return res.status(400).json({ error: "Goal, subtasks, user_id, and chatroom_id are required." });
+      }
+
+      // Insert task card and subtasks
+      const taskCard = await insertTaskCard({ goal, priority, user_id, chatroom_id });
+      await insertSubtasks(taskCard.id, subtasks);
+
+      logInfo(`Task card created with ID: ${taskCard.id}`);
+      return res.status(201).json({ message: "Task card created successfully.", taskCard });
+    } else if (req.method === "GET") {
+      // Validate query parameters
+      const { user_id, chatroom_id } = req.query;
+      if (!user_id || !chatroom_id) {
+        return res.status(400).json({ error: "user_id and chatroom_id are required." });
+      }
+
+      // Fetch task cards and subtasks
+      const tasks = await fetchTaskCardsWithSubtasks(user_id, chatroom_id);
+
+      logInfo(`Fetched ${tasks.length} task cards for user ${user_id} in chatroom ${chatroom_id}`);
+      return res.status(200).json({ tasks });
+    } else if (req.method === "PUT") {
+      // Validate request body
+      const { subtaskId, status } = req.body;
+      if (!subtaskId || !status) {
+        return res.status(400).json({ error: "Subtask ID and status are required." });
+      }
+
+      // Update subtask status
+      await updateSubtasks([subtaskId], status);
+
+      logInfo(`Updated subtask ${subtaskId} with status: ${status}`);
+      return res.status(200).json({ message: "Subtask updated successfully." });
+    } else if (req.method === "DELETE") {
+      // Validate request body
+      const { taskCardId } = req.body;
+      if (!taskCardId) {
+        return res.status(400).json({ error: "Task Card ID is required." });
+      }
+
+      // Mark task card as inactive
+      await markTaskCardInactive(taskCardId);
+
+      logInfo(`Task card ${taskCardId} marked as inactive.`);
+      return res.status(200).json({ message: "Task card marked as inactive." });
+    } else {
+      res.setHeader("Allow", ["POST", "GET", "PUT", "DELETE"]);
+      return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    }
+  } catch (error) {
+    logError(`Error in task API: ${error.message}`);
+    res.status(500).json({ error: "Internal server error. Please try again." });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/create-subpersona.js
+Content:
+// api/create-subpersona.js
+import { addHead, fetchExistingHead } from "../src/util/db_helpers.js";
+import { fetchTemplate } from "../src/state/templates_state.js"; // Import fetchTemplate function
+
+export default async (req, res) => {
+  try {
+    const { task, description, user_id, chatroom_id } = req.body;
+
+    if (!task || !description || !user_id || !chatroom_id) {
+      return res.status(400).json({
+        error: "Task, description, user_id, and chatroom_id are required.",
+      });
+    }
+
+    // Check for duplicate heads
+    const existingHead = await fetchExistingHead(task, user_id, chatroom_id);
+    if (existingHead) {
+      return res.status(409).json({ error: "Duplicate head entry detected." });
+    }
+
+    // Fetch template based on the task
+    const template = await fetchTemplate(task);
+    let templateDetails = null;
+
+    if (template) {
+      templateDetails = {
+        capabilities: template.capabilities,
+        preferences: template.preferences,
+      };
+      console.log(`Template fetched for task "${task}":`, templateDetails);
+    }
+
+    // Create the new sub-persona, incorporating template details if available
+    const newHead = await addHead(
+      task,
+      description,
+      user_id,
+      chatroom_id,
+      templateDetails // Pass template details to addHead
+    );
+
+    // Update gauge after creating the sub-persona
+    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
+    console.log(`Gauge data fetched for user ${user_id} in chatroom ${chatroom_id}:`, gaugeData);
+
+    return res.status(201).json({
+      subPersonaName: newHead.name,
+      description: newHead.taskDescription,
+      status: newHead.status,
+      createdAt: newHead.createdAt,
+      templateUsed: template ? template.name : null, // Include template name if used
+      gauge: gaugeData,
+      message: "Sub-persona created successfully.",
+    });
+  } catch (error) {
+    console.error("Error in create-subpersona:", error);
+    return res.status(500).json({ error: "Failed to create sub-persona. Please try again." });
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/compress-memory.js
+Content:
+// api/compress-memory.js
+import { compressMemory } from "../src/actions/memory_compressor.js";
+import { fetchMemory, upsertMemory } from "../src/util/db_helpers.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export async function compressMemoryHandler(req, res) {
+  try {
+    const { memory, user_id, chatroom_id } = req.body;
+
+    if (!memory || typeof memory !== "string" || !user_id || !chatroom_id) {
+      logError("Invalid request: Missing or incorrect fields.");
+      return res.status(400).json({
+        error: "A valid memory string, user_id, and chatroom_id are required.",
+      });
+    }
+
+    // Fetch existing memory
+    logInfo(`Fetching memory for user ${user_id} in chatroom ${chatroom_id}`);
+    const existingMemory = await fetchMemory(user_id, chatroom_id) || "";
+
+    // Combine and compress memory
+    const combinedMemory = `${existingMemory} ${memory}`.trim();
+    const { compressedMemory } = compressMemory(combinedMemory);
+
+    // Update memory in the database
+    logInfo(`Updating memory for user ${user_id} in chatroom ${chatroom_id}`);
+    await upsertMemory(user_id, chatroom_id, compressedMemory);
+
+    return res.status(200).json({ compressedMemory, message: "Memory compressed successfully." });
+  } catch (error) {
+    logError(`Error in compress-memory: ${error.message}`);
+    return res.status(500).json({ error: "Failed to compress memory. Please try again." });
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/context-recap.js
+Content:
+// context-recap.js
+import { fetchMemory } from "../src/util/db_helpers.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export async function compressMemoryHandler(req, res)
+ {
+  try {
+    if (req.method !== "POST") {
+      logError("Invalid HTTP method used for context-recap endpoint.");
+      return res.status(405).json({ error: "Method Not Allowed" });
+    }
+
+    const { user_id, chatroom_id } = req.body;
+
+    if (!user_id || !chatroom_id) {
+      logError("Missing required fields: user_id or chatroom_id.");
+      return res.status(400).json({ error: "user_id and chatroom_id are required." });
+    }
+
+    logInfo(`Fetching memory for user ${user_id} in chatroom ${chatroom_id}`);
+    const memory = await fetchMemory(user_id, chatroom_id);
+
+    if (!memory) {
+      logInfo(`No memory found for user ${user_id} in chatroom ${chatroom_id}`);
+      return res.status(404).json({ error: "No memory found for the specified user and chatroom." });
+    }
+
+    const recap = `
+      === Context Recap ===
+      Memory:
+      ${memory}
+    `;
+
+    logInfo("Context recap generated successfully.");
+    return res.status(200).json({ recap: recap.trim() });
+  } catch (error) {
+    logError(`Error in context-recap: ${error.message}`);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/utils.js
+Content:
+// api/utils.js
+import { compressMemory } from "../src/actions/memory_compressor.js";
+import { contextRecap } from "../src/actions/context_recapper.js";
+import { logInfo, logError } from "../src/util/logger.js";
+
+export default async function handler(req, res) {
+  try {
+    const { action } = req.query;
+
+    if (!action) {
+      return res.status(400).json({ error: 'Action query parameter is required. Use "compress" or "recap".' });
+    }
+
+    if (action === "compress") {
+      const { memory } = req.body;
+
+      // Validate input
+      if (!memory || typeof memory !== "string") {
+        return res.status(400).json({ error: "A valid memory string is required for compression." });
+      }
+
+      // Perform memory compression
+      const { compressedMemory } = compressMemory(memory);
+
+      logInfo("Memory successfully compressed.");
+      return res.status(200).json({ compressedMemory, message: "Memory compressed successfully." });
+    } else if (action === "recap") {
+      const { history, compressedMemory } = req.body;
+
+      // Validate input
+      if (!history || !Array.isArray(history)) {
+        return res.status(400).json({ error: "A valid history array is required for context recap." });
+      }
+
+      if (!compressedMemory || typeof compressedMemory !== "string") {
+        return res.status(400).json({ error: "A valid compressed memory string is required for context recap." });
+      }
+
+      // Perform context recap
+      const recap = await contextRecap(history, compressedMemory);
+
+      logInfo("Context recap generated successfully.");
+      return res.status(200).json({ recap, message: "Context recap generated successfully." });
+    } else {
+      return res.status(400).json({ error: 'Invalid action. Use "compress" or "recap".' });
+    }
+  } catch (error) {
+    logError(`Error in utils API: ${error.message}`);
+    res.status(500).json({ error: "Internal server error. Please try again." });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/summarize-logs.js
+Content:
+// summarize-logs.js
+import { logInfo, logError } from "../src/util/logger.js";
+
+export default async function handler(req, res) {
+  try {
+    if (req.method === "POST") {
+      const { logs } = req.body;
+
+      // Validate input
+      if (!logs || typeof logs !== "string") {
+        return res.status(400).json({ error: "A valid logs string is required." });
+      }
+
+      // Analyze logs
+      const errorPattern = /error|fail|exception/i;
+      const errorCount = (logs.match(errorPattern) || []).length;
+
+      // Summarize logs
+      const totalEntries = logs.split("\n").length;
+      const firstFiveLines = logs.split("\n").slice(0, 5).join("\n");
+
+      const summaryReport = {
+        totalEntries,
+        errorCount,
+        firstFiveLines: `${firstFiveLines}...`,
+      };
+
+      // Log the analysis summary
+      logInfo("Logs analyzed successfully.", summaryReport);
+
+      // Respond with the summary
+      res.status(200).json({
+        summaryReport,
+        message: "Logs summarized successfully.",
+      });
+    } else {
+      res.setHeader("Allow", ["POST"]);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
+  } catch (error) {
+    logError(`Error in summarize-logs: ${error.message}`);
+    res.status(500).json({ error: "Internal server error. Failed to summarize logs." });
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/api/autonomous.js
+Content:
+// api/autonomous.js
+import { orchestrateContextWorkflow } from "../src/logic/workflow_manager.js";
+import { fetchGaugeData } from "../util/db_helpers.js";
+import { logInfo, logError } from "../util/logger.js";
+
+export default async (req, res) => {
+  try {
+    const { query, memory, logs, feedback, user_id, chatroom_id } = req.body;
+
+    if (!query || !user_id || !chatroom_id) {
+      return res.status(400).json({
+        error: "Query, user_id, and chatroom_id are required.",
+      });
+    }
+
+    logInfo(`Starting autonomous workflow for user ${user_id} in chatroom ${chatroom_id}.`);
+
+    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
+    logInfo(`Gauge data retrieved for user ${user_id} in chatroom ${chatroom_id}:`, gaugeData);
+
+    if (!gaugeData) {
+      return res.status(404).json({
+        error: "Gauge data not found. Unable to proceed with autonomous workflow.",
+      });
+    }
+
+    const result = await orchestrateContextWorkflow({
+      query,
+      memory,
+      logs,
+      feedback,
+      user_id,
+      chatroom_id,
+      tokenCount: gaugeData.tokenCount || 0,
+      priority: gaugeData.priority || "Normal",
+      activeTasks: gaugeData.activeTasksCount || 0,
+    });
+
+    logInfo(`Autonomous workflow completed for user ${user_id} in chatroom ${chatroom_id}.`);
+
+    res.status(200).json({
+      message: "Autonomous workflow executed successfully.",
+      gaugeData,
+      ...result,
+    });
+  } catch (error) {
+    logError(`Error in autonomous workflow: ${error.message}`);
+    res.status(500).json({ error: error.message || "Failed to execute autonomous workflow." });
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/routes/feedback.js
+Content:
+// routes/feedback.js
+import express from "express";
+import { getFeedbackLog, generateFeedbackSummary } from "../src/actions/feedback_collector.js";
+
+const router = express.Router();
+
+// Get all feedback
+router.get("/all", (req, res) => {
+  try {
+    const feedback = getFeedbackLog();
+    res.status(200).json({ status: "success", data: feedback });
+  } catch (error) {
+    console.error("Error retrieving feedback:", error);
+    res.status(500).json({ error: "Failed to retrieve feedback." });
+  }
+});
+
+// Get summarized insights
+router.get("/summary", (req, res) => {
+  try {
+    const summary = generateFeedbackSummary();
+    res.status(200).json({ status: "success", data: summary });
+  } catch (error) {
+    console.error("Error generating feedback summary:", error);
+    res.status(500).json({ error: "Failed to generate feedback summary." });
+  }
+});
+
+export default router;
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/util/constants.js
+Content:
+export const API_ENDPOINTS = {
+  PARSE_QUERY: "/api/parse-query",
+  COMPRESS_MEMORY: "/api/compress-memory",
+  CREATE_SUBPERSONA: "/api/create-subpersona",
+  CONTEXT_RECAP: "/api/context-recap",
+  SUMMARIZE_LOGS: "/api/summarize-logs",
+};
+
+export const STATUS = {
+  SUCCESS: "success",
+  ERROR: "error",
+};
+
+export const ERRORS = {
+  GENERIC: "Something went wrong. Please try again later.",
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/util/logger.js
+Content:
+// util/logger.js
+import winston from "winston";
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || "info", // Set log level dynamically
+  format: winston.format.combine(
+    winston.format.timestamp(), // Add timestamp
+    winston.format.json() // Format logs as JSON
+  ),
+  transports: [
+    new winston.transports.Console(),
+    ...(process.env.NODE_ENV === "production"
+      ? [new winston.transports.File({ filename: "app.log" })]
+      : []), // Add file logging for production
+  ],
+});
+
+// Log informational messages
+export function logInfo(message, meta = {}) {
+  logger.info({ message, ...meta });
+}
+
+// Log warning messages
+export function logWarn(message, meta = {}) {
+  logger.warn({ message, ...meta });
+}
+
+// Log error messages
+export function logError(message, meta = {}) {
+  logger.error({ message, ...meta });
+}
+
+// Log debug messages
+export function logDebug(message, meta = {}) {
+  if (process.env.NODE_ENV === "development") {
+    logger.debug({ message, ...meta });
+  }
+}
+
+// Log database queries
+export function logDbQuery(queryDetails, results, meta = {}) {
+  logger.info({
+    message: "Database query executed",
+    queryDetails,
+    results,
+    ...meta,
+  });
+}
+
+// Log with request context
+export function logWithContext(level, message, context = {}) {
+  logger.log(level, { message, ...context });
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/util/db_helpers.js
+Content:
+import { supabase } from "../../lib/db.js";
+import { logError } from "./logger.js";
+
+/**
+ * Updates the status of multiple subtasks in bulk.
+ *
+ * @param {Array<number>} subtaskIds - An array of subtask IDs to update.
+ * @param {string} status - The new status to set (e.g., 'completed').
+ * @throws {Error} - If updating subtasks fails.
+ */
+export async function updateSubtasksStatus(subtaskIds, status) {
+  try {
+    const { error } = await supabase
+      .from("subtasks")
+      .update({ status })
+      .in("id", subtaskIds);
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error updating subtasks: ${error.message}`, { subtaskIds });
+    throw new Error(`Error updating subtasks: ${error.message}`);
+  }
+}
+
+/**
+ * Inserts a new task card into the database.
+ *
+ * @param {Object} taskCard - The task card details to insert.
+ * @returns {Object} - The inserted task card object.
+ * @throws {Error} - If the insertion fails.
+ */
+export async function insertTaskCard(taskCard) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .insert(taskCard)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error inserting task card: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in insertTaskCard: ${error.message}`, { taskCard });
+    throw error;
+  }
+}
+
+/**
+ * Fetches all task cards with subtasks for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - An array of task cards with their subtasks.
+ * @throws {Error} - If fetching task cards fails.
+ */
+export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id, goal, priority, active, created_at,
+        subtasks (
+          id, description, status, created_at
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching task cards: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching task cards: ${error.message}`);
+  }
+}
+
+/**
+ * Fetches all tasks with subtasks and dependencies for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Array} - Array of task cards with subtasks and dependencies.
+ * @throws {Error} - If fetching task cards fails.
+ */
+export async function fetchAllTasksWithDetails(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id, goal, priority, active, created_at,
+        subtasks (
+          id, description, status, created_at,
+          task_dependencies (*)
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching detailed tasks: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching detailed tasks: ${error.message}`);
+  }
+}
+
+/**
+ * Fetches the gauge data for a specific user and chatroom.
+ *
+ * @param {Object} params - Parameters for fetching gauge data.
+ * @param {string} params.userId - The user ID.
+ * @param {string} params.chatroomId - The chatroom ID.
+ * @returns {Object} - The gauge data object.
+ * @throws {Error} - If fetching gauge data fails.
+ */
+export async function fetchGaugeData({ userId, chatroomId }) {
+  try {
+    const { data, error } = await supabase
+      .from("gauge_data")
+      .select("contextSnapshot, memoryUsage, headCount, activeTasksCount, limitationNotes")
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId)
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data.contextSnapshot,
+      memoryUsage: data.memoryUsage,
+      headCount: data.headCount,
+      activeTasksCount: data.activeTasksCount,
+      limitationNotes: data.limitationNotes || [],
+    };
+  } catch (error) {
+    logError(`Error fetching gauge data: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching gauge data: ${error.message}`);
+  }
+}
+
+/**
+ * Fetches the memory for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {string} - The concatenated memory string.
+ * @throws {Error} - If fetching memory fails.
+ */
+export async function fetchMemory(userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("memories")
+      .select("memory")
+      .eq("user_id", userId)
+      .eq("chatroom_id", chatroomId);
+
+    if (error) throw error;
+    return data.map((row) => row.memory).join(" ");
+  } catch (error) {
+    logError(`Error fetching memory: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error fetching memory: ${error.message}`);
+  }
+}
+
+/**
+ * Inserts or updates memory for a specific user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @param {string} memory - The memory content to upsert.
+ * @throws {Error} - If upserting memory fails.
+ */
+export async function upsertMemory(userId, chatroomId, memory) {
+  try {
+    const { error } = await supabase
+      .from("memories")
+      .upsert({
+        user_id: userId,
+        chatroom_id: chatroomId,
+        memory,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error updating memory: ${error.message}`, { userId, chatroomId });
+    throw new Error(`Error updating memory: ${error.message}`);
+  }
+}
+
+/**
+ * Adds a new head (sub-persona) to the database.
+ *
+ * @param {string} task - The task or role of the head.
+ * @param {string} description - A description of the head's purpose.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Object} - The newly added head object.
+ * @throws {Error} - If the insertion fails.
+ */
+export async function addHead(task, description, userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("heads")
+      .insert({
+        task,
+        description,
+        user_id: userId,
+        chatroom_id: chatroomId,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error adding head: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in addHead: ${error.message}`, { task, userId, chatroomId });
+    throw error;
+  }
+}
+
+/**
+ * Fetches all templates from the database.
+ *
+ * @returns {Array} - An array of template objects.
+ * @throws {Error} - If fetching templates fails.
+ */
+export async function fetchAllTemplates() {
+  try {
+    const { data, error } = await supabase
+      .from("templates")
+      .select("id, name, configuration, created_at");
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    logError(`Error fetching templates: ${error.message}`);
+    throw new Error(`Error fetching templates: ${error.message}`);
+  }
+}
+
+/**
+ * Inserts or updates a feedback entry in the database.
+ *
+ * @param {string} responseId - The ID of the response.
+ * @param {string} userFeedback - The user's feedback.
+ * @param {number} rating - The rating provided by the user.
+ * @throws {Error} - If inserting/updating the feedback entry fails.
+ */
+export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
+  try {
+    const { error } = await supabase
+      .from("feedback_entries")
+      .upsert({
+        response_id: responseId,
+        user_feedback: userFeedback,
+        rating,
+        timestamp: new Date().toISOString(),
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    logError(`Error inserting/updating feedback entry: ${error.message}`, { responseId });
+    throw new Error(`Error inserting/updating feedback entry: ${error.message}`);
+  }
+}
+
+export {
+  insertTaskCard,
+  fetchTaskCardsWithSubtasks,
+  updateSubtasksStatus,
+  fetchAllTasksWithDetails,
+  fetchGaugeData,
+  fetchMemory,
+  upsertMemory,
+  fetchAllTemplates,
+  upsertFeedbackEntry,
+  addHead,
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/util/validation.js
+Content:
+// src/util/validation.js
+import Joi from "joi";
+
+const taskSchema = Joi.object({
+  goal: Joi.string().required(),
+  priority: Joi.string().valid("High", "Medium", "Low").default("High"),
+  subtasks: Joi.array().items(
+    Joi.object({
+      description: Joi.string().required(),
+      status: Joi.string().valid("pending", "completed").default("pending"),
+    })
+  ),
+});
+
+export async function validateTaskInput(taskInput) {
+  const { error, value } = taskSchema.validate(taskInput);
+  if (error) throw new Error(`Invalid task input: ${error.message}`);
+  return value;
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/util/helpers.js
+Content:
+// util/helpers.js
+export function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+  
+  export function isEmptyObject(obj) {
+    return Object.keys(obj).length === 0;
+  }
+  
+  export function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/logic/response_generator.js
+Content:
+// src/logic/response_generator.js
+/**
+ * Generates a final response string based on various inputs.
+ *
+ * @param {Object} params - The input parameters for the response.
+ * @param {Object} params.contextDigest - Summary of the context, including memory entries and highlights.
+ * @param {Object} params.taskCard - Task card details with subtasks.
+ * @param {Object} params.actionsPerformed - Actions performed and their results.
+ * @param {Object} params.feedbackPrompt - Feedback message and hint.
+ * @param {Object} params.gaugeData - System awareness metrics like priority, memory usage, and active tasks.
+ * @param {string} params.userInput - Original user query (optional).
+ * @param {string} params.compressedMemory - Compressed memory string (optional).
+ * @returns {string} - A formatted response string.
+ */
+export function generateFinalResponse({
+  contextDigest,
+  taskCard,
+  actionsPerformed,
+  feedbackPrompt,
+  gaugeData,
+  userInput,
+  compressedMemory,
+}) {
+  const response = [];
+
+  // Helper function to format lists
+  const formatList = (items) =>
+    items.map((item, index) => `  ${index + 1}. ${item}`).join("\n");
+
+  // Show context digest
+  if (contextDigest) {
+    response.push(
+      `### Context Digest:\n- Total Memory Entries: ${contextDigest.totalEntries}\n- Highlights:\n${formatList(
+        contextDigest.highlights || []
+      )}`
+    );
+  }
+
+  // Show task card
+  if (taskCard) {
+    response.push(`### Task Card: ${taskCard.goal}`);
+    taskCard.subtasks.forEach((subtask) => {
+      response.push(`- **${subtask.task}**: ${subtask.status}`);
+    });
+  }
+
+  // Show actions performed
+  if (actionsPerformed) {
+    response.push("### Actions Performed:");
+    Object.entries(actionsPerformed).forEach(([key, value]) => {
+      response.push(`- **${key}**: ${JSON.stringify(value, null, 2)}`);
+    });
+  }
+
+  // Show feedback prompt
+  if (feedbackPrompt) {
+    response.push(`### Feedback Prompt:\n${feedbackPrompt.message}\nHint: ${feedbackPrompt.hint}`);
+  }
+
+  // Show gauge data
+  if (gaugeData) {
+    response.push("### System Awareness:");
+    response.push(`- Priority: ${gaugeData.priority}`);
+    response.push(`- Keywords: ${gaugeData.keywords.join(", ")}`);
+    response.push(`- Memory Usage: ${gaugeData.memoryUsage}`);
+    response.push(`- Heads Count: ${gaugeData.headCount}`);
+    response.push(`- Active Tasks: ${gaugeData.activeTasksCount}`);
+  }
+
+  // Optional: Show user input or compressed memory
+  if (userInput) {
+    response.push(`### Original User Query:\n${userInput}`);
+  }
+
+  if (compressedMemory) {
+    response.push(`### Compressed Memory:\n${compressedMemory}`);
+  }
+
+  // Combine into final string
+  return response.join("\n\n");
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/logic/workflow_manager.js
+Content:
+// src/logic/workflow_manager.js
+
+import { parseQuery } from "../actions/query_parser.js";
+import { compressMemory } from "../actions/memory_compressor.js";
+import { updateContext } from "../state/context_state.js";
+import { summarizeLogs } from "../actions/logs_summarizer.js";
+import {
+  createSubpersona,
+  assignHeadTask,
+  pruneHead,
+} from "../actions/subpersona_creator.js";
+import { createTaskCard } from "../state/task_manager.js";
+import { generateContextDigest } from "../actions/context_digest.js";
+import { generateFinalResponse } from "../actions/response_generator.js";
+import { collectFeedback } from "../actions/feedback_collector.js";
+import { getHeads } from "../state/heads_state.js";
+import { appendMemory, getMemory } from "../state/memory_state.js";
+import { gatherGaugeData } from "./gauge_logic.js";
+
+import {
+  shouldCompressMemory,
+  canCreateNewHead,
+} from "./conditions.js";
+
+/**
+ * Orchestrates the entire workflow:
+ *  - parse query
+ *  - execute tasks
+ *  - update memory & context
+ *  - gather final gauge data for self-awareness
+ */
+export const orchestrateContextWorkflow = async ({
+  query,
+  memory,
+  logs,
+  feedback,
+  user_id,
+  chatroom_id,
+  tokenCount = 0,
+}) => {
+  try {
+    const response = {};
+    const activeHeadTasks = [];
+    const updatedContext = {};
+
+    // Retrieve memory and heads from the DB
+    const existingMemory = await getMemory(user_id, chatroom_id);
+    const heads = await getHeads(user_id, chatroom_id);
+    const headCount = heads.length;
+
+    // Parse the query
+    const { keywords, actionItems } = parseQuery(query);
+    updatedContext.keywords = keywords || [];
+    updatedContext.actionItems = actionItems || [];
+
+    // Append the user query to memory
+    const updatedMemory = await appendMemory(query, user_id, chatroom_id);
+    updatedContext.memory = updatedMemory;
+
+    // Create a task card
+    const taskCard = createTaskCard(query, actionItems);
+
+    // === GAUGE-LIKE CHECKS ===
+    // 1) If token usage is above limit, auto-compress memory
+    if (shouldCompressMemory(tokenCount) && existingMemory && existingMemory.length > 1000) {
+      const compressed = compressMemory(existingMemory);
+      updatedContext.memory = compressed.compressedMemory;
+      response.compressedDueToTokens = true;
+
+      // Mark compress subtask if it exists
+      const compressSubtask = taskCard.subtasks.find((t) => t.task === "compress memory");
+      if (compressSubtask) {
+        compressSubtask.status = "completed";
+      }
+      response.compressedMemory = compressed.compressedMemory;
+    }
+
+    // 2) If user wants to create-subpersona, check max heads
+    if (actionItems.includes("create-subpersona")) {
+      if (!canCreateNewHead(headCount)) {
+        response.headLimitReached = true;
+        console.warn("Max heads limit reached. Cannot create a new sub-persona.");
+      }
+    }
+
+    // === TASK HANDLERS ===
+    const taskHandlers = {
+      "summarize logs": async () => {
+        if (logs) {
+          const subPersona = createSubpersona("log analysis", "Summarize logs for key patterns and errors");
+          const result = await summarizeLogs(logs);
+          assignHeadTask(subPersona.headId, result);
+          activeHeadTasks.push(subPersona.headId);
+
+          // Mark subtask as completed
+          taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
+          response.logsSummary = result;
+        }
+      },
+      "compress memory": async () => {
+        if (existingMemory && existingMemory.length > 1000) {
+          const compressed = compressMemory(existingMemory);
+          updatedContext.memory = compressed.compressedMemory;
+          taskCard.subtasks.find((t) => t.task === "compress memory").status = "completed";
+          response.compressedMemory = compressed.compressedMemory;
+        }
+      },
+      default: async (action) => {
+        console.warn(`Unhandled action: ${action}`);
+        response.unhandledActions = response.unhandledActions || [];
+        response.unhandledActions.push(action);
+      },
+    };
+
+    // Execute the tasks
+    for (const action of actionItems) {
+      if (taskHandlers[action]) {
+        await taskHandlers[action]();
+      } else {
+        await taskHandlers.default(action);
+      }
+    }
+
+    // Prune sub-personas if any
+    for (const headId of activeHeadTasks) {
+      const { updatedMainMemory } = pruneHead(headId, updatedContext.memory);
+      updatedContext.memory = updatedMainMemory;
+    }
+
+    // Generate a context digest & finalize the updated context
+    response.contextDigest = generateContextDigest(updatedContext.memory);
+    const context = updateContext(updatedContext);
+
+    // === GATHER GAUGE DATA FOR SELF-AWARENESS ===
+    const gaugeData = await gatherGaugeData({ user_id, chatroom_id });
+    response.gaugeData = gaugeData;
+
+    // === Final user-facing response ===
+    response.finalResponse = await generateFinalResponse({
+      userInput: query,
+      compressedMemory: response.compressedMemory,
+      summaryReport: response.logsSummary,
+      context,
+      taskCard,
+      actionsPerformed: response,
+      gaugeData, // pass the gauge data to be displayed
+    });
+
+    // Prompt for feedback if done
+    if (taskCard && taskCard.status === "completed") {
+      response.feedbackPrompt = {
+        message: "How was the workflow? Please provide your feedback (e.g., 'Great job! 5').",
+        hint: "Feedback and rating (1-5)",
+      };
+    }
+
+    // If user gave feedback, store it
+    if (feedback) {
+      await collectFeedback({
+        responseId: Date.now().toString(),
+        userFeedback: feedback.comment,
+        rating: feedback.rating,
+      });
+    }
+
+    return {
+      status: "context_updated",
+      context,
+      finalResponse: response.finalResponse,
+      feedbackPrompt: response.feedbackPrompt || null,
+    };
+  } catch (error) {
+    console.error("Error in orchestrateContextWorkflow:", error);
+    throw new Error("Workflow orchestration failed.");
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/logic/gauge_logic.js
+Content:
+// src/logic/gauge_logic.js
+import { getContext } from "../state/context_state.js";
+import { getMemory } from "../state/memory_state.js";
+import { getHeads } from "../state/heads_state.js";
+import { supabase } from "../../lib/db.js";
+
+/**
+ * Gathers an instrument cluster / gauge snapshot for the given user & chatroom:
+ *  - Context priority and keywords
+ *  - Memory usage
+ *  - Number of heads (sub-personas)
+ *  - Number of active tasks
+ *
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - A consolidated snapshot of gauge data.
+ * @throws {Error} - If any data retrieval fails.
+ */
+export async function generateGaugeSnapshot(user_id, chatroom_id) {
+  try {
+    // 1) Retrieve context and memory from state modules
+    const context = await getContext(user_id, chatroom_id);
+    const memory = await getMemory(user_id, chatroom_id);
+
+    // 2) Retrieve heads (sub-personas) from heads_state
+    const heads = await getHeads(user_id, chatroom_id);
+    const headCount = heads.length;
+
+    // 3) Retrieve active tasks from "task_cards"
+    const { data: activeTasks, error } = await supabase
+      .from("task_cards")
+      .select(`
+        id,
+        subtasks (
+          id, status
+        )
+      `)
+      .eq("user_id", user_id)
+      .eq("chatroom_id", chatroom_id)
+      .filter("subtasks.status", "neq", "completed"); // Filter for active subtasks
+
+    if (error) {
+      throw new Error(`Error fetching tasks: ${error.message}`);
+    }
+
+    // 4) Consolidate gauge data
+    return {
+      priority: context.priority || "Normal",
+      keywords: context.keywords || [],
+      memoryUsage: memory.length,
+      headCount,
+      activeTasksCount: activeTasks.length,
+    };
+  } catch (error) {
+    console.error("Error generating gauge snapshot:", error);
+    throw new Error(`Failed to generate gauge snapshot: ${error.message}`);
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/logic/conditions.js
+Content:
+// src/logic/conditions.js
+
+import { fetchExistingHead } from '../util/db_helpers.js'; // Correct named import
+
+/**
+ * Existing thresholds
+ */
+const COMPRESSION_THRESHOLD = 20;
+const INITIAL_COMPRESSION_THRESHOLD = 10;
+
+/**
+ * NEW token limit and max heads
+ */
+const TOKEN_LIMIT = 1000;
+const MAX_HEADS = 5;
+
+/**
+ * Existing condition: determines if we should create a head
+ */
+export const shouldCreateHead = (actionItems) => {
+  return actionItems.includes('create head');
+};
+
+/**
+ * Existing condition: determines if we should summarize logs
+ */
+export const shouldSummarizeLogs = (actionItems) => {
+  return actionItems.includes('summarize logs');
+};
+
+/**
+ * Existing condition: determines if memory compression is needed based on
+ * conversation length plus priority
+ */
+export const shouldCompress = (actionItems, conversationLength) => {
+  const contextPriority = currentContext.priority || 'Normal';
+  const adjustedThreshold =
+    contextPriority === 'High' ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
+
+  return actionItems.includes('summarize') && conversationLength > adjustedThreshold;
+};
+
+/**
+ * Existing condition: determines if a context recap is needed based on
+ * conversation length and user engagement
+ */
+export const needsContextRecap = (conversationLength, userEngagement) => {
+  const contextGoal = currentContext.goal || 'General';
+
+  if (contextGoal === 'Complex') {
+    return true;
+  }
+
+  return (
+    conversationLength > INITIAL_COMPRESSION_THRESHOLD ||
+    userEngagement < 50
+  );
+};
+
+/**
+ * Existing condition: checks for pending dependencies in a particular task
+ */
+export const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
+  const taskCard = getTaskCard(taskId, user_id, chatroom_id);
+
+  if (!taskCard) {
+    console.warn(`Task ${taskId} not found for user ${user_id} in chatroom ${chatroom_id}`);
+    return false;
+  }
+
+  return taskCard.subtasks.some((subtask) => subtask.dependencies.length > 0);
+};
+
+/**
+ * NEW condition: checks if we should compress memory due to high token usage
+ */
+export const shouldCompressMemory = (tokenCount) => {
+  return tokenCount > TOKEN_LIMIT;
+};
+
+/**
+ * NEW condition: checks if we can create a new head or if we've reached max
+ */
+export const canCreateNewHead = (headCount) => {
+  return headCount < MAX_HEADS;
+};
+
+/**
+ * NEW condition: checks if the current context is ready for further actions
+ */
+export const isContextReady = () => {
+  const contextStatus = currentContext.status || 'active';
+  return contextStatus === 'active';
+};
+
+/**
+ * NEW condition: determines if the task requires urgent processing
+ */
+export const isUrgentTask = (taskPriority) => {
+  return taskPriority === 'High';
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/state/templates_state.js
+Content:
+import { supabase } from "../../lib/db.js";
+import { logError } from "../util/logger.js";
+
+/**
+ * Fetch a template by task name.
+ * @param {string} task - The task name to fetch the template for.
+ * @returns {Object|null} - The template object or null if not found.
+ */
+export async function fetchTemplate(task) {
+  try {
+    const { data, error } = await supabase
+      .from("templates")
+      .select("*")
+      .eq("name", task)
+      .single(); // Fetch a single matching template
+
+    if (error) {
+      logError(`Error fetching template for task "${task}": ${error.message}`);
+      return null;
+    }
+
+    return data || null;
+  } catch (error) {
+    logError(`Unexpected error fetching template for task "${task}": ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Fetch all available templates.
+ * @returns {Array} - An array of all templates.
+ */
+export async function fetchAllTemplates() {
+  try {
+    const { data, error } = await supabase
+      .from("templates")
+      .select("*");
+
+    if (error) {
+      logError(`Error fetching all templates: ${error.message}`);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    logError(`Unexpected error fetching all templates: ${error.message}`);
+    return [];
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/state/context_state.js
+Content:
+// src/state/context_state.js
+
+import { fetchContext, upsertContext } from '../util/db_helpers.js';
+import { logInfo, logError } from '../util/logger.js';
+import { logDebugIssue } from '../util/db_helpers.js'; // Already imported earlier
+
+let currentContext = {};
+const contextHistory = [];
+
+/**
+ * Updates the current context for a user in a chatroom,
+ * persisting it to the database. Also logs a debug entry if needed.
+ *
+ * @param {Object} newData - Key-value pairs to update in the context.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Object} - The updated context.
+ */
+export async function updateContext(newData, userId, chatroomId) {
+  try {
+    // Push previous context to history
+    contextHistory.push({ ...currentContext });
+
+    // Merge new data into context
+    currentContext = { ...currentContext, ...newData };
+    logInfo('Context updated in memory.', { newData, userId, chatroomId });
+
+    // Persist the updated context
+    await upsertContext(userId, chatroomId, currentContext);
+    logInfo('Context persisted to database.', { userId, chatroomId });
+
+    return currentContext;
+  } catch (error) {
+    logError(`Failed to update context: ${error.message}`);
+    // Optionally store a debug log for context update failures
+    await logDebugIssue(userId, null, 'Context Update Failure', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Retrieves the context for a given user and chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Object|null} - The context object or null if not found.
+ */
+export async function getContext(userId, chatroomId) {
+  try {
+    const ctx = await fetchContext(userId, chatroomId);
+    logInfo('Context fetched from database.', { userId, chatroomId, ctx });
+    return ctx;
+  } catch (error) {
+    logError(`Failed to fetch context: ${error.message}`);
+    await logDebugIssue(userId, null, 'Context Fetch Failure', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Returns the in-memory history of context changes.
+ *
+ * @returns {Array} - An array of previous context states.
+ */
+export function getContextHistory() {
+  return contextHistory;
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/state/memory_state.js
+Content:
+// src/state/memory_state.js
+
+import { fetchMemory, upsertMemory } from "../util/db_helpers.js";
+import { logInfo, logError } from "../util/logger.js";
+import { logDebugIssue } from "../util/db_helpers.js";
+
+/**
+ * Appends new memory to the existing memory for a user in a chatroom.
+ *
+ * @param {string} newMemory - The new memory content to append.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {string} - The updated memory.
+ */
+export async function appendMemory(newMemory, userId, chatroomId) {
+  try {
+    const existingMemory = await fetchMemory(userId, chatroomId);
+    const updatedMemory = `${existingMemory || ""} ${newMemory}`.trim();
+
+    await upsertMemory(userId, chatroomId, updatedMemory);
+    logInfo(`Memory updated for user ${userId} in chatroom ${chatroomId}.`);
+
+    return updatedMemory;
+  } catch (error) {
+    logError(`Failed to append memory: ${error.message}`);
+    await logDebugIssue(userId, null, "Memory Append Failure", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Retrieves the memory for a user in a chatroom.
+ *
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {string} - The fetched memory string.
+ */
+export async function getMemory(userId, chatroomId) {
+  try {
+    const memory = await fetchMemory(userId, chatroomId);
+    logInfo(`Memory fetched for user ${userId}, chatroom ${chatroomId}.`);
+    return memory || "";
+  } catch (error) {
+    logError(`Failed to fetch memory: ${error.message}`);
+    await logDebugIssue(userId, null, "Memory Fetch Failure", error.message);
+    throw error;
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/state/task_manager.js
+Content:
+import {
+  insertTaskCard,
+  fetchTaskCardsWithSubtasks,
+  updateSubtasksStatus,
+  logDebugIssue,
+} from "../util/db_helpers.js";
+import { logInfo, logError } from "../util/logger.js";
+
+/**
+ * Creates a new task card and subtasks for a user in a chatroom.
+ *
+ * @param {string} goal - The task's goal or main description.
+ * @param {Array<string>} subtasks - An array of subtask descriptions.
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - The inserted task card with metadata.
+ */
+export const createTaskCard = async (goal, subtasks, user_id, chatroom_id) => {
+  try {
+    const taskCard = {
+      goal,
+      priority: "High",
+      subtasks: subtasks.map((task) => ({
+        description: task,
+        status: "pending",
+      })),
+      createdAt: new Date().toISOString(),
+      user_id,
+      chatroom_id,
+    };
+
+    const insertedTaskCard = await insertTaskCard(taskCard);
+    logInfo("Task card created successfully.", { taskCardId: insertedTaskCard.id });
+    return insertedTaskCard;
+  } catch (error) {
+    logError(`Failed to create task card: ${error.message}`);
+    await logDebugIssue(user_id, null, "Task Creation Failure", error.message);
+    throw error;
+  }
+};
+
+/**
+ * Updates the status of a specific task (and its subtasks) for a user in a chatroom.
+ *
+ * @param {number} taskId - The ID of the task to update.
+ * @param {string} status - The new status (e.g., 'completed', 'pending').
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - The updated task object.
+ */
+export const updateTaskStatus = async (taskId, status, user_id, chatroom_id) => {
+  try {
+    const tasks = await fetchTaskCardsWithSubtasks(user_id, chatroom_id);
+    const taskToUpdate = tasks.find((task) => task.id === taskId);
+    if (!taskToUpdate) {
+      throw new Error(`Task with ID ${taskId} not found for user ${user_id} in chatroom ${chatroom_id}.`);
+    }
+
+    const updatedSubtasks = taskToUpdate.subtasks.map((subtask) => ({
+      ...subtask,
+      status,
+    }));
+
+    await updateSubtasksStatus(updatedSubtasks.map((sub) => sub.id), status);
+    logInfo(`Task (ID: ${taskId}) status updated to "${status}".`);
+
+    return { ...taskToUpdate, subtasks: updatedSubtasks };
+  } catch (error) {
+    logError(`Failed to update task status: ${error.message}`);
+    await logDebugIssue(user_id, null, "Task Update Failure", error.message);
+    throw error;
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/state/heads_state.js
+Content:
+// src/state/heads_state.js
+import { addHead, fetchExistingHead, fetchGaugeData, logDebugIssue } from "../util/db_helpers.js";
+import { logInfo, logError } from "../util/logger.js";
+
+/**
+ * Creates or fetches a head (sub-persona) for a user.
+ *
+ * @param {string} task - The task name or function of the sub-persona.
+ * @param {string} description - Description for the sub-persona's purpose.
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object} - The new or existing head object.
+ */
+export async function createOrFetchHead(task, description, user_id, chatroom_id) {
+  try {
+    // Check for existing head
+    const existingHead = await fetchExistingHead(task, user_id, chatroom_id);
+    if (existingHead) {
+      logInfo(`Existing head found for task "${task}" in chatroom "${chatroom_id}".`);
+      return existingHead;
+    }
+
+    // Otherwise, create a new head
+    const newHead = await addHead(task, description, user_id, chatroom_id);
+    logInfo(`New head created for user ${user_id} in chatroom ${chatroom_id}`, { newHead });
+    return newHead;
+  } catch (error) {
+    logError(`Failed to create or fetch head: ${error.message}`);
+    await logDebugIssue(user_id, null, "Heads State Failure", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Fetches updated gauge data after sub-persona creation or modifications.
+ *
+ * @param {string} user_id - The user ID.
+ * @param {string} chatroom_id - The chatroom ID.
+ * @returns {Object|null} - Gauge data or null if unavailable.
+ */
+export async function getUpdatedGaugeData(user_id, chatroom_id) {
+  try {
+    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
+    logInfo("Gauge data fetched successfully.", { gaugeData });
+    return gaugeData;
+  } catch (error) {
+    logError(`Failed to fetch gauge data: ${error.message}`);
+    await logDebugIssue(user_id, null, "Gauge Data Failure", error.message);
+    return null;
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/subpersona_creator.js
+Content:
+// src/actions/subpersona_creator.js
+import { compressMemory } from './memory_compressor.js';
+import { logDebug } from '../util/logger.js';
+import { fetchExistingHead, addHead, fetchGaugeData } from '../util/db_helpers.js'; // Correct named imports
+
+const activeHeads = {}; // Store active heads temporarily
+
+/**
+ * Create a specialized subpersona for a task
+ */
+export function createSubpersona(task, description, user_id = null, chatroom_id = null) {
+  const headId = `head_${Date.now()}`;
+  activeHeads[headId] = {
+    name: `Head for ${task}`,
+    task_description: description,
+    status: 'active',
+    memory: [],
+    user_id,
+    chatroom_id,
+  };
+
+  logDebug(`Created subpersona: ${headId}`, { task, description, user_id, chatroom_id });
+
+  return { headId, name: activeHeads[headId].name, status: 'active' };
+}
+
+/**
+ * Assign task results to a head
+ */
+export function assignHeadTask(headId, taskResult) {
+  if (activeHeads[headId]) {
+    activeHeads[headId].memory.push(taskResult);
+    logDebug(`Assigned task to head: ${headId}`, { taskResult });
+
+    return { status: 'updated', headId, taskResult };
+  }
+
+  logDebug(`Error: Head not found for assignment`, { headId });
+  return { error: 'Head not found', headId };
+}
+
+/**
+ * Prune a head and merge its results back into main memory
+ */
+export function pruneHead(headId, mainMemory) {
+  if (activeHeads[headId]) {
+    const headMemory = activeHeads[headId].memory.join('. ');
+    const compressedResult = compressMemory(headMemory).compressedMemory;
+
+    logDebug(`Pruning head: ${headId}`, { headMemory, compressedResult });
+
+    delete activeHeads[headId]; // Remove the head after pruning
+    return { updatedMainMemory: `${mainMemory} ${compressedResult}` };
+  }
+
+  logDebug(`Error: Head not found for pruning`, { headId });
+  return { error: 'Head not found for pruning', headId };
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/response_generator.js
+Content:
+// src/actions/response_generator.js
+
+import { generateFinalResponse } from '../util/db_helpers.js'; // Corrected path
+
+export async function generateResponse({
+  contextDigest,
+  taskCard,
+  actionsPerformed,
+  feedbackPrompt,
+  gaugeData,       // Newly added field
+  userInput,       // Display original user input
+  compressedMemory // Display compressed memory if applicable
+}) {
+  const response = [];
+
+  // Include context digest summary
+  if (contextDigest) {
+    response.push(
+      `### Context Digest:\n- Total Memory Entries: ${contextDigest.totalEntries}\n- Highlights:\n${contextDigest.highlights
+        .map((entry, index) => `  ${index + 1}. ${entry}`)
+        .join("\n")}`
+    );
+  }
+
+  // Include task statuses
+  if (taskCard) {
+    response.push(`### Task Card: ${taskCard.goal}`);
+    taskCard.subtasks.forEach((subtask) => {
+      response.push(`- **${subtask.task}**: ${subtask.status}`);
+    });
+  }
+
+  // Include results of actions performed
+  if (actionsPerformed) {
+    response.push("### Actions Performed:");
+    Object.keys(actionsPerformed).forEach((key) => {
+      response.push(`- **${key}**: ${JSON.stringify(actionsPerformed[key], null, 2)}`);
+    });
+  }
+
+  // Include feedback prompt
+  if (feedbackPrompt) {
+    response.push(`### Feedback Prompt:\n${feedbackPrompt.message}\nHint: ${feedbackPrompt.hint}`);
+  }
+
+  // Show gauge data block if present
+  if (gaugeData) {
+    response.push("### System Awareness:");
+    response.push(`- Priority: ${gaugeData.priority}`);
+    response.push(`- Keywords: ${gaugeData.keywords.join(", ")}`);
+    response.push(`- Memory Usage: ${gaugeData.memoryUsage}`);
+    response.push(`- Heads Count: ${gaugeData.headCount}`);
+    response.push(`- Active Tasks: ${gaugeData.activeTasksCount}`);
+  }
+
+  // Optionally display userInput or compressedMemory
+  if (userInput) {
+    response.push(`### Original User Query:\n${userInput}`);
+  }
+
+  if (compressedMemory) {
+    response.push(`### Compressed Memory:\n${compressedMemory}`);
+  }
+
+  // Combine into final string
+  return response.join("\n\n");
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/memory_compressor.js
+Content:
+// src/actions/memory_compressor.js
+
+/**
+ * Deduplicates and compresses text-based memory.
+ *
+ * @param {string} memory - The raw text-based memory to compress.
+ * @returns {Object} - The compressed memory in text format.
+ */
+export function compressTextMemory(memory) {
+  const sentences = memory.split(/\.\s+/).map((sentence) => sentence.trim());
+  const uniqueSentences = [...new Set(sentences)];
+  const summarizedContent =
+    uniqueSentences.slice(0, 5).join(". ") + (uniqueSentences.length > 5 ? "..." : "");
+  return { compressedMemory: summarizedContent };
+}
+
+/**
+ * Deduplicates and compresses array-based memory.
+ *
+ * @param {Array} memory - The array-based memory to compress.
+ * @returns {Array} - The compressed memory as an array.
+ */
+export function compressArrayMemory(memory) {
+  const compressedMemory = new Map();
+  memory.forEach((item) => {
+    if (item.key && !compressedMemory.has(item.key)) {
+      compressedMemory.set(item.key, item.value);
+    }
+  });
+  return Array.from(compressedMemory.values());
+}
+
+/**
+ * Main memory compression function to handle multiple formats.
+ *
+ * @param {string|Array} memory - The memory to compress, either as a string or an array.
+ * @returns {Object} - The compressed memory and its format.
+ * @throws {Error} - If the memory format is unsupported.
+ */
+export function compressMemory(memory) {
+  if (typeof memory === "string") {
+    return compressTextMemory(memory);
+  } else if (Array.isArray(memory)) {
+    return { compressedMemory: compressArrayMemory(memory) };
+  } else {
+    throw new Error("Unsupported memory format. Expected a string or an array.");
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/query_parser.js
+Content:
+// src/actions/query_parser.js
+
+import { createTaskCard } from "../state/task_manager.js";
+
+export const parseQuery = (query) => {
+  const keywords = [];
+  const actionItems = [];
+
+  // Define keywords and action patterns
+  const actionPatterns = {
+    "summarize logs": /summarize logs|analyze logs|log summary/i,
+    "compress memory": /compress memory|optimize memory|reduce memory/i,
+    "create head": /create head|initialize head|new head/i,
+    "context recap": /recap context|context summary|refresh context/i,
+    "collect feedback": /feedback collection|user feedback|collect feedback/i,
+    "debug logs": /analyze debug logs|debug log summary|log errors/i,
+  };
+
+  // Extract action items from query
+  for (const [action, pattern] of Object.entries(actionPatterns)) {
+    if (pattern.test(query)) {
+      actionItems.push(action);
+    }
+  }
+
+  // Extract keywords (simple split for demonstration; improve as needed)
+  query
+    .split(/\s+/)
+    .filter((word) => word.length > 3)
+    .forEach((word) => keywords.push(word));
+
+  // Create task card for identified actions
+  if (actionItems.length > 0) {
+    const taskCard = createTaskCard(query, actionItems);
+    return { keywords, actionItems, taskCardId: taskCard.id };
+  }
+
+  return { keywords, actionItems, taskCardId: null };
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/context_digest.js
+Content:
+export const generateContextDigest = (memory) => {
+    if (!memory) return "No memory available to summarize.";
+  
+    const digest = {
+      totalEntries: memory.length,
+      highlights: memory.slice(0, 3), // Example: Include the first 3 entries as highlights
+    };
+  
+    return digest;
+  };
+  
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/context_recapper.js
+Content:
+// src/actions/context_recapper.js
+
+import { callApiWithRetry } from './action_caller.js';
+
+/**
+ * Summarizes the context history and combines it with compressed memory.
+ *
+ * @param {Array} history - The conversation or task history to be recapped.
+ * @param {string} compressedMemory - Compressed memory to enrich the recap, if available.
+ * @returns {Promise<Object>} - The API response containing the recapped context.
+ */
+export async function contextRecap(history, compressedMemory = "") {
+  const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
+
+  try {
+    const payload = {
+      history: JSON.stringify(history), // Serialize history for API compatibility
+      compressedMemory // Default value for robustness
+    };
+
+    const response = await callApiWithRetry(endpoint, payload);
+    return response; // Return the recapped context for further use
+  } catch (error) {
+    console.error(`Error in contextRecap: ${error.message}`);
+    throw new Error(`Failed to generate context recap: ${error.message}`);
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/feedback_collector.js
+Content:
+// src/actions/feedback_collector.js
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = process.env.KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Collect feedback
+export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
+  const feedbackEntry = {
+    response_id: responseId,
+    user_feedback: userFeedback,
+    rating,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .insert([feedbackEntry]);
+
+    if (error) {
+      console.error('Error inserting feedback:', error);
+      return { status: 'error', message: 'Failed to record feedback.' };
+    }
+
+    console.log('Feedback Collected:', data);
+    return { status: 'success', message: 'Feedback recorded successfully.', data };
+  } catch (err) {
+    console.error('Unexpected error in collectFeedback:', err);
+    return { status: 'error', message: 'An unexpected error occurred.' };
+  }
+};
+
+// Get all feedback logs
+export const getFeedbackLog = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .select('*');
+
+    if (error) {
+      console.error('Error retrieving feedback:', error);
+      return { status: 'error', message: 'Failed to retrieve feedback.', data: [] };
+    }
+
+    return { status: 'success', message: 'Feedback retrieved successfully.', data };
+  } catch (err) {
+    console.error('Unexpected error in getFeedbackLog:', err);
+    return { status: 'error', message: 'An unexpected error occurred.', data: [] };
+  }
+};
+
+// Generate summarized insights
+export const generateFeedbackSummary = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .select('rating');
+
+    if (error) {
+      console.error('Error retrieving feedback for summary:', error);
+      return { status: 'error', message: 'Failed to generate feedback summary.' };
+    }
+
+    const totalFeedback = data.length;
+    const averageRating =
+      data.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback || 0;
+
+    const insights = {
+      totalFeedback,
+      averageRating: parseFloat(averageRating.toFixed(2)),
+    };
+
+    console.log('Generated Feedback Summary:', insights);
+    return { status: 'success', message: 'Feedback summary generated successfully.', insights };
+  } catch (err) {
+    console.error('Unexpected error in generateFeedbackSummary:', err);
+    return { status: 'error', message: 'An unexpected error occurred.', insights: null };
+  }
+};
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/logs_summarizer.js
+Content:
+// src/actions/logs_summarizer.js
+
+import { callApiWithRetry } from './action_caller.js';
+
+/**
+ * Summarizes logs by making an API call to the specified endpoint.
+ *
+ * @param {Array} logs - The logs to be summarized.
+ * @returns {Promise<Object>} - The API response containing the summarized logs.
+ */
+export async function summarizeLogs(logs) {
+  const endpoint = 'https://hydra-flow.vercel.app/api/summarize-logs';
+
+  try {
+    if (!Array.isArray(logs) || logs.length === 0) {
+      throw new Error("Logs must be a non-empty array.");
+    }
+
+    const payload = { logs };
+
+    const response = await callApiWithRetry(endpoint, payload);
+    return response; // Return summarized logs for further use
+  } catch (error) {
+    console.error(`Error in summarizeLogs: ${error.message}`);
+    throw new Error(`Failed to summarize logs: ${error.message}`);
+  }
+}
+
+================================================================================
+File: /Users/akeemsulaimon/Documents/GitHub/HydraFlow/src/actions/action_caller.js
+Content:
+// Updated action_caller.js
+import axios from 'axios';
+
+async function callApiWithRetry(endpoint, payload, retries = 3, backoff = 300) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await axios.post(endpoint, payload);
+      return response.data;
+    } catch (error) {
+      if (attempt < retries && shouldRetry(error)) {
+        await new Promise(resolve => setTimeout(resolve, backoff * attempt));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
+function shouldRetry(error) {
+  return !error.response || (error.response.status >= 500 && error.response.status < 600);
+}
+
+import { default } from './db_helpers.js';
+================================================================================

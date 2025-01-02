@@ -1,11 +1,7 @@
 // api/feedback.js
 import {
-  insertFeedback,
-  getFeedbackLog,
-  generateFeedbackSummary,
-  fetchFeedbackByUser,
-} from "../../src/util/db_helpers.js";
-import { logInfo, logError } from "../../src/util/logger.js";
+  insertFeedback, getFeedbackLog, generateFeedbackSummary,
+  fetchFeedbackByUser,logInfo, logError} from "../src/util";
 
 export default async function handler(req, res) {
   try {

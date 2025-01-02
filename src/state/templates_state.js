@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/db.js";
-import { logError } from "../util/logger.js";
+import { logError } from "../util";
 
 /**
  * Fetch a template by task name.

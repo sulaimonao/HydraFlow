@@ -1,7 +1,6 @@
 // src/actions/subpersona_creator.js
 import { compressMemory } from './memory_compressor.js';
-import { logDebug } from '../util/logger.js';
-import { fetchExistingHead, addHead, fetchGaugeData } from '../util/db_helpers.js'; // Correct named imports
+import { logDebug, fetchExistingHead, addHead, fetchGaugeData } from '../util';
 
 const activeHeads = {}; // Store active heads temporarily
 

@@ -1,6 +1,6 @@
 // api/create-subpersona.js
-import { addHead, fetchExistingHead } from "../src/util/db_helpers.js";
-import { fetchTemplate } from "../src/state/templates_state.js"; // Import fetchTemplate function
+import { addHead, fetchExistingHead } from "../src/util"; // Import addHead and fetchExistingHead functions
+import { fetchTemplate } from "../src/state"; // Import fetchTemplate function
 
 export default async (req, res) => {
   try {

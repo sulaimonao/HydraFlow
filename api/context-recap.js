@@ -1,6 +1,5 @@
 // context-recap.js
-import { fetchMemory } from "../src/util/db_helpers.js";
-import { logInfo, logError } from "../src/util/logger.js";
+import { fetchMemory, logInfo, logError  } from "../src/util";
 
 export async function compressMemoryHandler(req, res)
  {

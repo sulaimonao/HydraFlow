@@ -1,8 +1,8 @@
 // src/state/context_state.js
 
-import { fetchContext, upsertContext } from '../util/db_helpers.js';
-import { logInfo, logError } from '../util/logger.js';
-import { logDebugIssue } from '../util/db_helpers.js'; // Already imported earlier
+import { fetchContext, upsertContext,
+  logInfo, logError, logDebugIssue
+ } from '../util';
 
 let currentContext = {};
 const contextHistory = [];

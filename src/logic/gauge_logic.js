@@ -1,7 +1,5 @@
 // src/logic/gauge_logic.js
-import { getContext } from "../state/context_state.js";
-import { getMemory } from "../state/memory_state.js";
-import { getHeads } from "../state/heads_state.js";
+import { getContext, getMemory, getHeads } from "../state";
 import { supabase } from "../../lib/db.js";
 
 /**

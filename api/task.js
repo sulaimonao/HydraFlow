@@ -5,8 +5,8 @@ import {
   fetchTaskCardsWithSubtasks,
   updateSubtasks,
   markTaskCardInactive,
-} from "../util/db_helpers.js";
-import { logInfo, logError } from "../src/util/logger.js";
+  logInfo, logError
+} from "../util";
 
 export default async function handler(req, res) {
   try {

@@ -1,22 +1,15 @@
 // src/logic/workflow_manager.js
 
-import { parseQuery } from "../actions/query_parser.js";
-import { compressMemory } from "../actions/memory_compressor.js";
-import { updateContext } from "../state/context_state.js";
-import { summarizeLogs } from "../actions/logs_summarizer.js";
-import {
-  createSubpersona,
-  assignHeadTask,
-  pruneHead,
-} from "../actions/subpersona_creator.js";
-import { createTaskCard } from "../state/task_manager.js";
-import { generateContextDigest } from "../actions/context_digest.js";
-import { generateFinalResponse } from "../actions/response_generator.js";
-import { collectFeedback } from "../actions/feedback_collector.js";
-import { getHeads } from "../state/heads_state.js";
-import { appendMemory, getMemory } from "../state/memory_state.js";
+import { parseQuery, compressMemory, generateContextDigest,
+   generateFinalResponse, collectFeedback,
+   createSubpersona,
+   assignHeadTask,
+   pruneHead,
+   summarizeLogs, } from "../actions";
+import { updateContext, createTaskCard, getHeads,
+  appendMemory, getMemory
+ } from "../state";
 import { gatherGaugeData } from "./gauge_logic.js";
-
 import {
   shouldCompressMemory,
   canCreateNewHead,

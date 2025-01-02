@@ -1,6 +1,6 @@
 // src/actions/response_generator.js
 
-import { generateFinalResponse } from '../util/db_helpers.js'; // Corrected path
+import { generateFinalResponse } from '../util'; // Corrected path
 
 export async function generateResponse({
   contextDigest,

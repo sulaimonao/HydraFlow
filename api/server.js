@@ -1,7 +1,8 @@
-// api/server.js
+// server.js
 import express from "express";
 import cors from "cors";
 import feedbackRoutes from "./routes";
+import { healthCheck } from "./lib/db";
 import { logInfo, logError } from "../src/util";
 
 const app = express();
@@ -14,6 +15,23 @@ app.use(express.json());
 app.use((req, res, next) => {
   logInfo(`${req.method} ${req.url}`);
   next();
+});
+
+// Health Check Endpoint
+app.get("/health", async (req, res) => {
+  try {
+    await healthCheck();
+    res.status(200).json({
+      status: "healthy",
+      message: "Database connection is active.",
+    });
+  } catch (error) {
+    logError("Database health check failed:", error.message);
+    res.status(500).json({
+      status: "unhealthy",
+      error: error.message,
+    });
+  }
 });
 
 // API Routes

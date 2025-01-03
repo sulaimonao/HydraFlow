@@ -14,3 +14,10 @@ export const STATUS = {
 export const ERRORS = {
   GENERIC: "Something went wrong. Please try again later.",
 };
+
+// Add named export for constants
+export default {
+  API_ENDPOINTS,
+  STATUS,
+  ERRORS,
+};

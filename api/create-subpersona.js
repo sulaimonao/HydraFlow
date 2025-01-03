@@ -1,6 +1,7 @@
 // api/create-subpersona.js
 import { addHead, fetchExistingHead, logInfo, logError, fetchGaugeData } from "../src/util/index.js";
 import { fetchTemplate } from "../src/state/index.js";
+import { ERRORS } from "../src/util/constants.js"; // Import constants
 
 export default async (req, res) => {
   try {
@@ -50,6 +51,6 @@ export default async (req, res) => {
     });
   } catch (error) {
     logError("Error in create-subpersona:", error);
-    return res.status(500).json({ error: "Failed to create sub-persona. Please try again." });
+    return res.status(500).json({ error: ERRORS.GENERIC }); // Use constant for error message
   }
 };

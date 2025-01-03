@@ -1,5 +1,5 @@
 // api/create-subpersona.js
-import { addHead, fetchExistingHead } from "../src/util/index.js";
+import { addHead, fetchExistingHead, logInfo, logError, fetchGaugeData } from "../src/util/index.js";
 import { fetchTemplate } from "../src/state/index.js";
 
 export default async (req, res) => {

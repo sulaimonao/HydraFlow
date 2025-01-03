@@ -21,4 +21,8 @@ export async function fetchMemory(userId, chatroomId) {
     console.log(`Updating memory for user ${userId} in chatroom ${chatroomId}`);
   }
   
+export function logMemoryIssue(message) {
+  console.error(`Memory Issue: ${message}`);
+}
+
   export { logError, logInfo }; // Ensure logError is exported

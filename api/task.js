@@ -7,7 +7,7 @@ import {
   markTaskCardInactive,
   logInfo,
   logError,
-} from "../util/index.js";
+} from "../src/util/index.js";
 
 export default async function handler(req, res) {
   try {

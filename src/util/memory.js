@@ -1,5 +1,5 @@
 // src/util/memory.js
-
+import { logError, logInfo } from "./logger.js";
 /**
  * Fetches memory for a user in a chatroom.
  * @param {string} userId - The user ID.
@@ -21,3 +21,4 @@ export async function fetchMemory(userId, chatroomId) {
     console.log(`Updating memory for user ${userId} in chatroom ${chatroomId}`);
   }
   
+  export { logError, logInfo }; // Ensure logError is exported

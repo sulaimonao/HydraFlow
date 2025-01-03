@@ -1,7 +1,7 @@
-// api/gauge.js 
-import { logError, logInfo } from "../util/logger.js";
-import { getContext } from "../state/context_state.js";
-import { getMemory, getHeads } from "../state/memory_state.js";
+// api/gauge.js
+import { logError, logInfo } from "../src/util/logger.js"; 
+import { getContext } from "../src/state/context_state.js";
+import { getMemory, getHeads } from "../src/state/memory_state.js";
 
 export async function fetchGaugeData({ userId, chatroomId }) {
   try {

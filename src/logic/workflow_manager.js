@@ -42,7 +42,8 @@ export const orchestrateContextWorkflow = async ({
     });
 
     if (feedback) {
-      await collectFeedback(feedback);
+      const feedbackResult = await collectFeedback(feedback);
+      response.feedbackResult = feedbackResult;
     }
 
     return response;

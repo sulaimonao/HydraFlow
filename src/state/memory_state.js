@@ -1,6 +1,7 @@
 // src/state/memory_state.js
 
-import { fetchMemory, upsertMemory, logInfo, logError, logDebugIssue } from "../util/memory.js";
+import { fetchMemory, updateMemory, logMemoryIssue } from "../util/memory.js";
+import { logError, logInfo } from "../util/logger.js";
 
 /**
  * Appends new memory to the existing memory for a user in a chatroom.

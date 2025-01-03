@@ -1,9 +1,16 @@
 // src/actions/feedback_collector.js
 import { createClient } from '@supabase/supabase-js';
+import { createLogger, format, transports } from "winston";
 
 const supabaseUrl = process.env.DATABASE_URL;
 const supabaseKey = process.env.KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const logger = createLogger({
+  level: "info",
+  format: format.combine(format.timestamp(), format.json()),
+  transports: [new transports.Console()],
+});
 
 // Collect feedback
 export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
@@ -15,19 +22,17 @@ export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
   };
 
   try {
-    const { data, error } = await supabase
-      .from('feedback_entries')
-      .insert([feedbackEntry]);
+    const { data, error } = await supabase.from('feedback_entries').insert([feedbackEntry]);
 
     if (error) {
-      console.error('Error inserting feedback:', error);
+      logger.error('Error inserting feedback:', error);
       return { status: 'error', message: 'Failed to record feedback.' };
     }
 
-    console.log('Feedback Collected:', data);
+    logger.info('Feedback Collected:', data);
     return { status: 'success', message: 'Feedback recorded successfully.', data };
   } catch (err) {
-    console.error('Unexpected error in collectFeedback:', err);
+    logger.error('Unexpected error in collectFeedback:', err);
     return { status: 'error', message: 'An unexpected error occurred.' };
   }
 };

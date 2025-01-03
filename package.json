@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "lint": "node simple-linter.js",
+    "precommit": "npm run lint",
     "test": "jest --coverage"
   },
   "devDependencies": {

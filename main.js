@@ -2,9 +2,16 @@
 
 import express from "express";
 import fetch from "node-fetch";
+import { createLogger, format, transports } from "winston";
 
 const app = express();
 app.use(express.json());
+
+const logger = createLogger({
+  level: "info",
+  format: format.combine(format.timestamp(), format.json()),
+  transports: [new transports.Console()],
+});
 
 const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api";
 
@@ -26,7 +33,7 @@ async function callApi(endpoint, payload = {}, method = "POST") {
 
     return await response.json();
   } catch (error) {
-    console.error(`Error calling ${endpoint}:`, error);
+    logger.error(`Error calling ${endpoint}:`, error);
     throw error;
   }
 }
@@ -92,6 +99,6 @@ app.post("/api/autonomous", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
 

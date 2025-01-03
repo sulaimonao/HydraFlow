@@ -1,28 +1,16 @@
 // src/logic/conditions.js
+import { fetchExistingHead } from "../util/database/db_helpers.js";
+import Joi from "joi";
 
-import { fetchExistingHead } from '../util/index.js';
-import Joi from 'joi';
-
-/**
- * Existing thresholds
- */
 const COMPRESSION_THRESHOLD = 20;
 const INITIAL_COMPRESSION_THRESHOLD = 10;
-
-/**
- * NEW token limit and max heads
- */
 const TOKEN_LIMIT = 1000;
 const MAX_HEADS = 5;
 
-/**
- * Schema for action items validation
- */
-const actionItemsSchema = Joi.array().items(Joi.string().valid('create head', 'summarize logs', 'compress memory'));
+const actionItemsSchema = Joi.array().items(
+  Joi.string().valid("create head", "summarize logs", "compress memory")
+);
 
-/**
- * Validate action items
- */
 const validateActionItems = (actionItems) => {
   const { error, value } = actionItemsSchema.validate(actionItems);
   if (error) {
@@ -31,54 +19,34 @@ const validateActionItems = (actionItems) => {
   return value;
 };
 
-/**
- * Existing condition: determines if we should create a head
- */
 export const shouldCreateHead = (actionItems) => {
   validateActionItems(actionItems);
-  return actionItems.includes('create head');
+  return actionItems.includes("create head");
 };
 
-/**
- * Existing condition: determines if we should summarize logs
- */
 export const shouldSummarizeLogs = (actionItems) => {
   validateActionItems(actionItems);
-  return actionItems.includes('summarize logs');
+  return actionItems.includes("summarize logs");
 };
 
-/**
- * Existing condition: determines if memory compression is needed based on
- * conversation length plus priority
- */
 export const shouldCompress = (actionItems, conversationLength) => {
-  const contextPriority = currentContext.priority || 'Normal';
+  const contextPriority = currentContext.priority || "Normal";
   const adjustedThreshold =
-    contextPriority === 'High' ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
+    contextPriority === "High" ? COMPRESSION_THRESHOLD / 2 : COMPRESSION_THRESHOLD;
 
-  return actionItems.includes('summarize') && conversationLength > adjustedThreshold;
+  return actionItems.includes("summarize") && conversationLength > adjustedThreshold;
 };
 
-/**
- * Existing condition: determines if a context recap is needed based on
- * conversation length and user engagement
- */
 export const needsContextRecap = (conversationLength, userEngagement) => {
-  const contextGoal = currentContext.goal || 'General';
-
-  if (contextGoal === 'Complex') {
-    return true;
-  }
+  const contextGoal = currentContext.goal || "General";
 
   return (
+    contextGoal === "Complex" ||
     conversationLength > INITIAL_COMPRESSION_THRESHOLD ||
     userEngagement < 50
   );
 };
 
-/**
- * Existing condition: checks for pending dependencies in a particular task
- */
 export const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
   const taskCard = getTaskCard(taskId, user_id, chatroom_id);
 
@@ -90,31 +58,10 @@ export const hasPendingDependencies = (taskId, user_id, chatroom_id) => {
   return taskCard.subtasks.some((subtask) => subtask.dependencies.length > 0);
 };
 
-/**
- * NEW condition: checks if we should compress memory due to high token usage
- */
-export const shouldCompressMemory = (tokenCount) => {
-  return tokenCount > TOKEN_LIMIT;
-};
+export const shouldCompressMemory = (tokenCount) => tokenCount > TOKEN_LIMIT;
 
-/**
- * NEW condition: checks if we can create a new head or if we've reached max
- */
-export const canCreateNewHead = (headCount) => {
-  return headCount < MAX_HEADS;
-};
+export const canCreateNewHead = (headCount) => headCount < MAX_HEADS;
 
-/**
- * NEW condition: checks if the current context is ready for further actions
- */
-export const isContextReady = () => {
-  const contextStatus = currentContext.status || 'active';
-  return contextStatus === 'active';
-};
+export const isContextReady = () => currentContext.status === "active";
 
-/**
- * NEW condition: determines if the task requires urgent processing
- */
-export const isUrgentTask = (taskPriority) => {
-  return taskPriority === 'High';
-};
+export const isUrgentTask = (taskPriority) => taskPriority === "High";

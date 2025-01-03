@@ -8,7 +8,7 @@ import { logError } from "./index.js";
  * @param {string} status - The new status to set (e.g., 'completed').
  * @throws {Error} - If updating subtasks fails.
  */
-export async function updateSubtasksStatus(subtaskIds, status) {
+async function updateSubtasksStatus(subtaskIds, status) {
   try {
     const { error } = await supabase
       .from("subtasks")
@@ -29,8 +29,59 @@ export async function updateSubtasksStatus(subtaskIds, status) {
  * @returns {Object} - The inserted task card object.
  * @throws {Error} - If the insertion fails.
  */
-export async function insertTaskCard(taskCard) {
+async function insertTaskCard(taskCard) {
   // function implementation
+}
+
+/**
+ * Adds a new head to the database.
+ *
+ * @param {string} task - The task associated with the head.
+ * @param {string} description - The description of the head.
+ * @param {number} userId - The ID of the user.
+ * @param {number} chatroomId - The ID of the chatroom.
+ * @returns {Object} - The inserted head object.
+ * @throws {Error} - If the insertion fails.
+ */
+async function addHead(task, description, userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("heads")
+      .insert([{ task, description, user_id: userId, chatroom_id: chatroomId }])
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  } catch (error) {
+    logError(`Error adding head: ${error.message}`, { task, description, userId, chatroomId });
+    throw new Error(`Error adding head: ${error.message}`);
+  }
+}
+
+/**
+ * Creates a new head in the database.
+ *
+ * @param {string} task - The task associated with the head.
+ * @param {string} description - The description of the head.
+ * @param {number} userId - The ID of the user.
+ * @param {number} chatroomId - The ID of the chatroom.
+ * @returns {Object} - The inserted head object.
+ * @throws {Error} - If the insertion fails.
+ */
+async function createNewHead(task, description, userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("heads")
+      .insert([{ task, description, user_id: userId, chatroom_id: chatroomId, is_primary: false }])
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error creating new specialist head: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in createNewHead: ${error.message}`, { task, userId, chatroomId });
+    throw error;
+  }
 }
 
 /**
@@ -41,7 +92,7 @@ export async function insertTaskCard(taskCard) {
  * @returns {Array} - An array of task cards with their subtasks.
  * @throws {Error} - If fetching task cards fails.
  */
-export async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
+async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
   try {
     const { data, error } = await supabase
       .from("task_cards")
@@ -287,12 +338,13 @@ export async function createNewHead(task, description, userId, chatroomId) {
   }
 }
 
+// Consolidated exports
 export {
-  addHead, // For creating the primary head
-  createNewHead, // For delegating tasks to specialists
-  insertTaskCard,
-  fetchTaskCardsWithSubtasks,
   updateSubtasksStatus,
+  insertTaskCard,
+  addHead,
+  createNewHead,
+  fetchTaskCardsWithSubtasks,
   fetchAllTasksWithDetails,
   fetchGaugeData,
   fetchMemory,

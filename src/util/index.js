@@ -1,3 +1,4 @@
+// src/util/index.js
 export { default as constants } from './constants.js';
 export { default as helpers } from './helpers.js';
 export { default as logger } from './logger.js';
@@ -7,6 +8,7 @@ export { default as validation } from './validation.js';
 export {
   updateSubtasksStatus,
   insertTaskCard,
-  addPrimaryHead,
-  addAlternateHead,
+  addHead as addPrimaryHead, // Aliased to differentiate primary head addition
+  createNewHead as addAlternateHead, // Aliased to differentiate alternate head addition
 } from './db_helpers.js';
+

@@ -1,27 +1,21 @@
 // src/actions/context_recapper.js
-
-import { callApiWithRetry } from './index.js';
+import { callApiWithRetry } from "./action_caller.js";
 
 /**
- * Summarizes the context history and combines it with compressed memory.
- *
- * @param {Array} history - The conversation or task history to be recapped.
- * @param {string} compressedMemory - Compressed memory to enrich the recap, if available.
- * @returns {Promise<Object>} - The API response containing the recapped context.
+ * Summarizes context history and combines it with compressed memory.
  */
 export async function contextRecap(history, compressedMemory = "") {
-  const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
+  const endpoint = "https://hydra-flow.vercel.app/api/context-recap";
 
   try {
     const payload = {
-      history: JSON.stringify(history), // Serialize history for API compatibility
-      compressedMemory // Default value for robustness
+      history: JSON.stringify(history),
+      compressedMemory,
     };
 
-    const response = await callApiWithRetry(endpoint, payload);
-    return response; // Return the recapped context for further use
+    return await callApiWithRetry(endpoint, payload);
   } catch (error) {
     console.error(`Error in contextRecap: ${error.message}`);
-    throw new Error(`Failed to generate context recap: ${error.message}`);
+    throw new Error("Failed to generate context recap.");
   }
 }

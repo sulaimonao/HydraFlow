@@ -1,19 +1,8 @@
 // src/logic/workflow_manager.js
 
-import { parseQuery, compressMemory, generateContextDigest,
-   generateFinalResponse, collectFeedback,
-   createSubpersona,
-   assignHeadTask,
-   pruneHead,
-   summarizeLogs, } from "../actions/index.js";
-import { updateContext, createTaskCard, getHeads,
-  appendMemory, getMemory
- } from "../state/index.js";
-import { gatherGaugeData } from "./index.js";
-import {
-  shouldCompressMemory,
-  canCreateNewHead,
-} from "./index.js";
+import { parseQuery, compressMemory, generateContextDigest, generateFinalResponse, collectFeedback, createSubpersona, assignHeadTask, pruneHead, summarizeLogs } from "../actions/index.js";
+import { updateContext, createTaskCard, getHeads, appendMemory, getMemory } from "../state/index.js";
+import { gatherGaugeData, shouldCompressMemory, canCreateNewHead } from "./index.js";
 
 /**
  * Orchestrates the entire workflow:

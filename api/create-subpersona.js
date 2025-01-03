@@ -1,5 +1,5 @@
 // api/create-subpersona.js
-import { addHead, fetchExistingHead, logInfo, logError, fetchGaugeData } from "../src/util/index.js";
+import { addHead, fetchExistingHead, logInfo, logError, fetchGaugeData } from "../src/util/heads.js";
 import { fetchTemplate } from "../src/state/index.js";
 import { ERRORS } from "../src/util/constants.js"; // Import constants
 

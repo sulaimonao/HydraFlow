@@ -1,10 +1,4 @@
-import {
-  insertTaskCard,
-  fetchTaskCardsWithSubtasks,
-  updateSubtasksStatus,
-  logDebugIssue,
-  logInfo, logError,
-} from "../util/index.js";
+import { insertTaskCard, fetchTaskCardsWithSubtasks, updateSubtasksStatus, logDebugIssue, logInfo, logError } from "../util/task.js";
 
 /**
  * Creates a new task card and subtasks for a user in a chatroom.

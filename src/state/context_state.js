@@ -1,8 +1,6 @@
 // src/state/context_state.js
 
-import { fetchContext, upsertContext,
-  logInfo, logError, logDebugIssue
- } from '../util/index.js';
+import { fetchContext, upsertContext, logInfo, logError, logDebugIssue } from '../util/context.js';
 
 let currentContext = {};
 const contextHistory = [];

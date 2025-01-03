@@ -2,7 +2,7 @@
 import { orchestrateContextWorkflow } from "../src/logic/index.js";
 import { fetchGaugeData, logInfo, logError } from "../src/util/gauge.js";
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   try {
     const { query, memory, logs, feedback, user_id, chatroom_id } = req.body;
 

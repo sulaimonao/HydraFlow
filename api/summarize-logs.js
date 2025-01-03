@@ -1,5 +1,5 @@
-// summarize-logs.js
-import { logInfo, logError } from "../src/util/index.js";
+// api/summarize-logs.js
+import { logInfo, logError } from "../src/util/logger.js"; // Ensure logger.js is correctly referenced
 
 export default async function handler(req, res) {
   try {
@@ -16,8 +16,9 @@ export default async function handler(req, res) {
       const errorCount = (logs.match(errorPattern) || []).length;
 
       // Summarize logs
-      const totalEntries = logs.split("\n").length;
-      const firstFiveLines = logs.split("\n").slice(0, 5).join("\n");
+      const logEntries = logs.split("\n");
+      const totalEntries = logEntries.length;
+      const firstFiveLines = logEntries.slice(0, 5).join("\n");
 
       const summaryReport = {
         totalEntries,

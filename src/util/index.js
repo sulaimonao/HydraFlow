@@ -10,5 +10,9 @@ export {
   insertTaskCard,
   addHead as addPrimaryHead, // Aliased to differentiate primary head addition
   createNewHead as addAlternateHead, // Aliased to differentiate alternate head addition
+  fetchTaskCardsWithSubtasks,
+  upsertFeedbackEntry,
+  insertTaskCardWithDependencies,
+  fetchTaskCardWithSubtasks,
 } from './db_helpers.js';
 

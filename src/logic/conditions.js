@@ -1,6 +1,7 @@
 // src/logic/conditions.js
 
-import { fetchExistingHead } from '../util/index.js'; 
+import { fetchExistingHead } from '../util/index.js';
+import Joi from 'joi';
 
 /**
  * Existing thresholds
@@ -15,9 +16,26 @@ const TOKEN_LIMIT = 1000;
 const MAX_HEADS = 5;
 
 /**
+ * Schema for action items validation
+ */
+const actionItemsSchema = Joi.array().items(Joi.string().valid('create head', 'summarize logs', 'compress memory'));
+
+/**
+ * Validate action items
+ */
+const validateActionItems = (actionItems) => {
+  const { error, value } = actionItemsSchema.validate(actionItems);
+  if (error) {
+    throw new Error(`Validation error: ${error.message}`);
+  }
+  return value;
+};
+
+/**
  * Existing condition: determines if we should create a head
  */
 export const shouldCreateHead = (actionItems) => {
+  validateActionItems(actionItems);
   return actionItems.includes('create head');
 };
 
@@ -25,6 +43,7 @@ export const shouldCreateHead = (actionItems) => {
  * Existing condition: determines if we should summarize logs
  */
 export const shouldSummarizeLogs = (actionItems) => {
+  validateActionItems(actionItems);
   return actionItems.includes('summarize logs');
 };
 

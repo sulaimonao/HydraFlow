@@ -1,19 +1,26 @@
 // src/util/validation.js
-import Joi from "joi";
+import Joi from 'joi';
 
+// Define your schema
 const taskSchema = Joi.object({
-  goal: Joi.string().required(),
-  priority: Joi.string().valid("High", "Medium", "Low").default("High"),
+  user_id: Joi.string().required(),
+  chatroom_id: Joi.string().required(),
+  task: Joi.string().required(),
+  description: Joi.string().optional(),
+  priority: Joi.string().valid('High', 'Medium', 'Low').default('High'),
   subtasks: Joi.array().items(
     Joi.object({
       description: Joi.string().required(),
-      status: Joi.string().valid("pending", "completed").default("pending"),
+      status: Joi.string().valid('pending', 'completed').default('pending'),
     })
   ),
 });
 
-export async function validateTaskInput(taskInput) {
-  const { error, value } = taskSchema.validate(taskInput);
-  if (error) throw new Error(`Invalid task input: ${error.message}`);
+// Validation function
+export const validateTaskInput = (data) => {
+  const { error, value } = taskSchema.validate(data);
+  if (error) {
+    throw new Error(`Validation error: ${error.message}`);
+  }
   return value;
-}
+};

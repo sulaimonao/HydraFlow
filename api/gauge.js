@@ -1,38 +1,22 @@
 // api/gauge.js
-import { logError, logInfo } from "../src/util/logger.js"; 
-import { getContext } from "../src/state/context_state.js";
-import { getMemory, getHeads } from "../src/state/memory_state.js";
+import { generateGaugeSnapshot } from "../src/logic/gauge_logic.js";
+import { logInfo, logError } from "../src/util/logger.js";
 
-export async function fetchGaugeData({ userId, chatroomId }) {
+export default async (req, res) => {
   try {
-    const gaugeSnapshot = await generateGaugeSnapshot(userId, chatroomId);
-    logInfo("Gauge data fetched successfully.", gaugeSnapshot);
-    return gaugeSnapshot;
+    const { userId, chatroomId } = req.body;
+
+    if (!userId || !chatroomId) {
+      logError("Invalid request: Missing userId or chatroomId.");
+      return res.status(400).json({ error: "userId and chatroomId are required." });
+    }
+
+    logInfo(`Fetching gauge data for user ${userId} in chatroom ${chatroomId}.`);
+    const gaugeData = await generateGaugeSnapshot(userId, chatroomId);
+
+    return res.status(200).json({ gaugeData });
   } catch (error) {
-    logError(`Failed to fetch gauge data: ${error.message}`);
-    throw error;
+    logError(`Error in gauge API: ${error.message}`);
+    res.status(500).json({ error: "Failed to fetch gauge data." });
   }
-}
-
-async function generateGaugeSnapshot(userId, chatroomId) {
-  try {
-    const context = await getContext(userId, chatroomId);
-    const memory = await getMemory(userId, chatroomId);
-    const heads = await getHeads(userId, chatroomId);
-
-    return {
-      priority: context.priority || "Normal",
-      memoryUsage: memory.length,
-      headCount: heads.length,
-      activeTasksCount: await fetchActiveTasksCount(userId, chatroomId),
-    };
-  } catch (error) {
-    logError(`Failed to generate gauge snapshot: ${error.message}`);
-    throw error;
-  }
-}
-
-async function fetchActiveTasksCount(userId, chatroomId) {
-  // Placeholder for fetching active tasks count
-  return 5;
-}
+};

@@ -7,9 +7,7 @@ export default async (req, res) => {
     const { query, memory, logs, feedback, user_id, chatroom_id } = req.body;
 
     if (!query || !user_id || !chatroom_id) {
-      return res.status(400).json({
-        error: "Missing required fields: query, user_id, or chatroom_id.",
-      });
+      return res.status(400).json({ error: "Missing required fields: query, user_id, or chatroom_id." });
     }
 
     logInfo(`Starting autonomous workflow for user ${user_id} in chatroom ${chatroom_id}.`);
@@ -31,7 +29,7 @@ export default async (req, res) => {
       activeTasks: gaugeData.activeTasksCount || 0,
     });
 
-    logInfo(`Autonomous workflow completed successfully.`);
+    logInfo(`Autonomous workflow completed successfully for user ${user_id}.`);
     res.status(200).json({ message: "Success", result });
   } catch (error) {
     logError(`Error in autonomous workflow: ${error.message}`);

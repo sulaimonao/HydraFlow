@@ -30,19 +30,7 @@ export async function updateSubtasksStatus(subtaskIds, status) {
  * @throws {Error} - If the insertion fails.
  */
 export async function insertTaskCard(taskCard) {
-  try {
-    const { data, error } = await supabase
-      .from("task_cards")
-      .insert(taskCard)
-      .select()
-      .single();
-
-    if (error) throw new Error(`Error inserting task card: ${error.message}`);
-    return data;
-  } catch (error) {
-    logError(`Error in insertTaskCard: ${error.message}`, { taskCard });
-    throw error;
-  }
+  // function implementation
 }
 
 /**
@@ -188,7 +176,7 @@ export async function upsertMemory(userId, chatroomId, memory) {
 }
 
 /**
- * Adds a new head (sub-persona) to the database.
+ * Adds a primary head (initial sub-persona) to the database.
  *
  * @param {string} task - The task or role of the head.
  * @param {string} description - A description of the head's purpose.
@@ -207,11 +195,12 @@ export async function addHead(task, description, userId, chatroomId) {
         user_id: userId,
         chatroom_id: chatroomId,
         created_at: new Date().toISOString(),
+        is_primary: true, // Mark this as the primary head
       })
       .select()
       .single();
 
-    if (error) throw new Error(`Error adding head: ${error.message}`);
+    if (error) throw new Error(`Error adding primary head: ${error.message}`);
     return data;
   } catch (error) {
     logError(`Error in addHead: ${error.message}`, { task, userId, chatroomId });
@@ -265,7 +254,42 @@ export async function upsertFeedbackEntry(responseId, userFeedback, rating) {
   }
 }
 
+/**
+ * Creates a new specialist head (sub-persona) in the database.
+ *
+ * @param {string} task - The task associated with the head.
+ * @param {string} description - The description of the head.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Object} - The inserted specialist head object.
+ * @throws {Error} - If the insertion fails.
+ */
+export async function createNewHead(task, description, userId, chatroomId) {
+  try {
+    const { data, error } = await supabase
+      .from("heads")
+      .insert({
+        task,
+        description,
+        user_id: userId,
+        chatroom_id: chatroomId,
+        created_at: new Date().toISOString(),
+        is_primary: false, // Mark this as a secondary head
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Error creating new specialist head: ${error.message}`);
+    return data;
+  } catch (error) {
+    logError(`Error in createNewHead: ${error.message}`, { task, userId, chatroomId });
+    throw error;
+  }
+}
+
 export {
+  addHead, // For creating the primary head
+  createNewHead, // For delegating tasks to specialists
   insertTaskCard,
   fetchTaskCardsWithSubtasks,
   updateSubtasksStatus,
@@ -275,5 +299,4 @@ export {
   upsertMemory,
   fetchAllTemplates,
   upsertFeedbackEntry,
-  addHead,
 };

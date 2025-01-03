@@ -1,4 +1,4 @@
-// src/util/heads.js
+// src/util/database/heads.js
 /**
  * Adds a new head (sub-persona) to the system.
  * @param {string} task - The task name or function of the sub-persona.

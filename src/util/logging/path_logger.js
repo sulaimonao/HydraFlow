@@ -1,3 +1,4 @@
+// src/util/logging/path_logger.js
 import { resolve } from "path";
 
 export const logResolvedPath = (modulePath) => {

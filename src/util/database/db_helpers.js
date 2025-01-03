@@ -1,6 +1,6 @@
-// src/util/db_helpers.js
-import { supabase } from "../../lib/db.js";
-import { logError } from "./logger.js"; // Ensure this points to the correct logger file
+// src/util/database/db_helpers.js
+import { supabase } from "../../../lib/db.js";
+import { logError } from "../logging/logger.js"; // Updated logger path
 
 /**
  * Updates the status of multiple subtasks in bulk.
@@ -65,27 +65,6 @@ async function addHead(task, description, userId, chatroomId) {
 }
 
 /**
- * Creates a new alternate head in the database.
- */
-async function createNewHead(task, description, userId, chatroomId) {
-  if (!task || !description || !userId || !chatroomId) {
-    throw new Error("Invalid input: Missing head details.");
-  }
-  try {
-    const { data, error } = await supabase
-      .from("heads")
-      .insert([{ task, description, user_id: userId, chatroom_id: chatroomId, is_primary: false }])
-      .select();
-
-    if (error) throw error;
-    return data[0];
-  } catch (error) {
-    logError(`Error creating new head: ${error.message}`, { task, description, userId, chatroomId });
-    throw error;
-  }
-}
-
-/**
  * Fetches all task cards with subtasks for a user and chatroom.
  */
 async function fetchTaskCardsWithSubtasks(userId, chatroomId) {
@@ -144,7 +123,6 @@ export {
   updateSubtasksStatus,
   insertTaskCard,
   addHead,
-  createNewHead,
   fetchTaskCardsWithSubtasks,
   fetchTaskCardWithSubtasks,
 };

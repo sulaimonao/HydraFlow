@@ -1,4 +1,4 @@
-// util/logger.js
+// src/util/logging/logger.js
 import winston from "winston";
 
 const logger = winston.createLogger({

@@ -1,4 +1,4 @@
-// src/util/memory.js
+// src/util/database/memory.js
 import { logError, logInfo } from "./logger.js";
 /**
  * Fetches memory for a user in a chatroom.

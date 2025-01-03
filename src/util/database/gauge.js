@@ -1,4 +1,4 @@
-// src/util/gauge.js
+// src/util/database/gauge.js
 
 export const STATUS = {
     SUCCESS: "success",

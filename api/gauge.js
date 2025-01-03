@@ -1,49 +1,37 @@
 // api/gauge.js 
-import { fetchGaugeData, STATUS, logInfo, logError } from "../src/util/gauge.js";
+import { logError } from './logger.js';
+import { getContext } from '../state/context_state.js';
+import { getMemory, getHeads } from '../state/memory_state.js';
 
-export default async function gaugeHandler(req, res) {
+export async function fetchGaugeData({ userId, chatroomId }) {
   try {
-    if (req.method === "GET") {
-      const { user_id, chatroom_id } = req.query;
-      if (!user_id || !chatroom_id) {
-        logError("Missing required query parameters: user_id or chatroom_id.");
-        return res.status(400).json({
-          status: STATUS.ERROR,
-          message: "Missing required query parameters: user_id and chatroom_id are mandatory.",
-        });
-      }
-
-      const safeUserId = user_id;
-      const safeChatroomId = chatroom_id;
-
-      logInfo(`Fetching gauge data for user ${safeUserId} in chatroom ${safeChatroomId}.`);
-
-      const gaugeData = await fetchGaugeData({ userId: safeUserId, chatroomId: safeChatroomId });
-
-      if (!gaugeData) {
-        logInfo(`No gauge data found for user ${safeUserId} in chatroom ${safeChatroomId}.`);
-        return res.status(404).json({
-          status: STATUS.ERROR,
-          message: "Gauge data not found for the provided identifiers.",
-        });
-      }
-
-      return res.status(200).json({
-        status: STATUS.SUCCESS,
-        user_id: safeUserId,
-        chatroom_id: safeChatroomId,
-        ...gaugeData,
-      });
-    } else {
-      res.setHeader("Allow", ["GET"]);
-      logError(`Unsupported method ${req.method} on gauge route.`);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
-    }
+    const gaugeSnapshot = await generateGaugeSnapshot(userId, chatroomId);
+    return gaugeSnapshot;
   } catch (error) {
-    logError(`Error in gauge route: ${error.message}`);
-    return res.status(500).json({
-      status: STATUS.ERROR,
-      error: "Internal server error.",
-    });
+    logError(`Failed to fetch gauge data: ${error.message}`);
+    throw error;
   }
+}
+
+export async function generateGaugeSnapshot(userId, chatroomId) {
+  try {
+    const context = await getContext(userId, chatroomId);
+    const memory = await getMemory(userId, chatroomId);
+    const heads = await getHeads(userId, chatroomId);
+    return {
+      priority: context.priority || "Normal",
+      keywords: context.keywords || [],
+      memoryUsage: memory.length,
+      headCount: heads.length,
+      activeTasksCount: await fetchActiveTasksCount(userId, chatroomId),
+    };
+  } catch (error) {
+    logError(`Failed to generate gauge snapshot: ${error.message}`);
+    throw error;
+  }
+}
+
+async function fetchActiveTasksCount(userId, chatroomId) {
+  // Placeholder for active task fetching logic
+  return 5; // Example static return for testing
 }

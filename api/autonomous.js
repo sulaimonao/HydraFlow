@@ -1,5 +1,5 @@
 // api/autonomous.js
-import { orchestrateContextWorkflow } from "../src/logic/index.js";
+import { orchestrateContextWorkflow } from "../src/logic/workflow_manager.js";
 import { fetchGaugeData, logInfo, logError } from "../src/util/gauge.js";
 
 export default async (req, res) => {
@@ -15,12 +15,8 @@ export default async (req, res) => {
     logInfo(`Starting autonomous workflow for user ${user_id} in chatroom ${chatroom_id}.`);
 
     const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
-    logInfo(`Gauge data retrieved for user ${user_id} in chatroom ${chatroom_id}:`, gaugeData);
-
     if (!gaugeData) {
-      return res.status(404).json({
-        error: "Gauge data not found. Unable to proceed with autonomous workflow.",
-      });
+      return res.status(404).json({ error: "Gauge data not found." });
     }
 
     const result = await orchestrateContextWorkflow({
@@ -35,15 +31,10 @@ export default async (req, res) => {
       activeTasks: gaugeData.activeTasksCount || 0,
     });
 
-    logInfo(`Autonomous workflow completed for user ${user_id} in chatroom ${chatroom_id}.`);
-
-    res.status(200).json({
-      message: "Autonomous workflow executed successfully.",
-      gaugeData,
-      ...result,
-    });
+    logInfo(`Autonomous workflow completed successfully.`);
+    res.status(200).json({ message: "Success", result });
   } catch (error) {
     logError(`Error in autonomous workflow: ${error.message}`);
-    res.status(500).json({ error: error.message || "Failed to execute autonomous workflow." });
+    res.status(500).json({ error: "Internal server error." });
   }
 };

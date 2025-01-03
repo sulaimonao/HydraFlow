@@ -1,11 +1,6 @@
 // api/compress-memory.js
-import { compressMemory } from "../src/actions/memory_compressor.js"; // Ensure correct path
-import {
-  fetchMemory,
-  upsertMemory,
-  logInfo,
-  logError,
-} from "../src/util/memory.js"; // Ensure correct path
+import { compressMemory } from "../src/actions/memory_compressor.js";
+import { fetchMemory, upsertMemory, logInfo, logError } from "../util/memory.js";
 
 export default async function compressMemoryHandler(req, res) {
   try {
@@ -18,15 +13,14 @@ export default async function compressMemoryHandler(req, res) {
       });
     }
 
-    logInfo(`Fetching memory for user ${user_id} in chatroom ${chatroom_id}`);
     const existingMemory = await fetchMemory(user_id, chatroom_id);
     const combinedMemory = `${existingMemory || ""} ${memory}`.trim();
 
-    const compressedMemory = compressMemory(combinedMemory);
+    const { compressedMemory } = compressMemory(combinedMemory);
 
-    logInfo(`Updating memory for user ${user_id} in chatroom ${chatroom_id}`);
     await upsertMemory(user_id, chatroom_id, compressedMemory);
 
+    logInfo(`Memory compressed for user ${user_id} in chatroom ${chatroom_id}`);
     return res.status(200).json({
       compressedMemory,
       message: "Memory compressed successfully.",

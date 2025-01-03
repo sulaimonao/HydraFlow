@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import feedbackRoutes from "./routes";
 import { healthCheck } from "./lib/db";
-import { logInfo, logError } from "../src/util/index.js";
+import { logInfo, logError } from "./src/util/logger.js";
 
 const app = express();
 
@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Logging Middleware
 app.use((req, res, next) => {
-  logInfo(`${req.method} ${req.url}`);
+  logInfo(`${req.method} ${req.url}`, { query: req.query, body: req.body });
   next();
 });
 
@@ -36,11 +36,11 @@ app.get("/health", async (req, res) => {
 
 // API Routes
 app.use("/api/feedback", feedbackRoutes);
-// Additional routes can be added here (e.g., /api/context, /api/tasks)
+// Add additional routes here (e.g., /api/context, /api/tasks)
 
 // Centralized Error Handling Middleware
 app.use((err, req, res, next) => {
-  logError(`Error: ${err.message}`);
+  logError(`Error: ${err.message}`, { stack: err.stack });
   res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
 });
 

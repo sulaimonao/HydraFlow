@@ -1,8 +1,8 @@
 // main.js
-
 import express from "express";
 import fetch from "node-fetch";
 import { createLogger, format, transports } from "winston";
+import Joi from "joi";
 
 const app = express();
 app.use(express.json());
@@ -40,59 +40,69 @@ async function callApi(endpoint, payload = {}, method = "POST") {
 
 // Action handlers for each actionItem
 const actionHandlers = {
-  "create-subpersona": async (details) => {
-    return await callApi("/create-subpersona", {
+  "create-subpersona": async (details) =>
+    callApi("/create-subpersona", {
       task: details.task || "default task",
       description: details.description || "Default sub-persona description",
-    });
-  },
-  "compress-memory": async (details) => {
-    const memory = details.memory || "Default memory chunk.";
-    return await callApi("/compress-memory", { memory });
-  },
-  "summarize-logs": async (details) => {
-    return await callApi("/summarize-logs", {
-      logs: details.logs || "Default log content.",
-    });
-  },
-  "context-recap": async (details) => {
-    return await callApi("/utils?action=recap", {
+      user_id: details.user_id,
+      chatroom_id: details.chatroom_id,
+    }),
+  "compress-memory": async (details) =>
+    callApi("/compress-memory", { memory: details.memory }),
+  "summarize-logs": async (details) =>
+    callApi("/summarize-logs", { logs: details.logs }),
+  "context-recap": async (details) =>
+    callApi("/utils?action=recap", {
       history: details.history || [],
-      compressedMemory: details.compressedMemory || "Default compressed memory.",
-    });
-  },
-  "gauge-data": async (details) => {
-    return await callApi(`/gauge?user_id=${details.user_id}&chatroom_id=${details.chatroom_id}`, {}, "GET");
-  },
-  // Add new action handlers here as needed
+      compressedMemory: details.compressedMemory || "",
+    }),
+  "gauge-data": async (details) =>
+    callApi(`/gauge?user_id=${details.user_id}&chatroom_id=${details.chatroom_id}`, {}, "GET"),
 };
+
+// Input validation schema
+const workflowSchema = Joi.object({
+  query: Joi.string().required(),
+  details: Joi.object({
+    user_id: Joi.string().required(),
+    chatroom_id: Joi.string().required(),
+    task: Joi.string().optional(),
+    description: Joi.string().optional(),
+    memory: Joi.string().optional(),
+    logs: Joi.string().optional(),
+    history: Joi.array().items(Joi.string()).optional(),
+    compressedMemory: Joi.string().optional(),
+  }).required(),
+});
 
 app.post("/api/autonomous", async (req, res) => {
   try {
-    const { query, details } = req.body;
-
-    if (!query) {
-      return res.status(400).json({ error: "Query is required." });
+    const { error, value } = workflowSchema.validate(req.body);
+    if (error) {
+      logger.error("Validation error:", error.details);
+      return res.status(400).json({ error: error.message });
     }
+
+    const { query, details } = value;
 
     // Step 1: Parse query
     const parseResponse = await callApi("/parse-query", { query });
     const { actionItems } = parseResponse;
 
-    let results = {};
+    const results = {};
 
     // Step 2: Execute actions dynamically
     for (const action of actionItems) {
       if (actionHandlers[action]) {
-        results[action] = await actionHandlers[action](details || {});
+        results[action] = await actionHandlers[action](details);
       } else {
-        console.warn(`Unknown action: ${action}`);
+        logger.warn(`Unknown action: ${action}`);
       }
     }
 
     res.status(200).json({ message: "Workflow executed successfully", results });
   } catch (error) {
-    console.error("Error in autonomous workflow:", error);
+    logger.error("Error in autonomous workflow:", error);
     res.status(500).json({ error: "Failed to execute workflow." });
   }
 });
@@ -101,4 +111,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
 });
-

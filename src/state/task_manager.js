@@ -1,14 +1,13 @@
-import { insertTaskCard, fetchTaskCardsWithSubtasks, updateSubtasksStatus, logDebugIssue, logInfo, logError } from "../util/task.js";
+//src/state/task_manager.js
+import {
+  insertTaskCard,
+  fetchTaskCardsWithSubtasks,
+  updateSubtasksStatus,
+  logDebugIssue,
+  logInfo,
+  logError,
+} from "../util/database/db_helpers.js";
 
-/**
- * Creates a new task card and subtasks for a user in a chatroom.
- *
- * @param {string} goal - The task's goal or main description.
- * @param {Array<string>} subtasks - An array of subtask descriptions.
- * @param {string} user_id - The user ID.
- * @param {string} chatroom_id - The chatroom ID.
- * @returns {Object} - The inserted task card with metadata.
- */
 export const createTaskCard = async (goal, subtasks, user_id, chatroom_id) => {
   try {
     const taskCard = {
@@ -33,15 +32,6 @@ export const createTaskCard = async (goal, subtasks, user_id, chatroom_id) => {
   }
 };
 
-/**
- * Updates the status of a specific task (and its subtasks) for a user in a chatroom.
- *
- * @param {number} taskId - The ID of the task to update.
- * @param {string} status - The new status (e.g., 'completed', 'pending').
- * @param {string} user_id - The user ID.
- * @param {string} chatroom_id - The chatroom ID.
- * @returns {Object} - The updated task object.
- */
 export const updateTaskStatus = async (taskId, status, user_id, chatroom_id) => {
   try {
     const tasks = await fetchTaskCardsWithSubtasks(user_id, chatroom_id);

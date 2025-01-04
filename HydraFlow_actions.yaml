@@ -67,13 +67,47 @@ components:
             status:
               type: string
               description: "Status of the subpersona activation."
+    LogSummary:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: "Summary of the log analysis."
+        patterns:
+          type: array
+          items:
+            type: string
+          description: "Key patterns identified in the logs."
+        errors:
+          type: array
+          items:
+            type: string
+          description: "Errors found in the logs."
+    FeedbackSummary:
+      type: object
+      properties:
+        totalFeedback:
+          type: integer
+          description: "Total number of feedback entries."
+        averageRating:
+          type: number
+          description: "Average rating from the feedback."
+        comments:
+          type: array
+          items:
+            type: string
+          description: "List of feedback comments."
 responses:
   ServerError:
     description: "Server error while processing the request."
     content:
       application/json:
         schema:
-          $ref: "#/components/schemas/ServerErrorResponse"
+          type: object
+          properties:
+            message:
+              type: string
+              description: "Error message."
 paths:
   /parse-query:
     post:

@@ -1,42 +1,40 @@
-// api/create-subpersona.js
-import { addHead, fetchExistingHead, logInfo, logError, fetchGaugeData } from "../src/util/heads.js";
-import { fetchTemplate } from "../src/state/templates_state.js";
-import { ERRORS } from "../src/util/constants.js";
+// create-subpersona.js
 
 export default async (req, res) => {
   try {
-    const { task, description, user_id, chatroom_id } = req.body;
+    const { task, description } = req.body;
 
-    if (!task || !description || !user_id || !chatroom_id) {
-      logError("Invalid request: Missing required fields.");
-      return res.status(400).json({ error: "Task, description, user_id, and chatroom_id are required." });
+    // Input validation
+    if (!task || !description) {
+      return res.status(400).json({ error: "Task and description are required." });
     }
 
-    logInfo(`Checking for existing sub-persona for task "${task}" in chatroom ${chatroom_id}.`);
-    const existingHead = await fetchExistingHead(task, user_id, chatroom_id);
-    if (existingHead) {
-      logError("Duplicate sub-persona entry detected.");
-      return res.status(409).json({ error: "Duplicate sub-persona entry detected." });
-    }
+    // Generate unique sub-persona metadata
+    const timestamp = Date.now();
+    const subPersonaName = `${task.replace(/ /g, "").toLowerCase()}_${timestamp}`;
+    const subPersonaData = {
+      name: subPersonaName,
+      taskDescription: description,
+      status: "active",
+      createdAt: new Date(timestamp).toISOString(),
+    };
 
-    const template = await fetchTemplate(task);
-    const templateDetails = template ? { capabilities: template.capabilities, preferences: template.preferences } : null;
+    // Log creation (or replace with database logic)
+    console.log("Sub-Persona Created:", subPersonaData);
 
-    logInfo(`Creating new sub-persona for user ${user_id} in chatroom ${chatroom_id}.`);
-    const newHead = await addHead(task, description, user_id, chatroom_id, templateDetails);
-
-    const gaugeData = await fetchGaugeData({ userId: user_id, chatroomId: chatroom_id });
-    logInfo(`Gauge data fetched successfully for user ${user_id}.`);
-
-    return res.status(201).json({
-      subPersonaName: newHead.task,
-      description: newHead.description,
-      templateUsed: template ? template.name : "No template used",
-      gauge: gaugeData,
+    // Return sub-persona details
+    return res.status(200).json({
+      subPersonaName: subPersonaData.name,
+      description: subPersonaData.taskDescription,
+      status: subPersonaData.status,
+      createdAt: subPersonaData.createdAt,
+      metadata: {
+        taskId: timestamp,
+      },
       message: "Sub-persona created successfully.",
     });
   } catch (error) {
-    logError(`Error in create-subpersona: ${error.message}`);
-    return res.status(500).json({ error: ERRORS.GENERIC });
+    console.error("Error in create-subpersona:", error);
+    return res.status(500).json({ error: "Failed to create sub-persona. Please try again." });
   }
 };

@@ -3,10 +3,8 @@ info:
   title: HydraFlow Actions API
   description: >
     HydraFlow is an adaptive conversational assistant API for context management, query parsing,
-    dynamic sub-persona creation, memory compression, log summarization, context recapping,
-    and real-time gauge (instrument cluster) insights.
-  version: 1.5.1
-
+    dynamic sub-persona creation, memory compression, log summarization, and context recapping.
+  version: 1.2.0
 servers:
   - url: https://hydra-flow.vercel.app/api
     description: Deployed API server
@@ -58,13 +56,25 @@ components:
           description: Feedback text provided by the user.
         rating:
           type: integer
-          minimum: 1
-          maximum: 5
           description: Rating given by the user (1-5).
         timestamp:
           type: string
           format: date-time
           description: Time of feedback submission.
+
+    FeedbackSummary:
+      type: object
+      properties:
+        totalFeedback:
+          type: integer
+          description: Total number of feedback entries.
+        averageRating:
+          type: number
+          description: Average rating from all feedback entries.
+        feedbackEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackEntry'
 
     LogSummary:
       type: object
@@ -78,55 +88,6 @@ components:
         firstFiveLines:
           type: string
           description: The first five lines of the log for a quick overview.
-
-    GaugeData:
-      type: object
-      properties:
-        user_id:
-          type: string
-          description: The user ID being monitored.
-        chatroom_id:
-          type: string
-          description: The chatroom ID or session reference.
-        contextSnapshot:
-          type: object
-          properties:
-            priority:
-              type: string
-              description: Current priority or context-level emphasis.
-            keywords:
-              type: array
-              items:
-                type: string
-              description: Keywords recognized in the context.
-        memoryUsage:
-          type: integer
-          description: The length of the conversation memory string.
-        headCount:
-          type: integer
-          description: Number of sub-personas (heads) currently active.
-        activeTasksCount:
-          type: integer
-          description: Number of tasks with at least one incomplete subtask.
-        limitationNotes:
-          type: array
-          items:
-            type: string
-          description: List of constraints or thresholds being applied.
-
-    CompressedMemory:
-      type: object
-      properties:
-        compressedMemory:
-          type: string
-          description: Resulting compressed memory after optimization.
-
-    Recap:
-      type: object
-      properties:
-        recap:
-          type: string
-          description: A summarized recap of the context and memory.
 
     ServerErrorResponse:
       type: object
@@ -148,6 +109,7 @@ paths:
     post:
       operationId: parseQuery
       summary: Parse a query into actionable keywords and tasks
+      description: Parses user-provided query to extract keywords and actionable tasks.
       requestBody:
         description: User query to parse.
         required: true
@@ -177,6 +139,7 @@ paths:
     post:
       operationId: createSubpersona
       summary: Create a specialized sub-persona
+      description: Dynamically generates a specialized sub-persona for a specified task.
       requestBody:
         description: Details for sub-persona creation.
         required: true
@@ -187,8 +150,6 @@ paths:
               required:
                 - task
                 - description
-                - user_id
-                - chatroom_id
               properties:
                 task:
                   type: string
@@ -196,15 +157,22 @@ paths:
                 description:
                   type: string
                   description: A detailed description of the sub-persona's role.
-                user_id:
-                  type: string
-                  description: The user ID creating the sub-persona.
-                chatroom_id:
-                  type: string
-                  description: The chatroom ID where the sub-persona will operate.
       responses:
-        '201':
+        '200':
           description: Successfully created a sub-persona.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subPersonaName:
+                    type: string
+                    description: Name assigned to the newly created sub-persona.
+                  status:
+                    type: string
+                    description: The status of the sub-persona creation process.
+        '400':
+          description: Missing task or description fields.
         '500':
           $ref: '#/components/responses/ServerError'
 
@@ -212,6 +180,7 @@ paths:
     post:
       operationId: compressMemory
       summary: Compress and optimize memory
+      description: Compresses lengthy conversation memory for optimized context management.
       requestBody:
         description: Full memory content to compress.
         required: true
@@ -231,60 +200,57 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompressedMemory'
+                type: object
+                properties:
+                  compressedMemory:
+                    type: string
+                    description: Compressed memory summary.
+        '400':
+          description: Missing or invalid memory input.
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /context-recap:
+  /summarize-logs:
     post:
-      operationId: contextRecap
-      summary: Generate a context recap
+      operationId: summarizeLogs
+      summary: Summarize logs for patterns and errors
+      description: Analyzes log data to generate summaries of key patterns and errors.
       requestBody:
-        description: Details for generating a context recap.
+        description: Log data to summarize.
         required: true
         content:
           application/json:
             schema:
               type: object
               required:
-                - user_id
-                - chatroom_id
+                - logs
               properties:
-                user_id:
+                logs:
                   type: string
-                  description: The user ID.
-                chatroom_id:
-                  type: string
-                  description: The chatroom ID.
+                  description: Log data to analyze and summarize.
       responses:
         '200':
-          description: Successfully generated context recap.
+          description: Successfully summarized logs.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Recap'
+                $ref: '#/components/schemas/LogSummary'
+        '400':
+          description: Missing or invalid log data.
         '500':
           $ref: '#/components/responses/ServerError'
 
-  /gauge:
+  /feedback/summary:
     get:
-      operationId: getGaugeData
-      summary: Retrieve real-time gauge (instrument cluster) info
-      parameters:
-        - in: query
-          name: user_id
-          schema:
-            type: string
-        - in: query
-          name: chatroom_id
-          schema:
-            type: string
+      operationId: getFeedbackSummary
+      summary: Retrieve feedback summary
+      description: Fetches a summarized view of all feedback, including totals and averages.
       responses:
         '200':
-          description: Successfully retrieved gauge data.
+          description: Successfully retrieved feedback summary.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GaugeData'
+                $ref: '#/components/schemas/FeedbackSummary'
         '500':
           $ref: '#/components/responses/ServerError'

@@ -1,59 +1,17 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
+    { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
-  "rewrites": [
-    {
-      "source": "/api/parse-query",
-      "destination": "/api/parse-query.js"
-    },
-    {
-      "source": "/api/task",
-      "destination": "/api/task.js"
-    },    
-    {
-      "source": "/api/create-subpersona",
-      "destination": "/api/create-subpersona.js"
-    },
-    {
-      "source": "/api/compress-memory",
-      "destination": "/api/compress-memory.js"
-    },
-    {
-      "source": "/api/context-recap",
-      "destination": "/api/context-recap.js"
-    },
-    {
-      "source": "/api/summarize-logs",
-      "destination": "/api/summarize-logs.js"
-    },
-    {
-      "source": "/api/autonomous",
-      "destination": "/api/autonomous.js"
-    },
-    {
-      "source": "/api/feedback/all",
-      "destination": "/api/feedback/all.js"
-    },
-    {
-      "source": "/api/feedback/summary",
-      "destination": "/api/feedback/summary.js"
-    },
-    {
-      "source": "/api/feedback/submit",
-      "destination": "/api/feedback/submit.js"
-    },
-    {
-      "source": "/api/gauge",
-      "destination": "/api/gauge.js"
-    },
-    {
-      "source": "/api/test-db",
-      "destination": "/api/test-db.js"
-    }
+  "routes": [
+    { "src": "/api/parse-query", "dest": "/api/parse-query.js" },
+    { "src": "/api/create-subpersona", "dest": "/api/create-subpersona.js" },
+    { "src": "/api/compress-memory", "dest": "/api/compress-memory.js" },
+    { "src": "/api/context-recap", "dest": "/api/context-recap.js" },
+    { "src": "/api/summarize-logs", "dest": "/api/summarize-logs.js" },
+    { "src": "/api/autonomous", "dest": "/api/autonomous.js" },
+    { "src": "/api/feedback/all", "dest": "/api/feedback/all.js" },
+    { "src": "/api/feedback/summary", "dest": "/api/feedback/summary.js" },
+    { "src": "/api/feedback/submit", "dest": "/api/feedback/submit.js" }
   ]
 }

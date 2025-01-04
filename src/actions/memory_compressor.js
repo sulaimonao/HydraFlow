@@ -1,16 +1,31 @@
-// src/actions/memory_compressor.js
-/**
- * Compresses memory based on its type.
- */
+// Consolidated memory_compressor.js
+
+// Deduplicates and compresses text-based memory
+export function compressTextMemory(memory) {
+  const sentences = memory.split(". ").map((sentence) => sentence.trim());
+  const uniqueSentences = [...new Set(sentences)];
+  const summarizedContent = uniqueSentences.slice(0, 3).join(". ") + "...";
+  return { compressedMemory: summarizedContent };
+}
+
+// Deduplicates and compresses array-based memory
+export function compressArrayMemory(memory) {
+  const compressedMemory = new Map();
+  memory.forEach((item) => {
+    if (item.key && !compressedMemory.has(item.key)) {
+      compressedMemory.set(item.key, item.value);
+    }
+  });
+  return Array.from(compressedMemory.values());
+}
+
+// Main compressMemory function to handle multiple formats
 export function compressMemory(memory) {
   if (typeof memory === "string") {
-    const sentences = memory.split(/\.\s+/).map((s) => s.trim());
-    const uniqueSentences = [...new Set(sentences)];
-    return { compressedMemory: uniqueSentences.slice(0, 5).join(". ") + "..." };
+    return compressTextMemory(memory);
   } else if (Array.isArray(memory)) {
-    const uniqueEntries = [...new Map(memory.map((item) => [item.key, item.value])).values()];
-    return { compressedMemory: uniqueEntries };
+    return { compressedMemory: compressArrayMemory(memory) };
   } else {
-    throw new Error("Unsupported memory format.");
+    throw new Error("Unsupported memory format. Expected a string or an array.");
   }
 }

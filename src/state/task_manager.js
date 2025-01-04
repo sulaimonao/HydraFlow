@@ -1,57 +1,43 @@
-//src/state/task_manager.js
-import {
-  insertTaskCard,
-  fetchTaskCardsWithSubtasks,
-  updateSubtasksStatus,
-  logDebugIssue,
-  logInfo,
-  logError,
-} from "../util/database/db_helpers.js";
+//task_manager.js
 
-export const createTaskCard = async (goal, subtasks, user_id, chatroom_id) => {
-  try {
-    const taskCard = {
-      goal,
-      priority: "High",
-      subtasks: subtasks.map((task) => ({
-        description: task,
-        status: "pending",
-      })),
-      createdAt: new Date().toISOString(),
-      user_id,
-      chatroom_id,
-    };
+const tasks = []; // In-memory task storage (replace with DB if needed)
 
-    const insertedTaskCard = await insertTaskCard(taskCard);
-    logInfo("Task card created successfully.", { taskCardId: insertedTaskCard.id });
-    return insertedTaskCard;
-  } catch (error) {
-    logError(`Failed to create task card: ${error.message}`);
-    await logDebugIssue(user_id, null, "Task Creation Failure", error.message);
-    throw error;
-  }
+export const createTaskCard = (goal, subtasks) => {
+  const taskCard = {
+    id: `task_${Date.now()}`,
+    goal,
+    priority: "High",
+    subtasks: subtasks.map((task, index) => ({
+      id: `subtask_${Date.now()}_${index}`,
+      task,
+      status: "pending",
+      dependencies: [],
+    })),
+    createdAt: new Date().toISOString(),
+  };
+
+  tasks.push(taskCard);
+  return taskCard;
 };
 
-export const updateTaskStatus = async (taskId, status, user_id, chatroom_id) => {
-  try {
-    const tasks = await fetchTaskCardsWithSubtasks(user_id, chatroom_id);
-    const taskToUpdate = tasks.find((task) => task.id === taskId);
-    if (!taskToUpdate) {
-      throw new Error(`Task with ID ${taskId} not found for user ${user_id} in chatroom ${chatroom_id}.`);
+export const addDependency = (taskId, dependencyId) => {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) throw new Error(`Task ${taskId} not found`);
+
+  task.subtasks.forEach((subtask) => {
+    if (subtask.id === dependencyId) {
+      subtask.dependencies.push(taskId);
     }
-
-    const updatedSubtasks = taskToUpdate.subtasks.map((subtask) => ({
-      ...subtask,
-      status,
-    }));
-
-    await updateSubtasksStatus(updatedSubtasks.map((sub) => sub.id), status);
-    logInfo(`Task (ID: ${taskId}) status updated to "${status}".`);
-
-    return { ...taskToUpdate, subtasks: updatedSubtasks };
-  } catch (error) {
-    logError(`Failed to update task status: ${error.message}`);
-    await logDebugIssue(user_id, null, "Task Update Failure", error.message);
-    throw error;
-  }
+  });
 };
+
+export const updateTaskStatus = (taskId, status) => {
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) throw new Error(`Task ${taskId} not found`);
+
+  task.subtasks.forEach((subtask) => {
+    subtask.status = status;
+  });
+};
+
+export const getTaskCard = (taskId) => tasks.find((t) => t.id === taskId);

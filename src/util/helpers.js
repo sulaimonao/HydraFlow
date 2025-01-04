@@ -1,4 +1,4 @@
-// src/util/helpers.js
+// helpers.js
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }

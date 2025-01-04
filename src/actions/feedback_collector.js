@@ -1,64 +1,36 @@
-// src/actions/feedback_collector.js
-import { supabase } from "../util/database/db_helpers.js";
-import { logError, logInfo } from "../util/logging/logger.js";
+const feedbackLog = []; // Temporary in-memory storage (replace with DB if needed)
 
-/**
- * Collects user feedback and stores it in the database.
- */
-export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
+// Collect feedback
+export const collectFeedback = ({ responseId, userFeedback, rating }) => {
   const feedbackEntry = {
-    response_id: responseId,
-    user_feedback: userFeedback,
+    responseId,
+    userFeedback,
     rating,
     timestamp: new Date().toISOString(),
   };
 
-  try {
-    const { data, error } = await supabase.from("feedback_entries").insert([feedbackEntry]);
-    if (error) throw error;
-
-    logInfo("Feedback collected successfully.", { data });
-    return { status: "success", message: "Feedback recorded successfully.", data };
-  } catch (err) {
-    logError("Error collecting feedback.", { err });
-    return { status: "error", message: "Failed to record feedback." };
-  }
+  feedbackLog.push(feedbackEntry);
+  console.log("Feedback Collected:", feedbackEntry);
+  return { status: "success", message: "Feedback recorded successfully." };
 };
 
-/**
- * Retrieves feedback logs from the database.
- */
-export const getFeedbackLog = async () => {
-  try {
-    const { data, error } = await supabase.from("feedback_entries").select("*");
-    if (error) throw error;
-
-    return { status: "success", message: "Feedback retrieved successfully.", data };
-  } catch (err) {
-    logError("Error retrieving feedback logs.", { err });
-    return { status: "error", message: "Failed to retrieve feedback.", data: [] };
-  }
+// Get all feedback logs
+export const getFeedbackLog = () => {
+  return feedbackLog;
 };
 
-/**
- * Generates summarized insights from feedback data.
- */
-export const generateFeedbackSummary = async () => {
-  try {
-    const { data, error } = await supabase.from("feedback_entries").select("rating");
-    if (error) throw error;
+// Generate summarized insights
+export const generateFeedbackSummary = () => {
+  const totalFeedback = feedbackLog.length;
+  const averageRating =
+    feedbackLog.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback || 0;
 
-    const totalFeedback = data.length;
-    const averageRating = totalFeedback
-      ? parseFloat((data.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback).toFixed(2))
-      : 0;
+  const insights = {
+    totalFeedback,
+    averageRating: parseFloat(averageRating.toFixed(2)),
+    feedbackEntries: feedbackLog,
+  };
 
-    const insights = { totalFeedback, averageRating };
-    logInfo("Generated feedback summary.", { insights });
-
-    return { status: "success", message: "Feedback summary generated successfully.", insights };
-  } catch (err) {
-    logError("Error generating feedback summary.", { err });
-    return { status: "error", message: "Failed to generate feedback summary.", insights: null };
-  }
+  console.log("Generated Feedback Summary:", insights);
+  return insights;
 };

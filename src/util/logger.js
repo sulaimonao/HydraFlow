@@ -1,4 +1,5 @@
-// logger.js
+// src/util/logger.js
+
 export function logInfo(message) {
     console.log(`[INFO]: ${message}`);
   }

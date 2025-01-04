@@ -1,3 +1,5 @@
+//src/state/heads_state.js
+
 const heads = [];
 
 function addHead(name, status) {

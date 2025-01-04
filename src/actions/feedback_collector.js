@@ -1,3 +1,5 @@
+// src/actions/feedback_collector.js
+
 const feedbackLog = []; // Temporary in-memory storage (replace with DB if needed)
 
 // Collect feedback

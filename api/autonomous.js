@@ -1,4 +1,5 @@
-// autonomous.js
+// api/autonomous.js
+
 import { orchestrateContextWorkflow } from "../workflow_manager.js";
 
 export default async (req, res) => {

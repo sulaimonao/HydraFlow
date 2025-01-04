@@ -1,4 +1,4 @@
-// parse-query.js
+// api/parse-query.js
 
 export default async (req, res) => {
   try {

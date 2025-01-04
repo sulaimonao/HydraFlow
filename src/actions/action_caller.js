@@ -1,4 +1,5 @@
 // src/actions/action_caller.js
+
 import axios from 'axios';
 
 async function callApiWithRetry(endpoint, payload, retries = 3, backoff = 300) {
@@ -27,6 +28,8 @@ const { generateResponse } = require("./response_generator");
 
 async function callAction(action, payload, context) {
   switch (action) {
+    case "generate_response":
+      return await generateResponse(payload, context);
     case "fetch_gauge_metrics":
       return calculateMetrics(context);
     default:

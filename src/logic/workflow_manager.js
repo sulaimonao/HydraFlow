@@ -1,4 +1,4 @@
-// workflow_manager.js
+// src/logic/workflow_manager.js
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../actions/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";

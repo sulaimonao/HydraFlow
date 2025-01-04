@@ -1,4 +1,5 @@
-// Updated log_summarizer.js
+// src/actions/log_summarizer.js
+
 import { callApiWithRetry } from './action_caller.js';
 
 async function summarizeLogs(logs) {

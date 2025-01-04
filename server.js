@@ -1,9 +1,29 @@
 const express = require("express");
+const session = require("express-session");
+const { v4: uuidv4 } = require("uuid");
 const feedbackRoutes = require("./routes/feedback");
 const { calculateMetrics } = require("./src/util/metrics");
 
 const app = express();
 app.use(express.json());
+
+// Use session middleware
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Middleware to initialize user and chatroom data
+app.use((req, res, next) => {
+  if (!req.session.userId) {
+    req.session.userId = uuidv4();
+  }
+  if (!req.session.chatroomId) {
+    req.session.chatroomId = uuidv4();
+  }
+  next();
+});
 
 // Feedback routes
 app.use("/api/feedback", feedbackRoutes);

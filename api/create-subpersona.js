@@ -1,4 +1,4 @@
-// create-subpersona.js
+// api/create-subpersona.js
 
 export default async (req, res) => {
   try {

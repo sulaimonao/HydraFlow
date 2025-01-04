@@ -1,4 +1,5 @@
-// compress-memory.js
+// api/compress-memory.js
+
 import { compressMemory } from "../src/actions/memory_compressor.js";
 
 export default async (req, res) => {

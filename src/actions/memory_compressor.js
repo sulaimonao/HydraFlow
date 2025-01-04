@@ -1,4 +1,4 @@
-// Consolidated memory_compressor.js
+// src/actions/memory_compressor.js
 
 // Deduplicates and compresses text-based memory
 export function compressTextMemory(memory) {

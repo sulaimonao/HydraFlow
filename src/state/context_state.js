@@ -1,6 +1,21 @@
-//context_state.js
+//src/state/context_state.js
 
-let currentContext = {};
+class ContextState {
+  constructor() {
+    this.tokenUsage = { used: 0, total: 8192 };
+    this.responseLatency = 0.8;
+  }
+
+  updateTokenUsage(usedTokens) {
+    this.tokenUsage.used += usedTokens;
+  }
+
+  updateResponseLatency(latency) {
+    this.responseLatency = latency;
+  }
+}
+
+let currentContext = new ContextState();
 const contextHistory = [];
 
 export function updateContext(newData) {
@@ -15,3 +30,4 @@ export function getContextHistory() {
 }
 
 export { currentContext };
+module.exports = ContextState;

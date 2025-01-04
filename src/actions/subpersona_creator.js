@@ -1,3 +1,5 @@
+//src/actions/subpersona_creator.js
+
 import { compressMemory } from './memory_compressor.js';
 
 const activeHeads = {}; // Store active heads temporarily

@@ -3,8 +3,8 @@ info:
   title: "HydraFlow Actions API"
   description: |
     HydraFlow is an adaptive conversational assistant API for context management, query parsing, dynamic sub-persona creation, memory compression, log summarization, and context recapping.
-    This version includes proactive memory optimization, enhanced subpersona autonomy, and streamlined context management.
-  version: "1.3.0"
+    This version includes proactive memory optimization, enhanced subpersona autonomy, and streamlined context management, real-time gauge insights.
+  version: "1.4.0"
 servers:
   - url: "https://hydra-flow.vercel.app/api"
     description: "Deployed API server"

@@ -1,10 +1,5 @@
-// api/feedback/submit.js
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = process.env.KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// api/feedback/submit.js 
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -17,14 +12,9 @@ export default async function handler(req, res) {
 
     try {
       // Insert feedback into the feedback_entries table
-      const { data, error } = await supabase
-        .from('feedback_entries')
-        .insert([{ user_feedback: userFeedback, rating }]);
-
-      if (error) {
-        console.error('Error inserting feedback:', error);
-        return res.status(500).json({ error: 'Failed to submit feedback. Please try again.' });
-      }
+      const data = await supabaseRequest(
+        supabase.from('feedback_entries').insert([{ user_feedback: userFeedback, rating }])
+      );
 
       res.status(200).json({ message: 'Feedback submitted successfully.', data });
     } catch (error) {
@@ -36,4 +26,3 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-// Compare this snippet from lib/db.js:

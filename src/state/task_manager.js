@@ -1,12 +1,5 @@
 // src/state/task_manager.js
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = process.env.KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 export const createTaskCard = async (goal, subtasks) => {
   const taskCard = {
@@ -20,25 +13,29 @@ export const createTaskCard = async (goal, subtasks) => {
     createdAt: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase.from('task_cards').insert([taskCard]);
-  if (error) throw new Error(`Error creating task card: ${error.message}`);
+  const data = await supabaseRequest(
+    supabase.from('task_cards').insert([taskCard])
+  );
   return data[0];
 };
 
 export const addDependency = async (taskId, dependencyId) => {
-  const { data, error } = await supabase.from('subtasks').update({ dependencies: dependencyId }).eq('id', taskId);
-  if (error) throw new Error(`Error adding dependency: ${error.message}`);
+  const data = await supabaseRequest(
+    supabase.from('subtasks').update({ dependencies: dependencyId }).eq('id', taskId)
+  );
   return data;
 };
 
 export const updateTaskStatus = async (taskId, status) => {
-  const { data, error } = await supabase.from('subtasks').update({ status }).eq('id', taskId);
-  if (error) throw new Error(`Error updating task status: ${error.message}`);
+  const data = await supabaseRequest(
+    supabase.from('subtasks').update({ status }).eq('id', taskId)
+  );
   return data;
 };
 
 export const getTaskCard = async (taskId) => {
-  const { data, error } = await supabase.from('task_cards').select('*').eq('id', taskId);
-  if (error) throw new Error(`Error fetching task card: ${error.message}`);
+  const data = await supabaseRequest(
+    supabase.from('task_cards').select('*').eq('id', taskId)
+  );
   return data[0];
 };

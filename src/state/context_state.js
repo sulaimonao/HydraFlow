@@ -1,12 +1,5 @@
 //src/state/context_state.js
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = process.env.KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 class ContextState {
   constructor() {
@@ -16,12 +9,16 @@ class ContextState {
 
   async updateTokenUsage(usedTokens) {
     this.tokenUsage.used += usedTokens;
-    await supabase.from('context_state').update({ tokenUsage: this.tokenUsage }).eq('id', 1);
+    await supabaseRequest(
+      supabase.from('context_state').update({ tokenUsage: this.tokenUsage }).eq('id', 1)
+    );
   }
 
   async updateResponseLatency(latency) {
     this.responseLatency = latency;
-    await supabase.from('context_state').update({ responseLatency: this.responseLatency }).eq('id', 1);
+    await supabaseRequest(
+      supabase.from('context_state').update({ responseLatency: this.responseLatency }).eq('id', 1)
+    );
   }
 }
 
@@ -31,7 +28,9 @@ const contextHistory = [];
 export async function updateContext(newData) {
   contextHistory.push({ ...currentContext }); // Save a snapshot before updating
   currentContext = { ...currentContext, ...newData };
-  await supabase.from('context_state').update(currentContext).eq('id', 1);
+  await supabaseRequest(
+    supabase.from('context_state').update(currentContext).eq('id', 1)
+  );
 
   return currentContext;
 }

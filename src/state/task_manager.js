@@ -1,43 +1,44 @@
 //src/state/task_manager.js
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const tasks = []; // In-memory task storage (replace with DB if needed)
+dotenv.config();
 
-export const createTaskCard = (goal, subtasks) => {
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = process.env.KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export const createTaskCard = async (goal, subtasks) => {
   const taskCard = {
-    id: `task_${Date.now()}`,
     goal,
     priority: "High",
     subtasks: subtasks.map((task, index) => ({
-      id: `subtask_${Date.now()}_${index}`,
-      task,
+      description: task,
       status: "pending",
       dependencies: [],
     })),
     createdAt: new Date().toISOString(),
   };
 
-  tasks.push(taskCard);
-  return taskCard;
+  const { data, error } = await supabase.from('task_cards').insert([taskCard]);
+  if (error) throw new Error(`Error creating task card: ${error.message}`);
+  return data[0];
 };
 
-export const addDependency = (taskId, dependencyId) => {
-  const task = tasks.find((t) => t.id === taskId);
-  if (!task) throw new Error(`Task ${taskId} not found`);
-
-  task.subtasks.forEach((subtask) => {
-    if (subtask.id === dependencyId) {
-      subtask.dependencies.push(taskId);
-    }
-  });
+export const addDependency = async (taskId, dependencyId) => {
+  const { data, error } = await supabase.from('subtasks').update({ dependencies: dependencyId }).eq('id', taskId);
+  if (error) throw new Error(`Error adding dependency: ${error.message}`);
+  return data;
 };
 
-export const updateTaskStatus = (taskId, status) => {
-  const task = tasks.find((t) => t.id === taskId);
-  if (!task) throw new Error(`Task ${taskId} not found`);
-
-  task.subtasks.forEach((subtask) => {
-    subtask.status = status;
-  });
+export const updateTaskStatus = async (taskId, status) => {
+  const { data, error } = await supabase.from('subtasks').update({ status }).eq('id', taskId);
+  if (error) throw new Error(`Error updating task status: ${error.message}`);
+  return data;
 };
 
-export const getTaskCard = (taskId) => tasks.find((t) => t.id === taskId);
+export const getTaskCard = async (taskId) => {
+  const { data, error } = await supabase.from('task_cards').select('*').eq('id', taskId);
+  if (error) throw new Error(`Error fetching task card: ${error.message}`);
+  return data[0];
+};

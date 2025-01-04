@@ -1,4 +1,12 @@
 //src/state/context_state.js
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = process.env.KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 class ContextState {
   constructor() {
@@ -6,21 +14,24 @@ class ContextState {
     this.responseLatency = 0.8;
   }
 
-  updateTokenUsage(usedTokens) {
+  async updateTokenUsage(usedTokens) {
     this.tokenUsage.used += usedTokens;
+    await supabase.from('context_state').update({ tokenUsage: this.tokenUsage }).eq('id', 1);
   }
 
-  updateResponseLatency(latency) {
+  async updateResponseLatency(latency) {
     this.responseLatency = latency;
+    await supabase.from('context_state').update({ responseLatency: this.responseLatency }).eq('id', 1);
   }
 }
 
 let currentContext = new ContextState();
 const contextHistory = [];
 
-export function updateContext(newData) {
+export async function updateContext(newData) {
   contextHistory.push({ ...currentContext }); // Save a snapshot before updating
   currentContext = { ...currentContext, ...newData };
+  await supabase.from('context_state').update(currentContext).eq('id', 1);
 
   return currentContext;
 }
@@ -30,4 +41,3 @@ export function getContextHistory() {
 }
 
 export { currentContext };
-module.exports = ContextState;

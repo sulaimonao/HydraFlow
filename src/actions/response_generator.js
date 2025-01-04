@@ -29,4 +29,15 @@ export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerforme
     // Combine response into a cohesive output
     return response.join("\n\n");
   };
-  
+
+async function generateResponse(input, context) {
+  // Mock response generation logic
+  const response = `Processed input: ${input}`;
+  context.tokenUsage = context.tokenUsage || { used: 500, total: 8192 }; // Example token usage
+  context.responseLatency = 0.7; // Example latency
+  return response;
+}
+
+module.exports = {
+  generateResponse,
+};

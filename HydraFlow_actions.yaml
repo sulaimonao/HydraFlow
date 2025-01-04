@@ -1,14 +1,13 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
-  title: HydraFlow Actions API
-  description: >
-    HydraFlow is an adaptive conversational assistant API for context management, query parsing,
-    dynamic sub-persona creation, memory compression, log summarization, and context recapping.
-  version: 1.2.0
+  title: "HydraFlow Actions API"
+  description: |
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing, dynamic sub-persona creation, memory compression, log summarization, and context recapping.
+    This version includes proactive memory optimization, enhanced subpersona autonomy, and streamlined context management.
+  version: "1.3.0"
 servers:
-  - url: https://hydra-flow.vercel.app/api
-    description: Deployed API server
-
+  - url: "https://hydra-flow.vercel.app/api"
+    description: "Deployed API server"
 components:
   schemas:
     ParseQueryResponse:
@@ -18,21 +17,21 @@ components:
           type: array
           items:
             type: string
-          description: Keywords extracted from the query.
+          description: "Keywords extracted from the query."
         actionItems:
           type: array
           items:
             type: string
-          description: Actionable tasks identified from the query.
+          description: "Actionable tasks identified from the query."
         taskCard:
           type: object
           properties:
             goal:
               type: string
-              description: Goal of the task.
+              description: "Goal of the task."
             priority:
               type: string
-              description: Task priority (e.g., High, Medium).
+              description: "Task priority (e.g., High, Medium)."
             subtasks:
               type: array
               items:
@@ -40,217 +39,205 @@ components:
                 properties:
                   task:
                     type: string
-                    description: Subtask description.
+                    description: "Subtask description."
                   status:
                     type: string
-                    description: Subtask status (e.g., pending, completed).
-
-    FeedbackEntry:
+                    description: "Subtask status (e.g., pending, completed)."
+    MemoryOptimization:
       type: object
       properties:
-        responseId:
-          type: string
-          description: Response ID associated with the feedback.
-        userFeedback:
-          type: string
-          description: Feedback text provided by the user.
-        rating:
+        threshold:
           type: integer
-          description: Rating given by the user (1-5).
-        timestamp:
+          description: "Memory usage threshold to trigger compression."
+        status:
           type: string
-          format: date-time
-          description: Time of feedback submission.
-
-    FeedbackSummary:
+          description: "Status of memory optimization."
+    SubpersonaActivation:
       type: object
       properties:
-        totalFeedback:
-          type: integer
-          description: Total number of feedback entries.
-        averageRating:
-          type: number
-          description: Average rating from all feedback entries.
-        feedbackEntries:
-          type: array
-          items:
-            $ref: '#/components/schemas/FeedbackEntry'
-
-    LogSummary:
-      type: object
-      properties:
-        totalEntries:
-          type: integer
-          description: Total number of log entries analyzed.
-        errorCount:
-          type: integer
-          description: Number of error-like patterns detected.
-        firstFiveLines:
+        triggerCondition:
           type: string
-          description: The first five lines of the log for a quick overview.
-
-    ServerErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: Description of the error.
-
-  responses:
-    ServerError:
-      description: Server error while processing the request.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ServerErrorResponse'
-
+          description: "Condition that activates the subpersona."
+        subpersonaDetails:
+          type: object
+          properties:
+            name:
+              type: string
+              description: "Name of the activated subpersona."
+            status:
+              type: string
+              description: "Status of the subpersona activation."
+responses:
+  ServerError:
+    description: "Server error while processing the request."
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/ServerErrorResponse"
 paths:
   /parse-query:
     post:
-      operationId: parseQuery
-      summary: Parse a query into actionable keywords and tasks
-      description: Parses user-provided query to extract keywords and actionable tasks.
+      operationId: "parseQuery"
+      summary: "Parse a query into actionable keywords and tasks"
+      description: "Parses user-provided query to extract keywords and actionable tasks."
       requestBody:
-        description: User query to parse.
+        description: "User query to parse."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - query
+              required: ["query"]
               properties:
                 query:
                   type: string
-                  description: The query input that needs parsing.
+                  description: "The query input that needs parsing."
       responses:
-        '200':
-          description: Successfully parsed query.
+        200:
+          description: "Successfully parsed query."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParseQueryResponse'
-        '400':
-          description: Invalid input; query missing or malformed.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/ParseQueryResponse"
+        400:
+          description: "Invalid input; query missing or malformed."
+        500:
+          $ref: "#/responses/ServerError"
   /create-subpersona:
     post:
-      operationId: createSubpersona
-      summary: Create a specialized sub-persona
-      description: Dynamically generates a specialized sub-persona for a specified task.
+      operationId: "createSubpersona"
+      summary: "Create a specialized sub-persona"
+      description: "Dynamically generates a specialized sub-persona for a specified task, with optional self-activation logic."
       requestBody:
-        description: Details for sub-persona creation.
+        description: "Details for sub-persona creation."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - task
-                - description
+              required: ["task", "description"]
               properties:
                 task:
                   type: string
-                  description: The specific task the sub-persona will handle.
+                  description: "The specific task the sub-persona will handle."
                 description:
                   type: string
-                  description: A detailed description of the sub-persona's role.
+                  description: "A detailed description of the sub-persona's role."
+                triggerCondition:
+                  type: string
+                  description: "Condition for subpersona self-activation."
       responses:
-        '200':
-          description: Successfully created a sub-persona.
+        200:
+          description: "Successfully created a sub-persona."
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  subPersonaName:
-                    type: string
-                    description: Name assigned to the newly created sub-persona.
-                  status:
-                    type: string
-                    description: The status of the sub-persona creation process.
-        '400':
-          description: Missing task or description fields.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/SubpersonaActivation"
+        400:
+          description: "Missing task or description fields."
+        500:
+          $ref: "#/responses/ServerError"
   /compress-memory:
     post:
-      operationId: compressMemory
-      summary: Compress and optimize memory
-      description: Compresses lengthy conversation memory for optimized context management.
+      operationId: "compressMemory"
+      summary: "Compress and optimize memory"
+      description: "Compresses lengthy conversation memory for optimized context management. Automatically triggers if memory usage exceeds the defined threshold."
       requestBody:
-        description: Full memory content to compress.
+        description: "Full memory content to compress."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - memory
+              required: ["memory"]
               properties:
                 memory:
                   type: string
-                  description: The full conversation memory to be compressed.
+                  description: "The full conversation memory to be compressed."
       responses:
-        '200':
-          description: Successfully compressed memory.
+        200:
+          description: "Successfully compressed memory."
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  compressedMemory:
-                    type: string
-                    description: Compressed memory summary.
-        '400':
-          description: Missing or invalid memory input.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/MemoryOptimization"
+        400:
+          description: "Missing or invalid memory input."
+        500:
+          $ref: "#/responses/ServerError"
   /summarize-logs:
     post:
-      operationId: summarizeLogs
-      summary: Summarize logs for patterns and errors
-      description: Analyzes log data to generate summaries of key patterns and errors.
+      operationId: "summarizeLogs"
+      summary: "Summarize logs for patterns and errors"
+      description: "Analyzes log data to generate summaries of key patterns and errors."
       requestBody:
-        description: Log data to summarize.
+        description: "Log data to summarize."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - logs
+              required: ["logs"]
               properties:
                 logs:
                   type: string
-                  description: Log data to analyze and summarize.
+                  description: "Log data to analyze and summarize."
       responses:
-        '200':
-          description: Successfully summarized logs.
+        200:
+          description: "Successfully summarized logs."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogSummary'
-        '400':
-          description: Missing or invalid log data.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/LogSummary"
+        400:
+          description: "Missing or invalid log data."
+        500:
+          $ref: "#/responses/ServerError"
   /feedback/summary:
     get:
-      operationId: getFeedbackSummary
-      summary: Retrieve feedback summary
-      description: Fetches a summarized view of all feedback, including totals and averages.
+      operationId: "getFeedbackSummary"
+      summary: "Retrieve feedback summary"
+      description: "Fetches a summarized view of all feedback, including totals and averages."
       responses:
-        '200':
-          description: Successfully retrieved feedback summary.
+        200:
+          description: "Successfully retrieved feedback summary."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeedbackSummary'
-        '500':
-          $ref: '#/components/responses/ServerError'
+                $ref: "#/components/schemas/FeedbackSummary"
+        500:
+          $ref: "#/responses/ServerError"
+  /fetch-gauge-metrics:
+    get:
+      operationId: "fetchGaugeMetrics"
+      summary: "Fetch gauge metrics for the user interface"
+      description: "Provides real-time metrics including token usage, engine load, and latency."
+      responses:
+        200:
+          description: "Successfully fetched metrics."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokenUsage:
+                    type: object
+                    properties:
+                      used:
+                        type: integer
+                      total:
+                        type: integer
+                      remaining:
+                        type: integer
+                      status:
+                        type: string
+                  engineLoad:
+                    type: string
+                  latency:
+                    type: number
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+        500:
+          description: "Server error."

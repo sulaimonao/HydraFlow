@@ -1,4 +1,4 @@
-// Updated action_caller.js
+// src/actions/action_caller.js
 import axios from 'axios';
 
 async function callApiWithRetry(endpoint, payload, retries = 3, backoff = 300) {
@@ -21,3 +21,19 @@ function shouldRetry(error) {
 }
 
 export { callApiWithRetry };
+
+const { calculateMetrics } = require("../util/metrics");
+const { generateResponse } = require("./response_generator");
+
+async function callAction(action, payload, context) {
+  switch (action) {
+    case "fetch_gauge_metrics":
+      return calculateMetrics(context);
+    default:
+      throw new Error(`Unknown action: ${action}`);
+  }
+}
+
+module.exports = {
+  callAction,
+};

@@ -32,3 +32,4 @@ test_command.txt
 analyzeSyntax.js
 *.csv
 *.py
+lib/supabase_rls_policy.txt

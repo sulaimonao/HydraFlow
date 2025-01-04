@@ -1,4 +1,4 @@
-//src/state/task_manager.js
+// src/state/task_manager.js
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 

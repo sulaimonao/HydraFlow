@@ -1,9 +1,14 @@
 // src/actions/feedback_collector.js
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-const feedbackLog = []; // Temporary in-memory storage (replace with DB if needed)
+dotenv.config();
 
-// Collect feedback
-export const collectFeedback = ({ responseId, userFeedback, rating }) => {
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = process.env.KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
   const feedbackEntry = {
     responseId,
     userFeedback,
@@ -11,28 +16,19 @@ export const collectFeedback = ({ responseId, userFeedback, rating }) => {
     timestamp: new Date().toISOString(),
   };
 
-  feedbackLog.push(feedbackEntry);
-  console.log("Feedback Collected:", feedbackEntry);
-  return { status: "success", message: "Feedback recorded successfully." };
+  const { data, error } = await supabase.from('feedback_entries').insert([feedbackEntry]);
+  if (error) throw new Error(`Error collecting feedback: ${error.message}`);
+  return { status: "success", message: "Feedback recorded successfully.", data };
 };
 
-// Get all feedback logs
-export const getFeedbackLog = () => {
-  return feedbackLog;
+export const getFeedbackLog = async () => {
+  const { data, error } = await supabase.from('feedback_entries').select('*');
+  if (error) throw new Error(`Error fetching feedback log: ${error.message}`);
+  return data;
 };
 
-// Generate summarized insights
-export const generateFeedbackSummary = () => {
-  const totalFeedback = feedbackLog.length;
-  const averageRating =
-    feedbackLog.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback || 0;
-
-  const insights = {
-    totalFeedback,
-    averageRating: parseFloat(averageRating.toFixed(2)),
-    feedbackEntries: feedbackLog,
-  };
-
-  console.log("Generated Feedback Summary:", insights);
-  return insights;
+export const generateFeedbackSummary = async () => {
+  const { data, error } = await supabase.rpc('feedback_summary');
+  if (error) throw new Error(`Error generating feedback summary: ${error.message}`);
+  return data;
 };

@@ -1,5 +1,4 @@
 // api/compress-memory.js
-
 import { compressMemory } from "../src/actions/memory_compressor.js";
 
 export default async (req, res) => {
@@ -18,13 +17,21 @@ export default async (req, res) => {
     // Perform memory compression with optional threshold
     const compressedMemory = compressMemory(memory, threshold);
 
+    // Fallback for gauge metrics
+    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
+
+    // Log a warning if gauge metrics are missing
+    if (!res.locals.gaugeMetrics) {
+      console.warn("Warning: gaugeMetrics is missing. Using default values.");
+    }
+
     // Respond with compressed memory, additional metrics, and gauge metrics
     return res.status(200).json({
       compressedMemory,
       originalLength: memory.length,
       compressedLength: compressedMemory.length,
       compressionRatio: (compressedMemory.length / memory.length).toFixed(2),
-      gaugeMetrics: res.locals.gaugeMetrics,
+      gaugeMetrics,
       message: "Memory compressed successfully."
     });
   } catch (error) {

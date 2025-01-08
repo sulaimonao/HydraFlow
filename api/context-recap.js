@@ -1,5 +1,4 @@
 // api/context-recap.js
-
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { history, compressedMemory, additionalNotes } = req.body;
@@ -26,9 +25,17 @@ export default async function handler(req, res) {
 ` : ''}
     `;
 
+    // Fallback for gauge metrics
+    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to empty object if undefined
+
+    // Log a warning if gauge metrics are missing
+    if (!res.locals.gaugeMetrics) {
+      console.warn("Warning: gaugeMetrics is missing. Using default values.");
+    }
+
     res.status(200).json({
       recap: recap.trim(),
-      gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+      gaugeMetrics, // Include gauge metrics in the response
     });
   } else {
     res.status(405).json({ error: 'Method Not Allowed' });

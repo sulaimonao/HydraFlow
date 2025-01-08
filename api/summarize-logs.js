@@ -1,5 +1,4 @@
-// summarize-logs.js
-
+// api/summarize-logs.js
 import winston from "winston";
 
 export default async function handler(req, res) {
@@ -35,7 +34,14 @@ export default async function handler(req, res) {
       // Log the analysis
       logger.info("Logs analyzed", summaryReport);
 
-      res.status(200).json({ summaryReport });
+      // Fallback for gauge metrics
+      const gaugeMetrics = res.locals.gaugeMetrics || {};
+
+      res.status(200).json({
+        summaryReport,
+        gaugeMetrics, // Include gauge metrics in the response
+        message: "Logs summarized successfully.",
+      });
     } catch (error) {
       console.error("Error in summarize-logs:", error);
       res.status(500).json({ error: "Failed to summarize logs." });

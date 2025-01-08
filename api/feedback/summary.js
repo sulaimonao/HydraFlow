@@ -1,5 +1,4 @@
 // api/feedback/summary.js
-
 import supabase from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
@@ -19,10 +18,19 @@ export default async function handler(req, res) {
       ? (data.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback).toFixed(2) 
       : 0;
 
+    // Fallback for gauge metrics
+    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
+
+    // Log a warning if gauge metrics are missing
+    if (!res.locals.gaugeMetrics) {
+      console.warn("Warning: gaugeMetrics is missing. Using default values.");
+    }
+
+    // Respond with the summary and gauge metrics
     res.status(200).json({
       totalFeedback,
       averageRating,
-      gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+      gaugeMetrics,
       message: 'Feedback summary retrieved successfully.',
     });
   } catch (error) {

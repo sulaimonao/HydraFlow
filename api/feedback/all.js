@@ -1,5 +1,4 @@
 // api/feedback/all.js
-
 import supabase from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
@@ -13,11 +12,19 @@ export default async function handler(req, res) {
       throw new Error(`Error fetching feedback: ${error.message}`);
     }
 
+    // Fallback for gauge metrics
+    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
+
+    // Log a warning if gauge metrics are missing
+    if (!res.locals.gaugeMetrics) {
+      console.warn("Warning: gaugeMetrics is missing. Using default values.");
+    }
+
     // Respond with feedback data and gauge metrics
     res.status(200).json({
       status: 'success',
       data,
-      gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+      gaugeMetrics,
     });
   } catch (error) {
     console.error('Error retrieving all feedback:', error);

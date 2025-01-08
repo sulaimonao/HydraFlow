@@ -31,6 +31,9 @@ export default async function handler(req, res) {
         : [],
     };
 
+    // Fallback for gauge metrics
+    res.locals.gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to empty object if undefined
+
     // Attach enriched metrics to global gauge metrics
     res.locals.gaugeMetrics = enrichedMetrics;
 

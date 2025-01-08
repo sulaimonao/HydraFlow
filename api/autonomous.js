@@ -25,13 +25,13 @@ export default async (req, res) => {
     const responsePayload = {
       message: "Workflow executed successfully",
       ...result,
-      gaugeMetrics: res.locals.gaugeMetrics,
+      gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object
     };
 
     // Respond with the results of the workflow
     res.status(200).json(responsePayload);
   } catch (error) {
-    console.error("Error in autonomous workflow:", error);
-    res.status(500).json({ error: error.message || "Failed to execute workflow." });
+    console.error("Error in autonomous:", error);
+    res.status(500).json({ error: "Failed to execute workflow. Please try again." });
   }
 };

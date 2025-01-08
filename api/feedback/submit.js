@@ -16,10 +16,19 @@ export default async function handler(req, res) {
         supabase.from('feedback_entries').insert([{ user_feedback: userFeedback, rating }])
       );
 
+      // Fallback for gauge metrics
+      const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
+
+      // Log a warning if gauge metrics are missing
+      if (!res.locals.gaugeMetrics) {
+        console.warn("Warning: gaugeMetrics is missing. Using default values.");
+      }
+
+      // Respond with feedback submission confirmation and gauge metrics
       res.status(200).json({ 
         message: 'Feedback submitted successfully.', 
         data,
-        gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+        gaugeMetrics,
       });
     } catch (error) {
       console.error('Error submitting feedback:', error);

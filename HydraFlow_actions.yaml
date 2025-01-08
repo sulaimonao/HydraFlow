@@ -4,7 +4,7 @@ info:
   description: |
     HydraFlow is an adaptive conversational assistant API for context management, query parsing, dynamic sub-persona creation, memory compression, log summarization, and context recapping.
     This version includes proactive memory optimization, enhanced subpersona autonomy, and streamlined context management, real-time gauge insights.
-  version: "1.4.0"
+  version: "1.5.0"
 servers:
   - url: "https://hydra-flow.vercel.app/api"
     description: "Deployed API server"
@@ -97,6 +97,14 @@ components:
           items:
             type: string
           description: "List of feedback comments."
+    Recommendations:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: "Actionable recommendations based on current metrics."
 responses:
   ServerError:
     description: "Server error while processing the request."
@@ -275,3 +283,17 @@ paths:
                       type: string
         500:
           description: "Server error."
+  /recommendations:
+    get:
+      operationId: "getRecommendations"
+      summary: "Fetch actionable recommendations"
+      description: "Provides recommendations based on system performance and metrics."
+      responses:
+        200:
+          description: "Successfully fetched recommendations."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendations"
+        500:
+          $ref: "#/responses/ServerError"

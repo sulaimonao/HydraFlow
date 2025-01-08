@@ -13,7 +13,12 @@ export default async function handler(req, res) {
       throw new Error(`Error fetching feedback: ${error.message}`);
     }
 
-    res.status(200).json({ status: 'success', data });
+    // Respond with feedback data and gauge metrics
+    res.status(200).json({
+      status: 'success',
+      data,
+      gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+    });
   } catch (error) {
     console.error('Error retrieving all feedback:', error);
     res.status(500).json({ error: 'Failed to retrieve feedback data.' });

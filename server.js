@@ -4,6 +4,7 @@ const session = require("express-session");
 const { v4: uuidv4 } = require("uuid");
 const feedbackRoutes = require("./routes/feedback");
 const { calculateMetrics } = require("./src/util/metrics");
+const { appendGaugeMetrics } = require("./middleware/metricsMiddleware");
 
 const app = express();
 app.use(express.json());
@@ -28,6 +29,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware to append gauge metrics to all responses
+app.use(appendGaugeMetrics);
+
 // Feedback routes
 app.use("/api/feedback", feedbackRoutes);
 
@@ -42,7 +46,7 @@ app.get("/api/fetch-gauge-metrics", (req, res) => {
     ],
   };
   const metrics = calculateMetrics(context);
-  res.json(metrics);
+  res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
 // Fetch real-time recommendations
@@ -51,7 +55,7 @@ app.get("/api/recommendations", (req, res) => {
     "Consider compressing memory for optimal performance.",
     "Activate sub-persona for log analysis.",
   ];
-  res.json({ recommendations });
+  res.json({ recommendations, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
 // Start server

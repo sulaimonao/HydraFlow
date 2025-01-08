@@ -12,7 +12,9 @@
     { "src": "/api/autonomous", "dest": "/api/autonomous.js" },
     { "src": "/api/feedback/all", "dest": "/api/feedback/all.js" },
     { "src": "/api/feedback/summary", "dest": "/api/feedback/summary.js" },
-    { "src": "/api/feedback/submit", "dest": "/api/feedback/submit.js" },
-    { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics.js" }
+    { "src": "/api/feedback/task/(.*)", "dest": "/api/feedback/task/$1.js" },
+    { "src": "/api/feedback/persona/(.*)", "dest": "/api/feedback/persona/$1.js" },
+    { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics.js" },
+    { "src": "/api/recommendations", "dest": "/api/recommendations.js" }
   ]
 }

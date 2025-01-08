@@ -55,12 +55,13 @@ export default async (req, res) => {
       proposedTasks: taskCard.subtasks,
     });
 
-    // Respond with structured data
+    // Respond with structured data and gauge metrics
     res.status(200).json({
       keywords: query.split(" "), // Basic keyword extraction
       actionItems,
       taskCard,
       workflowPlan,
+      gaugeMetrics: res.locals.gaugeMetrics,
       message: "Query parsed and workflow planned successfully.",
     });
   } catch (error) {

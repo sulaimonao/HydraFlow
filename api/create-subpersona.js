@@ -27,7 +27,7 @@ export default async (req, res) => {
     // Log creation (or replace with database logic)
     console.log("Sub-Persona Created:", subPersonaData);
 
-    // Return sub-persona details
+    // Return sub-persona details with gauge metrics
     return res.status(200).json({
       subPersonaName: subPersonaData.name,
       description: subPersonaData.taskDescription,
@@ -37,6 +37,7 @@ export default async (req, res) => {
       metadata: {
         taskId: timestamp,
       },
+      gaugeMetrics: res.locals.gaugeMetrics,
       message: "Sub-persona created successfully.",
     });
   } catch (error) {

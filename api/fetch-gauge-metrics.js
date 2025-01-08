@@ -31,7 +31,14 @@ export default async function handler(req, res) {
         : [],
     };
 
-    res.status(200).json(enrichedMetrics);
+    // Attach enriched metrics to global gauge metrics
+    res.locals.gaugeMetrics = enrichedMetrics;
+
+    res.status(200).json({
+      enrichedMetrics,
+      gaugeMetrics: res.locals.gaugeMetrics,
+      message: "Gauge metrics calculated successfully."
+    });
   } catch (error) {
     console.error('Error fetching gauge metrics:', error);
     res.status(500).json({ error: 'Failed to fetch gauge metrics.' });

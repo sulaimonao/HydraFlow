@@ -300,39 +300,39 @@ paths:
   /tasks/dependency:
     post:
       operationId: "addTaskDependency"
-      summary: "Add a task dependency"
+      summary: "Add a dependency for a subtask"
       description: "Creates a dependency relationship between subtasks."
       requestBody:
-        description: "Details of the task dependency."
+        description: "Details of the dependency to add."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: ["subtaskId", "dependsOn"]
+              required: ["taskId", "dependencyId"]
               properties:
-                subtaskId:
+                taskId:
                   type: integer
                   description: "ID of the subtask."
-                dependsOn:
+                dependencyId:
                   type: integer
                   description: "ID of the subtask it depends on."
       responses:
         200:
-          description: "Successfully added task dependency."
+          description: "Successfully added the dependency."
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    description: "Success message."
-                  dependency:
-                    type: object
-                    description: "Details of the created dependency."
+                  taskId:
+                    type: integer
+                  dependencies:
+                    type: array
+                    items:
+                      type: integer
         400:
-          description: "Invalid input."
+          description: "Invalid input or existing dependency."
         500:
           $ref: "#/responses/ServerError"
   /tasks/dependencies/{subtaskId}:
@@ -376,64 +376,136 @@ paths:
   /tasks/{taskCardId}:
     get:
       operationId: "getTaskCard"
-      summary: "Fetch task card with subtasks and dependencies"
-      description: "Fetches a task card, its subtasks, and their dependencies."
+      summary: "Fetch a task card with its subtasks and dependencies"
+      description: "Fetches a specific task card and its associated subtasks and dependencies."
       parameters:
         - name: taskCardId
           in: path
           required: true
           schema:
             type: integer
-          description: "ID of the task card."
+          description: "The ID of the task card."
       responses:
         200:
-          description: "Successfully fetched task card."
+          description: "Successfully fetched the task card."
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    description: "Success message."
                   taskCard:
                     type: object
-                    properties:
-                      id:
-                        type: integer
-                        description: "Task card ID."
-                      goal:
-                        type: string
-                        description: "Goal of the task card."
-                      priority:
-                        type: string
-                        description: "Priority level of the task card."
-                      subtasks:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              description: "Subtask ID."
-                            description:
-                              type: string
-                              description: "Description of the subtask."
-                            status:
-                              type: string
-                              description: "Status of the subtask."
-                            dependencies:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  id:
-                                    type: integer
-                                    description: "Dependency ID."
-                                  dependsOn:
-                                    type: integer
-                                    description: "ID of the subtask it depends on."
+                    description: "Details of the task card."
         400:
-          description: "Invalid taskCardId."
+          description: "Invalid or missing taskCardId."
+        500:
+          $ref: "#/responses/ServerError"
+  /context/state:
+    get:
+      operationId: "getContextState"
+      summary: "Retrieve the current context state"
+      description: "Fetches the current context state for the user and chatroom."
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "User ID."
+        - name: chatroom_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Chatroom ID."
+      responses:
+        200:
+          description: "Successfully retrieved the context state."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentContext:
+                    type: object
+                    description: "Details of the current context state."
+        400:
+          description: "Invalid input or missing parameters."
+        500:
+          $ref: "#/responses/ServerError"
+    post:
+      operationId: "updateContextState"
+      summary: "Update the context state"
+      description: "Updates the current context state with new data."
+      requestBody:
+        description: "Details of the new context state."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["newData"]
+              properties:
+                newData:
+                  type: object
+                  description: "The updated context data."
+      responses:
+        200:
+          description: "Successfully updated the context state."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedContext:
+                    type: object
+                    description: "The updated context data."
+        400:
+          description: "Invalid input data."
+        500:
+          $ref: "#/responses/ServerError"
+  /feedback:
+    get:
+      operationId: "getFeedback"
+      summary: "Retrieve all feedback"
+      description: "Fetches all feedback entries."
+      responses:
+        200:
+          description: "Successfully retrieved feedback."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: array
+                    items:
+                      type: object
+        500:
+          $ref: "#/responses/ServerError"
+    post:
+      operationId: "submitFeedback"
+      summary: "Submit feedback"
+      description: "Submits feedback for a task or workflow."
+      requestBody:
+        description: "Details of the feedback to submit."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["comment", "rating"]
+              properties:
+                comment:
+                  type: string
+                  description: "The feedback comment."
+                rating:
+                  type: integer
+                  description: "The rating (1-5)."
+      responses:
+        200:
+          description: "Successfully submitted feedback."
+        400:
+          description: "Invalid feedback input."
         500:
           $ref: "#/responses/ServerError"

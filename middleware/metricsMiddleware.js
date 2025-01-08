@@ -1,6 +1,7 @@
 // middleware/metricsMiddleware.js
 
 import { calculateMetrics } from "../src/util/metrics";
+import { generateRecommendations } from "../src/util/recommendations";
 
 export const appendGaugeMetrics = async (req, res, next) => {
   try {
@@ -17,13 +18,11 @@ export const appendGaugeMetrics = async (req, res, next) => {
     const enrichedMetrics = {
       ...metrics,
       totalSubpersonas: context.activeSubpersonas.length,
-      suggestions: metrics.tokenUsage.used / metrics.tokenUsage.total > 0.8
-        ? ["Consider reducing token usage to optimize performance."]
-        : [],
+      recommendations: generateRecommendations(metrics), // Add recommendations
     };
 
     // Attach metrics to the response object
-    res.locals.gaugeMetrics = enrichedMetrics || {}; // Use an empty object as fallback
+    res.locals.gaugeMetrics = enrichedMetrics;
 
     next(); // Proceed to the next middleware or route handler
   } catch (error) {

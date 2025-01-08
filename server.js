@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const feedbackRoutes = require("./routes/feedback");
 const { calculateMetrics } = require("./src/util/metrics");
 const { appendGaugeMetrics } = require("./middleware/metricsMiddleware");
+const { generateRecommendations } = require("./src/util/recommendations"); // Import recommendations logic
 
 const app = express();
 app.use(express.json());
@@ -49,13 +50,17 @@ app.get("/api/fetch-gauge-metrics", (req, res) => {
   res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
-// Fetch real-time recommendations
+// Recommendations API
 app.get("/api/recommendations", (req, res) => {
-  const recommendations = [
-    "Consider compressing memory for optimal performance.",
-    "Activate sub-persona for log analysis.",
-  ];
-  res.json({ recommendations, gaugeMetrics: res.locals.gaugeMetrics });
+  try {
+    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Fallback if metrics are missing
+    const recommendations = generateRecommendations(gaugeMetrics);
+
+    res.status(200).json({ recommendations, gaugeMetrics });
+  } catch (error) {
+    console.error("Error generating recommendations:", error);
+    res.status(500).json({ error: "Failed to generate recommendations." });
+  }
 });
 
 // Start server

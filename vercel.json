@@ -15,6 +15,9 @@
     { "src": "/api/feedback/task/(.*)", "dest": "/api/feedback/task/$1.js" },
     { "src": "/api/feedback/persona/(.*)", "dest": "/api/feedback/persona/$1.js" },
     { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics.js" },
-    { "src": "/api/recommendations", "dest": "/api/recommendations.js" }
+    { "src": "/api/recommendations", "dest": "/api/recommendations.js" },
+    { "src": "/api/tasks/dependency", "dest": "/api/task.js", "methods": ["POST"] },
+    { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
+    { "src": "/api/tasks/(.*)", "dest": "/api/task.js", "methods": ["GET"] }
   ]
 }

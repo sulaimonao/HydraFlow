@@ -27,4 +27,27 @@ router.get("/summary", (req, res) => {
   }
 });
 
+// Get feedback by task or persona
+router.get("/task/:taskId", (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const taskFeedback = getFeedbackLog().filter((feedback) => feedback.taskId === taskId);
+    res.status(200).json({ status: "success", data: taskFeedback });
+  } catch (error) {
+    console.error("Error retrieving task feedback:", error);
+    res.status(500).json({ error: "Failed to retrieve task-specific feedback." });
+  }
+});
+
+router.get("/persona/:personaName", (req, res) => {
+  try {
+    const { personaName } = req.params;
+    const personaFeedback = getFeedbackLog().filter((feedback) => feedback.persona === personaName);
+    res.status(200).json({ status: "success", data: personaFeedback });
+  } catch (error) {
+    console.error("Error retrieving persona feedback:", error);
+    res.status(500).json({ error: "Failed to retrieve persona-specific feedback." });
+  }
+});
+
 export default router;

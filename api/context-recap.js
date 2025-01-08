@@ -26,7 +26,10 @@ export default async function handler(req, res) {
 ` : ''}
     `;
 
-    res.status(200).json({ recap: recap.trim() });
+    res.status(200).json({
+      recap: recap.trim(),
+      gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+    });
   } else {
     res.status(405).json({ error: 'Method Not Allowed' });
   }

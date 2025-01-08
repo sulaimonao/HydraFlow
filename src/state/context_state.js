@@ -25,9 +25,17 @@ class ContextState {
 let currentContext = new ContextState();
 const contextHistory = [];
 
+// Log context updates for debugging
+export function logContextUpdate(newData) {
+  console.log("Context Updated:", newData);
+  contextHistory.push({ ...currentContext });
+}
+
+// Enhanced context update
 export async function updateContext(newData) {
-  contextHistory.push({ ...currentContext }); // Save a snapshot before updating
+  logContextUpdate(newData);
   currentContext = { ...currentContext, ...newData };
+
   await supabaseRequest(
     supabase.from('context_state').update(currentContext).eq('id', 1)
   );

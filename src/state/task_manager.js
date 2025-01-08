@@ -5,7 +5,7 @@ export const createTaskCard = async (goal, subtasks) => {
   const taskCard = {
     goal,
     priority: "High",
-    subtasks: subtasks.map((task, index) => ({
+    subtasks: subtasks.map((task) => ({
       description: task,
       status: "pending",
       dependencies: [],
@@ -20,22 +20,23 @@ export const createTaskCard = async (goal, subtasks) => {
 };
 
 export const addDependency = async (taskId, dependencyId) => {
-  const data = await supabaseRequest(
-    supabase.from('subtasks').update({ dependencies: dependencyId }).eq('id', taskId)
+  const task = await getTaskCard(taskId);
+  if (!task) throw new Error(`Task ${taskId} not found.`);
+
+  const existingDependencies = task.subtasks.find((sub) => sub.id === taskId)?.dependencies || [];
+  if (existingDependencies.includes(dependencyId)) {
+    throw new Error(`Dependency ${dependencyId} already exists for task ${taskId}.`);
+  }
+
+  existingDependencies.push(dependencyId);
+  await supabaseRequest(
+    supabase.from('subtasks').update({ dependencies: existingDependencies }).eq('id', taskId)
   );
-  return data;
+  return { taskId, dependencies: existingDependencies };
 };
 
 export const updateTaskStatus = async (taskId, status) => {
-  const data = await supabaseRequest(
+  await supabaseRequest(
     supabase.from('subtasks').update({ status }).eq('id', taskId)
   );
-  return data;
-};
-
-export const getTaskCard = async (taskId) => {
-  const data = await supabaseRequest(
-    supabase.from('task_cards').select('*').eq('id', taskId)
-  );
-  return data[0];
 };

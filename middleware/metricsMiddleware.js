@@ -23,7 +23,7 @@ export const appendGaugeMetrics = async (req, res, next) => {
     };
 
     // Attach metrics to the response object
-    res.locals.gaugeMetrics = enrichedMetrics;
+    res.locals.gaugeMetrics = enrichedMetrics || {}; // Use an empty object as fallback
 
     next(); // Proceed to the next middleware or route handler
   } catch (error) {

@@ -29,15 +29,8 @@ export default async (req, res) => {
 
     // Return sub-persona details with gauge metrics
     return res.status(200).json({
-      subPersonaName: subPersonaData.name,
-      description: subPersonaData.taskDescription,
-      status: subPersonaData.status,
-      createdAt: subPersonaData.createdAt,
-      triggerCondition: subPersonaData.triggerCondition,
-      metadata: {
-        taskId: timestamp,
-      },
-      gaugeMetrics: res.locals.gaugeMetrics,
+      ...subPersonaData,
+      gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object
       message: "Sub-persona created successfully.",
     });
   } catch (error) {

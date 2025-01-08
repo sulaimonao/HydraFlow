@@ -1,9 +1,9 @@
 // api/feedback/submit.js 
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { userFeedback, rating } = req.body;
+    const { user_id, chatroom_id, userFeedback, rating, response_id } = req.body;
 
     // Input validation
     if (!userFeedback || typeof userFeedback !== 'string' || !rating || isNaN(rating)) {
@@ -11,25 +11,15 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Insert feedback into the feedback_entries table
-      const data = await supabaseRequest(
-        supabase.from('feedback_entries').insert([{ user_feedback: userFeedback, rating }])
-      );
+      const { data, error } = await supabase
+        .from('feedback_entries')
+        .insert([{ user_id, chatroom_id, user_feedback: userFeedback, rating, response_id }]);
 
-      // Fallback for gauge metrics
-      const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
-
-      // Log a warning if gauge metrics are missing
-      if (!res.locals.gaugeMetrics) {
-        console.warn("Warning: gaugeMetrics is missing. Using default values.");
+      if (error) {
+        throw new Error(`Error submitting feedback: ${error.message}`);
       }
 
-      // Respond with feedback submission confirmation and gauge metrics
-      res.status(200).json({ 
-        message: 'Feedback submitted successfully.', 
-        data,
-        gaugeMetrics,
-      });
+      res.status(200).json({ message: 'Feedback submitted successfully.', data });
     } catch (error) {
       console.error('Error submitting feedback:', error);
       res.status(500).json({ error: 'Unexpected error occurred.' });

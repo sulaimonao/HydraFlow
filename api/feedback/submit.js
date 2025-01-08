@@ -16,7 +16,11 @@ export default async function handler(req, res) {
         supabase.from('feedback_entries').insert([{ user_feedback: userFeedback, rating }])
       );
 
-      res.status(200).json({ message: 'Feedback submitted successfully.', data });
+      res.status(200).json({ 
+        message: 'Feedback submitted successfully.', 
+        data,
+        gaugeMetrics: res.locals.gaugeMetrics, // Include gauge metrics in the response
+      });
     } catch (error) {
       console.error('Error submitting feedback:', error);
       res.status(500).json({ error: 'Unexpected error occurred.' });

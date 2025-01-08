@@ -10,6 +10,7 @@ import { generateFinalResponse } from "../logic/response_generator.js";
 import { collectFeedback } from "../logic/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory } from "../state/memory_state.js";
+import { logIssue } from "../../api/debug.js"; // Import logIssue function
 
 import { shouldCompressMemory, canCreateNewHead } from "./conditions.js";
 
@@ -30,6 +31,14 @@ export const orchestrateContextWorkflow = async ({
     const existingMemory = await getMemory(user_id, chatroom_id);
     const heads = await getHeads(user_id, chatroom_id);
     const headCount = heads.length;
+
+    // Log the start of the workflow
+    await logIssue({
+      userId: user_id,
+      contextId: chatroom_id,
+      issue: 'Workflow started',
+      resolution: `Query: ${query}`,
+    });
 
     // Parse query
     const { keywords, actionItems } = parseQuery(query);
@@ -94,6 +103,14 @@ export const orchestrateContextWorkflow = async ({
       });
     }
 
+    // Log the successful completion of the workflow
+    await logIssue({
+      userId: user_id,
+      contextId: chatroom_id,
+      issue: 'Workflow completed successfully',
+      resolution: `Final response: ${response.finalResponse}`,
+    });
+
     return {
       status: "context_updated",
       context,
@@ -102,6 +119,15 @@ export const orchestrateContextWorkflow = async ({
     };
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);
+
+    // Log the error
+    await logIssue({
+      userId: user_id,
+      contextId: chatroom_id,
+      issue: 'Workflow orchestration failed',
+      resolution: `Error: ${error.message}`,
+    });
+
     throw new Error("Workflow orchestration failed.");
   }
 };

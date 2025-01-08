@@ -1,4 +1,43 @@
-//api/debug.js
+import supabase from '../../lib/supabaseClient';
+
+// Log an issue
+export async function logIssue({ userId, contextId, issue, resolution }) {
+  try {
+    const { data, error } = await supabase
+      .from('debug_logs')
+      .insert([{ user_id: userId, context_id: contextId, issue, resolution }])
+      .select();
+
+    if (error) {
+      throw new Error(`Error logging issue: ${error.message}`);
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error('Error in logIssue:', error);
+    throw error;
+  }
+}
+
+// Fetch debug logs
+export async function fetchDebugLogs(contextId) {
+  try {
+    const { data, error } = await supabase
+      .from('debug_logs')
+      .select('*')
+      .eq('context_id', contextId);
+
+    if (error) {
+      throw new Error(`Error fetching debug logs: ${error.message}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in fetchDebugLogs:', error);
+    throw error;
+  }
+}
+
 // Log an issue
 app.post('/debug/log', async (req, res) => {
     try {
@@ -20,4 +59,3 @@ app.post('/debug/log', async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   });
-  

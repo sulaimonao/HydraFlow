@@ -2,11 +2,15 @@
 
 export default async (req, res) => {
   try {
-    const { task, description } = req.body;
+    const { task, description, triggerCondition } = req.body;
 
     // Input validation
     if (!task || !description) {
       return res.status(400).json({ error: "Task and description are required." });
+    }
+
+    if (triggerCondition && typeof triggerCondition !== "string") {
+      return res.status(400).json({ error: "Trigger condition must be a string if provided." });
     }
 
     // Generate unique sub-persona metadata
@@ -17,6 +21,7 @@ export default async (req, res) => {
       taskDescription: description,
       status: "active",
       createdAt: new Date(timestamp).toISOString(),
+      triggerCondition: triggerCondition || "none",
     };
 
     // Log creation (or replace with database logic)
@@ -28,6 +33,7 @@ export default async (req, res) => {
       description: subPersonaData.taskDescription,
       status: subPersonaData.status,
       createdAt: subPersonaData.createdAt,
+      triggerCondition: subPersonaData.triggerCondition,
       metadata: {
         taskId: timestamp,
       },

@@ -21,8 +21,15 @@ export default async (req, res) => {
     // Delegate task orchestration to workflow_manager
     const result = await orchestrateContextWorkflow({ query, memory, logs, feedback, context });
 
+    // Attach gauge metrics to the response
+    const responsePayload = {
+      message: "Workflow executed successfully",
+      ...result,
+      gaugeMetrics: res.locals.gaugeMetrics,
+    };
+
     // Respond with the results of the workflow
-    res.status(200).json({ message: "Workflow executed successfully", ...result });
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error("Error in autonomous workflow:", error);
     res.status(500).json({ error: error.message || "Failed to execute workflow." });

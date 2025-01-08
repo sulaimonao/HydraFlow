@@ -18,12 +18,13 @@ export default async (req, res) => {
     // Perform memory compression with optional threshold
     const compressedMemory = compressMemory(memory, threshold);
 
-    // Respond with compressed memory and additional metrics
+    // Respond with compressed memory, additional metrics, and gauge metrics
     return res.status(200).json({
       compressedMemory,
       originalLength: memory.length,
       compressedLength: compressedMemory.length,
       compressionRatio: (compressedMemory.length / memory.length).toFixed(2),
+      gaugeMetrics: res.locals.gaugeMetrics,
       message: "Memory compressed successfully."
     });
   } catch (error) {

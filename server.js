@@ -9,11 +9,13 @@ const app = express();
 app.use(express.json());
 
 // Use session middleware
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: true,
-}));
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 // Middleware to initialize user and chatroom data
 app.use((req, res, next) => {
@@ -34,9 +36,22 @@ app.get("/api/fetch-gauge-metrics", (req, res) => {
   const context = req.context || {
     tokenUsage: { used: 6000, total: 8192 },
     responseLatency: 0.8,
+    activeSubpersonas: [
+      { name: "LogAnalyzer", status: "active" },
+      { name: "MemoryOptimizer", status: "idle" },
+    ],
   };
   const metrics = calculateMetrics(context);
   res.json(metrics);
+});
+
+// Fetch real-time recommendations
+app.get("/api/recommendations", (req, res) => {
+  const recommendations = [
+    "Consider compressing memory for optimal performance.",
+    "Activate sub-persona for log analysis.",
+  ];
+  res.json({ recommendations });
 });
 
 // Start server

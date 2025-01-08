@@ -297,3 +297,143 @@ paths:
                 $ref: "#/components/schemas/Recommendations"
         500:
           $ref: "#/responses/ServerError"
+  /tasks/dependency:
+    post:
+      operationId: "addTaskDependency"
+      summary: "Add a task dependency"
+      description: "Creates a dependency relationship between subtasks."
+      requestBody:
+        description: "Details of the task dependency."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["subtaskId", "dependsOn"]
+              properties:
+                subtaskId:
+                  type: integer
+                  description: "ID of the subtask."
+                dependsOn:
+                  type: integer
+                  description: "ID of the subtask it depends on."
+      responses:
+        200:
+          description: "Successfully added task dependency."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+                  dependency:
+                    type: object
+                    description: "Details of the created dependency."
+        400:
+          description: "Invalid input."
+        500:
+          $ref: "#/responses/ServerError"
+  /tasks/dependencies/{subtaskId}:
+    get:
+      operationId: "getTaskDependencies"
+      summary: "Fetch task dependencies"
+      description: "Fetches all dependencies for a given subtask."
+      parameters:
+        - name: subtaskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "ID of the subtask."
+      responses:
+        200:
+          description: "Successfully fetched task dependencies."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+                  dependencies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: "Dependency ID."
+                        dependsOn:
+                          type: integer
+                          description: "ID of the subtask it depends on."
+        400:
+          description: "Invalid subtaskId."
+        500:
+          $ref: "#/responses/ServerError"
+  /tasks/{taskCardId}:
+    get:
+      operationId: "getTaskCard"
+      summary: "Fetch task card with subtasks and dependencies"
+      description: "Fetches a task card, its subtasks, and their dependencies."
+      parameters:
+        - name: taskCardId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "ID of the task card."
+      responses:
+        200:
+          description: "Successfully fetched task card."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+                  taskCard:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: "Task card ID."
+                      goal:
+                        type: string
+                        description: "Goal of the task card."
+                      priority:
+                        type: string
+                        description: "Priority level of the task card."
+                      subtasks:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              description: "Subtask ID."
+                            description:
+                              type: string
+                              description: "Description of the subtask."
+                            status:
+                              type: string
+                              description: "Status of the subtask."
+                            dependencies:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                    description: "Dependency ID."
+                                  dependsOn:
+                                    type: integer
+                                    description: "ID of the subtask it depends on."
+        400:
+          description: "Invalid taskCardId."
+        500:
+          $ref: "#/responses/ServerError"

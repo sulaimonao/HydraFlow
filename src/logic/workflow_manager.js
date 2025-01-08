@@ -1,9 +1,8 @@
 // src/logic/workflow_manager.js
-import { gatherGaugeData } from "../logic/gauge_logic.js"; // NEW import
+import { gatherGaugeData } from "../logic/gauge_logic.js";
 import { parseQuery } from "../logic/query_parser.js";
 import { compressMemory } from "../logic/memory_compressor.js";
 import { updateContext } from "../state/context_state.js";
-import { summarizeLogs } from "../logic/logs_summarizer.js";
 import {
   createSubpersona,
   assignHeadTask,
@@ -31,7 +30,6 @@ import {
 export const orchestrateContextWorkflow = async ({
   query,
   memory,
-  logs,
   feedback,
   user_id,
   chatroom_id,
@@ -84,18 +82,6 @@ export const orchestrateContextWorkflow = async ({
 
     // === TASK HANDLERS ===
     const taskHandlers = {
-      "summarize logs": async () => {
-        if (logs) {
-          const subPersona = createSubpersona("log analysis", "Summarize logs for key patterns and errors");
-          const result = await summarizeLogs(logs);
-          assignHeadTask(subPersona.headId, result);
-          activeHeadTasks.push(subPersona.headId);
-
-          // Mark subtask as completed
-          taskCard.subtasks.find((t) => t.task === "summarize logs").status = "completed";
-          response.logsSummary = result;
-        }
-      },
       "compress memory": async () => {
         if (existingMemory && existingMemory.length > 1000) {
           const compressed = compressMemory(existingMemory);
@@ -131,14 +117,13 @@ export const orchestrateContextWorkflow = async ({
     const context = updateContext(updatedContext);
 
     // === GATHER GAUGE DATA FOR SELF-AWARENESS ===
-    const gaugeData = await gatherGaugeData({ user_id, chatroom_id }); // <== NEW
+    const gaugeData = await gatherGaugeData({ user_id, chatroom_id });
     response.gaugeData = gaugeData;
 
     // === Final user-facing response ===
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
-      summaryReport: response.logsSummary,
       context,
       taskCard,
       actionsPerformed: response,

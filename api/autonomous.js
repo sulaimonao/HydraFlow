@@ -4,7 +4,7 @@ import { orchestrateContextWorkflow } from "../workflow_manager.js";
 
 export default async (req, res) => {
   try {
-    const { query, memory, logs, feedback, user_id, chatroom_id } = req.body;
+    const { query, memory, feedback, user_id, chatroom_id } = req.body;
 
     // Validate required input
     if (!query) {
@@ -19,7 +19,7 @@ export default async (req, res) => {
     };
 
     // Delegate task orchestration to workflow_manager
-    const result = await orchestrateContextWorkflow({ query, memory, logs, feedback, context });
+    const result = await orchestrateContextWorkflow({ query, memory, feedback, context });
 
     // Attach gauge metrics to the response
     const responsePayload = {

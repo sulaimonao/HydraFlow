@@ -26,12 +26,15 @@ export default async function handler(req, res) {
 async function submitFeedback(req, res) {
   const { responseId, userFeedback, rating } = req.body;
 
+  console.log('Inserting feedback:', { responseId, userFeedback, rating });
+
   try {
     const data = await supabaseRequest(
       () => supabase.from('feedback_entries').insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
     );
     return res.status(200).json(data);
   } catch (error) {
+    console.error('Error inserting feedback:', error);
     return res.status(500).json({ error: error.message });
   }
 }

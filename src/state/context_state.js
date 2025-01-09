@@ -9,16 +9,24 @@ class ContextState {
 
   async updateTokenUsage(usedTokens) {
     this.tokenUsage.used += usedTokens;
-    await supabaseRequest(
-      supabase.from('context_state').update({ tokenUsage: this.tokenUsage }).eq('id', 1)
-    );
+    try {
+      await supabaseRequest(
+        supabase.from('context_state').update({ tokenUsage: this.tokenUsage }).eq('id', 1)
+      );
+    } catch (error) {
+      console.error('Error updating token usage:', error);
+    }
   }
 
   async updateResponseLatency(latency) {
     this.responseLatency = latency;
-    await supabaseRequest(
-      supabase.from('context_state').update({ responseLatency: this.responseLatency }).eq('id', 1)
-    );
+    try {
+      await supabaseRequest(
+        supabase.from('context_state').update({ responseLatency: this.responseLatency }).eq('id', 1)
+      );
+    } catch (error) {
+      console.error('Error updating response latency:', error);
+    }
   }
 }
 
@@ -36,9 +44,13 @@ export async function updateContext(newData) {
   logContextUpdate(newData);
   currentContext = { ...currentContext, ...newData };
 
-  await supabaseRequest(
-    supabase.from('context_state').update(currentContext).eq('id', 1)
-  );
+  try {
+    await supabaseRequest(
+      supabase.from('context_state').update(currentContext).eq('id', 1)
+    );
+  } catch (error) {
+    console.error('Error updating context:', error);
+  }
 
   return currentContext;
 }

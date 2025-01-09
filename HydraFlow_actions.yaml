@@ -511,11 +511,51 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FeedbackSubmission"
+              type: object
+              properties:
+                chatroom_id:
+                  type: string
+                  description: The ID of the chatroom
+                responseNumber:
+                  type: integer
+                  description: The response number in the chatroom
+                userFeedback:
+                  type: string
+                  description: The feedback from the user
+                rating:
+                  type: integer
+                  description: The rating given by the user
+              required:
+                - chatroom_id
+                - responseNumber
+                - userFeedback
       responses:
-        200:
-          description: "Successfully submitted feedback."
-        400:
-          description: "Invalid feedback input."
-        500:
-          $ref: "#/responses/ServerError"
+        '200':
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

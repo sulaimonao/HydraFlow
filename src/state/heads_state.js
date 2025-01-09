@@ -2,15 +2,25 @@
 import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 export async function addHead(name, status) {
-  const data = await supabaseRequest(
-    supabase.from('heads').insert([{ name, status, createdAt: new Date().toISOString() }])
-  );
-  return data[0];
+  try {
+    const data = await supabaseRequest(
+      supabase.from('heads').insert([{ name, status, createdAt: new Date().toISOString() }])
+    );
+    return data[0];
+  } catch (error) {
+    console.error('Error adding head:', error);
+    throw error;
+  }
 }
 
 export async function getHeads() {
-  const data = await supabaseRequest(
-    supabase.from('heads').select('*')
-  );
-  return data;
+  try {
+    const data = await supabaseRequest(
+      supabase.from('heads').select('*')
+    );
+    return data;
+  } catch (error) {
+    console.error('Error fetching heads:', error);
+    throw error;
+  }
 }

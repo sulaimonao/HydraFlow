@@ -7,6 +7,9 @@ export default async function handler(req, res) {
     let { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
     // Generate defaults if missing
+    if (!name) {
+      name = `Subpersona_${Date.now()}`;
+    }
     if (!user_id) {
       user_id = uuidv4();
       console.warn(`Missing user_id; generated: ${user_id}`);
@@ -16,10 +19,7 @@ export default async function handler(req, res) {
       console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
     }
 
-    if (!name) {
-      name = `Subpersona_${Date.now()}`;
-    }
-
+    // Insert sub-persona into database
     const { data, error } = await supabase
       .from('heads')
       .insert([{ name, capabilities, preferences, user_id, chatroom_id }])
@@ -31,19 +31,12 @@ export default async function handler(req, res) {
 
     res.status(200).json({
       message: 'Sub-persona created successfully.',
-      status: 'success',
       subPersona: data[0],
-      user_id,
+      user_id, 
       chatroom_id,
     });
   } catch (error) {
     console.error('Error in create-subpersona:', error);
-    res.status(500).json({
-      message: 'Failed to create sub-persona.',
-      status: 'error',
-      error: error.message,
-      user_id,
-      chatroom_id,
-    });
+    res.status(500).json({ error: 'Failed to create sub-persona. Please try again.' });
   }
 }

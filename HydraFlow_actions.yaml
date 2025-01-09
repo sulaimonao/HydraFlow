@@ -2,9 +2,10 @@ openapi: "3.1.0"
 info:
   title: "HydraFlow Actions API"
   description: |
-    HydraFlow is an adaptive conversational assistant API for context management, query parsing, dynamic sub-persona creation, memory compression, log summarization, and context recapping.
-    This version includes proactive memory optimization, enhanced subpersona autonomy, and streamlined context management, real-time gauge insights.
-  version: "1.5.0"
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
+    dynamic sub-persona creation, memory compression, and more. It supports integration with 
+    external systems like CustomGPT, ensuring smooth workflows with dynamic feedback and identifiers.
+  version: "1.6.0"
 servers:
   - url: "https://hydra-flow.vercel.app/api"
     description: "Deployed API server"
@@ -52,21 +53,24 @@ components:
         status:
           type: string
           description: "Status of memory optimization."
-    SubpersonaActivation:
+    SubpersonaCreation:
       type: object
       properties:
-        triggerCondition:
+        name:
           type: string
-          description: "Condition that activates the subpersona."
-        subpersonaDetails:
+          description: "Name of the sub-persona."
+        capabilities:
           type: object
-          properties:
-            name:
-              type: string
-              description: "Name of the activated subpersona."
-            status:
-              type: string
-              description: "Status of the subpersona activation."
+          description: "Capabilities for the sub-persona."
+        preferences:
+          type: object
+          description: "Preferences for the sub-persona."
+        user_id:
+          type: string
+          description: "Optional user identifier."
+        chatroom_id:
+          type: string
+          description: "Optional chatroom identifier."
     LogSummary:
       type: object
       properties:
@@ -83,6 +87,15 @@ components:
           items:
             type: string
           description: "Errors found in the logs."
+    FeedbackSubmission:
+      type: object
+      properties:
+        comment:
+          type: string
+          description: "The feedback comment."
+        rating:
+          type: integer
+          description: "The rating (1-5)."
     FeedbackSummary:
       type: object
       properties:
@@ -105,6 +118,12 @@ components:
           items:
             type: string
           description: "Actionable recommendations based on current metrics."
+    ContextUpdate:
+      type: object
+      properties:
+        newData:
+          type: object
+          description: "The updated context data."
 responses:
   ServerError:
     description: "Server error while processing the request."
@@ -149,36 +168,40 @@ paths:
     post:
       operationId: "createSubpersona"
       summary: "Create a specialized sub-persona"
-      description: "Dynamically generates a specialized sub-persona for a specified task, with optional self-activation logic."
+      description: |
+        Dynamically generates a sub-persona for a task. If `user_id` or `chatroom_id` are missing,
+        defaults are generated and returned in the response.
       requestBody:
         description: "Details for sub-persona creation."
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: ["task", "description"]
-              properties:
-                task:
-                  type: string
-                  description: "The specific task the sub-persona will handle."
-                description:
-                  type: string
-                  description: "A detailed description of the sub-persona's role."
-                triggerCondition:
-                  type: string
-                  description: "Condition for subpersona self-activation."
+              $ref: "#/components/schemas/SubpersonaCreation"
       responses:
         200:
           description: "Successfully created a sub-persona."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SubpersonaActivation"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Response message."
+                  subPersona:
+                    type: object
+                    description: "Details of the created sub-persona."
+                  user_id:
+                    type: string
+                    description: "Generated or provided user ID."
+                  chatroom_id:
+                    type: string
+                    description: "Generated or provided chatroom ID."
         400:
-          description: "Missing task or description fields."
+          description: "Missing required fields or invalid data."
         500:
-          $ref: "#/responses/ServerError"
+          description: "Server error during sub-persona creation."
   /compress-memory:
     post:
       operationId: "compressMemory"
@@ -443,12 +466,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: ["newData"]
-              properties:
-                newData:
-                  type: object
-                  description: "The updated context data."
+              $ref: "#/components/schemas/ContextUpdate"
       responses:
         200:
           description: "Successfully updated the context state."
@@ -493,15 +511,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: ["comment", "rating"]
-              properties:
-                comment:
-                  type: string
-                  description: "The feedback comment."
-                rating:
-                  type: integer
-                  description: "The rating (1-5)."
+              $ref: "#/components/schemas/FeedbackSubmission"
       responses:
         200:
           description: "Successfully submitted feedback."

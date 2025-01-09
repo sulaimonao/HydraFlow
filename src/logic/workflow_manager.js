@@ -32,6 +32,11 @@ export const orchestrateContextWorkflow = async ({
     const generatedUserId = user_id || uuidv4();
     const generatedChatroomId = chatroom_id || uuidv4();
 
+    response.generatedIdentifiers = {
+      user_id: generatedUserId,
+      chatroom_id: generatedChatroomId,
+    };
+
     // Retrieve memory and heads
     const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
     const heads = await getHeads(generatedUserId, generatedChatroomId);
@@ -128,6 +133,7 @@ export const orchestrateContextWorkflow = async ({
       context,
       finalResponse: response.finalResponse,
       feedbackPrompt: response.feedbackPrompt || null,
+      generatedIdentifiers: response.generatedIdentifiers,
     };
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);

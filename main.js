@@ -2,11 +2,14 @@
 
 import express from "express";
 import fetch from "node-fetch";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-const API_BASE_URL = "https://hydra-flow.vercel.app/api";
+const API_BASE_URL = process.env.API_BASE_URL;
 
 // Helper function for API calls
 async function callApi(endpoint, payload) {
@@ -82,3 +85,5 @@ app.post("/api/autonomous", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
+
+export default app;

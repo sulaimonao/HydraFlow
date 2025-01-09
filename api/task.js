@@ -1,6 +1,6 @@
 //api/task.js
 import { insertTaskDependency, fetchTaskDependencies, fetchTaskCards } from '../../lib/db';
-import supabase from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 // Add a task dependency
 export async function addTaskDependency(req, res) {

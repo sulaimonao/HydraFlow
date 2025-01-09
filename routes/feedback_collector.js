@@ -2,13 +2,16 @@
 
 import express from "express";
 import { getFeedbackLog, generateFeedbackSummary } from "../actions/feedback_collector.js";
+import supabase, { supabaseRequest } from '../lib/supabaseClient';
 
 const router = express.Router();
 
 // Get all feedback
-router.get("/all", (req, res) => {
+router.get("/all", async (req, res) => {
   try {
-    const feedback = getFeedbackLog();
+    const feedback = await supabaseRequest(
+      supabase.from('feedback_entries').select('*')
+    );
     res.status(200).json({ status: "success", data: feedback });
   } catch (error) {
     console.error("Error retrieving feedback:", error);
@@ -17,9 +20,9 @@ router.get("/all", (req, res) => {
 });
 
 // Get summarized insights
-router.get("/summary", (req, res) => {
+router.get("/summary", async (req, res) => {
   try {
-    const summary = generateFeedbackSummary();
+    const summary = await generateFeedbackSummary();
     res.status(200).json({ status: "success", data: summary });
   } catch (error) {
     console.error("Error generating feedback summary:", error);
@@ -28,14 +31,16 @@ router.get("/summary", (req, res) => {
 });
 
 // Get feedback by task or persona
-router.get("/task/:taskId", (req, res) => {
+router.get("/task/:taskId", async (req, res) => {
   try {
     const { taskId } = req.params;
-    const taskFeedback = getFeedbackLog().filter((feedback) => feedback.taskId === taskId);
-    res.status(200).json({ status: "success", data: taskFeedback });
+    const feedback = await supabaseRequest(
+      supabase.from('feedback_entries').select('*').eq('task_id', taskId)
+    );
+    res.status(200).json({ status: "success", data: feedback });
   } catch (error) {
-    console.error("Error retrieving task feedback:", error);
-    res.status(500).json({ error: "Failed to retrieve task-specific feedback." });
+    console.error("Error retrieving feedback by task:", error);
+    res.status(500).json({ error: "Failed to retrieve feedback by task." });
   }
 });
 

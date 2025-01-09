@@ -1,5 +1,5 @@
 // api/create-subpersona.js
-import supabase from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
@@ -20,14 +20,9 @@ export default async function handler(req, res) {
     }
 
     // Insert sub-persona into database
-    const { data, error } = await supabase
-      .from('heads')
-      .insert([{ name, capabilities, preferences, user_id, chatroom_id }])
-      .select();
-
-    if (error) {
-      throw new Error(`Error creating sub-persona: ${error.message}`);
-    }
+    const data = await supabaseRequest(
+      supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
+    );
 
     res.status(200).json({
       message: 'Sub-persona created successfully.',

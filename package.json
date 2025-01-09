@@ -1,7 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.47.10",
+    "@supabase/supabase-js": "^2.47.12",
     "acorn": "^8.14.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

@@ -2,6 +2,7 @@
 
 import { calculateMetrics } from "../src/util/metrics";
 import { generateRecommendations } from "../src/util/recommendations";
+import supabase, { supabaseRequest } from '../lib/supabaseClient';
 
 export const appendGaugeMetrics = async (req, res, next) => {
   try {

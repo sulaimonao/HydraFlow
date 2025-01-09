@@ -1,6 +1,6 @@
 // api/fetch-gauge-metrics.js
 import { calculateMetrics } from '../../src/util/metrics';
-import supabase from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 export default async function handler(req, res) {
   try {

@@ -1,7 +1,7 @@
 // api/autonomous.js
 
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
-import supabase from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 export default async (req, res) => {
   try {

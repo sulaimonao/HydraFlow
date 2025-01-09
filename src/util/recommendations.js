@@ -1,20 +1,21 @@
 //src/util/recommendations.js
 
-export const generateRecommendations = (gaugeMetrics) => {
-    const recommendations = [];
-  
-    if (gaugeMetrics.tokenUsage?.used / gaugeMetrics.tokenUsage?.total > 0.8) {
-      recommendations.push("Consider reducing token usage to optimize performance.");
-    }
-  
-    if (gaugeMetrics.responseLatency > 1.0) {
-      recommendations.push("High latency detected. Review response processing time.");
-    }
-  
-    if (gaugeMetrics.totalSubpersonas > 5) {
-      recommendations.push("Too many active sub-personas may impact performance. Consider optimizing.");
-    }
-  
-    return recommendations;
-  };
-  
+export function generateRecommendations(metrics) {
+  const { tokenUsagePercentage, averageLatency, activeSubpersonasCount } = metrics;
+
+  const recommendations = [];
+
+  if (tokenUsagePercentage > 80) {
+    recommendations.push("Consider optimizing token usage to avoid exceeding limits.");
+  }
+
+  if (averageLatency > 1) {
+    recommendations.push("Improve response latency for better performance.");
+  }
+
+  if (activeSubpersonasCount < 3) {
+    recommendations.push("Increase the number of active subpersonas for better task distribution.");
+  }
+
+  return recommendations;
+}

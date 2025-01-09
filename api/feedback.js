@@ -24,7 +24,13 @@ export default async function handler(req, res) {
 }
 
 async function submitFeedback(req, res) {
-  const { responseId, userFeedback, rating } = req.body;
+  const { chatroom_id, responseNumber, userFeedback, rating } = req.body;
+
+  if (!chatroom_id || responseNumber === undefined || !userFeedback) {
+    return res.status(400).json({ error: 'chatroom_id, responseNumber, and userFeedback are required.' });
+  }
+
+  const responseId = `${chatroom_id}_${responseNumber}`;
 
   console.log('Inserting feedback:', { responseId, userFeedback, rating });
 

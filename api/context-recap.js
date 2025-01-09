@@ -1,3 +1,5 @@
+import supabase from '../../lib/supabaseClient';
+
 // api/context-recap.js
 export default async function handler(req, res) {
   if (req.method === 'POST') {

@@ -1,6 +1,7 @@
 // api/autonomous.js
 
 import { orchestrateContextWorkflow } from "../workflow_manager.js";
+import supabase from '../../lib/supabaseClient';
 
 export default async (req, res) => {
   try {

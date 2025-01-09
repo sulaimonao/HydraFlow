@@ -1,11 +1,15 @@
-const heads = [];
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
-function addHead(name, status) {
-  heads.push({ name, status, createdAt: Date.now() });
+export async function addHead(name, status) {
+  const data = await supabaseRequest(
+    supabase.from('heads').insert([{ name, status, createdAt: new Date().toISOString() }])
+  );
+  return data[0];
 }
 
-function getHeads() {
-  return heads;
+export async function getHeads() {
+  const data = await supabaseRequest(
+    supabase.from('heads').select('*')
+  );
+  return data;
 }
-
-export { addHead, getHeads };

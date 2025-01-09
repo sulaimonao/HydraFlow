@@ -1,3 +1,5 @@
+//src/actions/query_parser.js
+
 function parseQuery(query) {
   const keywords = query.split(" ").filter(word => word.length > 2);
   const actionItems = [];

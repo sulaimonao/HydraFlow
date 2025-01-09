@@ -1,4 +1,4 @@
-// Updated response_generator.js
+// src/logic/response_generator.js
 export async function generateFinalResponse({ userInput, compressedMemory, summaryReport, context, taskCard, actionsPerformed }) {
   let draftResponse = "Here's my response:\n\n";
 

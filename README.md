@@ -1,131 +1,167 @@
-# HydraFlow Actions API
+# HydraFlow
 
-HydraFlow dynamically manages memory, parses queries, generates sub-personas, and summarizes logs.
+HydraFlow is a dynamic, API-driven workflow and state management system designed to integrate with Supabase for database operations. It supports real-time metric tracking, feedback collection, and task management, enabling scalable and efficient application workflows.
 
-## Deployed Endpoints
-Update `servers` in your `HydraFlow_actions.yaml` with your live Vercel domain:
-```
-https://hydra-flow.vercel.app/api
-```
+---
 
-## API Endpoints
-HydraFlow provides the following endpoints to manage workflows:
+## **Features**
 
-### 1. **`POST /compress-memory`**
-- **Description**: Summarizes and compresses long memory input.
-- **Input**:
-   ```json
-   { "memory": "string" }
-   ```
-- **Output**:
-   ```json
-   { "compressedMemory": "string" }
-   ```
-- **Test Command**:
+### 1. **Gauge Metrics**
+- Tracks system metrics (e.g., memory usage, CPU load) and database performance.
+- Logs API response times and real-time metrics to the `api_metrics` table.
+
+### 2. **Feedback Management**
+- Collects user feedback and ratings via the `/api/feedback` endpoint.
+- Stores feedback in the `feedback_entries` table with timestamps.
+- Generates summaries for insights into user feedback trends.
+
+### 3. **Task Card Workflow**
+- Supports task card creation, subtask management, and dependencies.
+- Updates `task_cards` and `subtasks` tables dynamically via Supabase.
+
+### 4. **State Management**
+- Maintains context, memory, and head states using:
+  - `context_state`
+  - `memory_state`
+  - `heads_state`
+- Updates and retrieves stateful data efficiently.
+
+---
+
+## **Folder Structure**
+
+### **Root Directory**
+- `.gitignore`: Specifies files and directories to exclude from version control.
+- `HydraFlow_actions.yaml`: Defines workflows and actions for the system.
+- `server.js`: Core backend server logic.
+- `package.json`: Project dependencies and scripts.
+- `vercel.json`: Deployment configuration.
+
+### **Directories**
+- `api/`: Contains API endpoint logic.
+- `lib/`: Utility modules, including Supabase client (`supabaseClient.js`).
+- `routes/`: Express routes for managing workflows (e.g., feedback).
+- `src/`: Core logic for state management and dynamic workflows.
+
+---
+
+## **Installation**
+
+### **Prerequisites**
+- Node.js (v16+)
+- Supabase Account
+
+### **Steps**
+1. Clone the repository:
    ```bash
-   curl -X POST https://hydra-flow.vercel.app/api/compress-memory \
-   -H "Content-Type: application/json" \
-   -d '{"memory": "This is a long memory for testing compression."}'
+   git clone <repository_url>
+   cd HydraFlow
    ```
 
-### 2. **`POST /parse-query`**
-- **Description**: Extracts actionable keywords and tasks from user queries.
-- **Input**:
-   ```json
-   { "query": "string" }
-   ```
-- **Output**:
-   ```json
-   { "keywords": ["string"], "actionItems": ["string"] }
-   ```
-- **Test Command**:
-   ```bash
-   curl -X POST https://hydra-flow.vercel.app/api/parse-query \
-   -H "Content-Type: application/json" \
-   -d '{"query": "Summarize logs and compress memory."}'
-   ```
-
-### 3. **`POST /create-subpersona`**
-- **Description**: Dynamically generates a specialized sub-persona for a specific task.
-- **Input**:
-   ```json
-   { "task": "string", "description": "string" }
-   ```
-- **Output**:
-   ```json
-   { "subPersonaName": "string", "status": "string" }
-   ```
-- **Test Command**:
-   ```bash
-   curl -X POST https://hydra-flow.vercel.app/api/create-subpersona \
-   -H "Content-Type: application/json" \
-   -d '{"task": "Analyze logs", "description": "Sub-persona for analyzing log data."}'
-   ```
-
-### 4. **`POST /context-recap`**
-- **Description**: Provides a recap of the context and compressed memory.
-- **Input**:
-   ```json
-   { "history": "string", "compressedMemory": "string" }
-   ```
-- **Output**:
-   ```json
-   { "recap": "string" }
-   ```
-- **Test Command**:
-   ```bash
-   curl -X POST https://hydra-flow.vercel.app/api/context-recap \
-   -H "Content-Type: application/json" \
-   -d '{"history": "Conversation history", "compressedMemory": "Compressed summary."}'
-   ```
-
-### 5. **`POST /summarize-logs`**
-- **Description**: Analyzes and summarizes log data for insights.
-- **Input**:
-   ```json
-   { "logs": "string" }
-   ```
-- **Output**:
-   ```json
-   { "summaryReport": "string" }
-   ```
-- **Test Command**:
-   ```bash
-   curl -X POST https://hydra-flow.vercel.app/api/summarize-logs \
-   -H "Content-Type: application/json" \
-   -d '{"logs": "Error at line 45: module not found."}'
-   ```
-
-## Deployment Instructions
-1. **Clone this repository**:
-   ```bash
-   git clone https://github.com/sulaimonao/HydraFlow.git
-   cd hydraflow
-   ```
-
-2. **Install dependencies**:
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. **Deploy to Vercel**:
-   Link your clone to website to generate your project link.
+3. Set up environment variables:
+   - Create a `.env` file in the root directory with the following:
+     ```env
+     DATABASE_URL=<Your Supabase URL>
+     KEY=<Your Supabase API Key>
+     ```
+
+4. Start the development server:
    ```bash
-   vercel deploy
+   npm start
    ```
 
-4. **Update API configurations**:
-   Replace the domain in `HydraFlow_actions.yaml` with your deployed URL:
+5. Deploy to Vercel:
+   ```bash
+   vercel --prod
    ```
-   https://hydra-flow.vercel.app/api
-   ```
-
-5. **Test the endpoints**:
-   Use the provided cURL commands above or a tool like Postman to validate all API endpoints.
 
 ---
 
-## Troubleshooting
-- Ensure you have the latest version of Node.js installed.
-- Verify the deployment logs on [Vercel Dashboard](https://vercel.com/dashboard) if any errors occur.
-- Confirm the endpoints are responding correctly using `cURL` or Postman.
+## **Endpoints**
+
+### **1. Feedback Management**
+- **POST `/api/feedback`**: Submit user feedback.
+  - **Payload**:
+    ```json
+    {
+      "userFeedback": "Great workflow!",
+      "rating": 5
+    }
+    ```
+  - **Response**:
+    ```json
+    {
+      "message": "Feedback submitted successfully.",
+      "data": { ... }
+    }
+    ```
+
+### **2. Gauge Metrics**
+- **GET `/api/gauge`**: Fetch system and database metrics.
+  - **Response**:
+    ```json
+    {
+      "metrics": {
+        "systemMetrics": { ... },
+        "dbMetrics": { ... },
+        "timestamp": "..."
+      }
+    }
+    ```
+
+---
+
+## **Key Files**
+
+### **1. `lib/supabaseClient.js`**
+- Sets up the Supabase client with error handling.
+- Provides a wrapper for API calls.
+
+### **2. `src/logic/gauge_logic.js`**
+- Collects and tracks system and database metrics.
+
+### **3. `src/actions/feedback_collector.js`**
+- Handles feedback collection and summary generation.
+
+### **4. `src/state/context_state.js`**
+- Manages and updates token usage and response latency.
+
+---
+
+## **Testing**
+
+### **Local Testing**
+- Use `npm run test` for unit tests.
+- Example test scripts include feedback submission, task creation, and metric tracking.
+
+### **API Testing**
+- Test endpoints using tools like Postman or cURL.
+
+---
+
+## **Contributing**
+
+1. Fork the repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/<feature-name>
+   ```
+3. Commit changes:
+   ```bash
+   git commit -m "Add <feature-name>"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/<feature-name>
+   ```
+5. Open a pull request.
+
+---
+
+## **License**
+This project is licensed under the MIT License. See the `LICENSE` file for details.

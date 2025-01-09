@@ -1,0 +1,140 @@
+openapi: "3.1.0"
+info:
+  title: "CustomGPT Integration with HydraFlow"
+  description: |
+    This configuration integrates HydraFlow workflows with CustomGPT, enabling sub-persona management, feedback collection, and context updates. It includes error handling and support for missing identifiers.
+  version: "1.0.0"
+servers:
+  - url: "https://hydra-flow.vercel.app/api"
+    description: "HydraFlow API Server"
+components:
+  schemas:
+    SubpersonaCreation:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Name of the sub-persona."
+        capabilities:
+          type: object
+          description: "Capabilities for the sub-persona."
+        preferences:
+          type: object
+          description: "Preferences for the sub-persona."
+        user_id:
+          type: string
+          description: "Optional user identifier."
+        chatroom_id:
+          type: string
+          description: "Optional chatroom identifier."
+    FeedbackSubmission:
+      type: object
+      properties:
+        comment:
+          type: string
+          description: "The feedback comment."
+        rating:
+          type: integer
+          description: "The rating (1-5)."
+    ContextUpdate:
+      type: object
+      properties:
+        newData:
+          type: object
+          description: "The updated context data."
+responses:
+  ServerError:
+    description: "Server error while processing the request."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              description: "Error message."
+paths:
+  /create-subpersona:
+    post:
+      operationId: "createSubpersona"
+      summary: "Create a specialized sub-persona"
+      description: |
+        Dynamically generates a sub-persona for a task. If `user_id` or `chatroom_id` are missing,
+        defaults are generated and returned in the response.
+      requestBody:
+        description: "Details for sub-persona creation."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubpersonaCreation"
+      responses:
+        200:
+          description: "Successfully created a sub-persona."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Response message."
+                  subPersona:
+                    type: object
+                    description: "Details of the created sub-persona."
+                  user_id:
+                    type: string
+                    description: "Generated or provided user ID."
+                  chatroom_id:
+                    type: string
+                    description: "Generated or provided chatroom ID."
+        400:
+          description: "Missing required fields or invalid data."
+        500:
+          $ref: "#/responses/ServerError"
+  /feedback:
+    post:
+      operationId: "submitFeedback"
+      summary: "Submit feedback"
+      description: "Submits feedback for a task or workflow."
+      requestBody:
+        description: "Details of the feedback to submit."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackSubmission"
+      responses:
+        200:
+          description: "Successfully submitted feedback."
+        400:
+          description: "Invalid feedback input."
+        500:
+          $ref: "#/responses/ServerError"
+  /context/state:
+    post:
+      operationId: "updateContextState"
+      summary: "Update the context state"
+      description: "Updates the current context state with new data."
+      requestBody:
+        description: "Details of the new context state."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContextUpdate"
+      responses:
+        200:
+          description: "Successfully updated the context state."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedContext:
+                    type: object
+                    description: "The updated context data."
+        400:
+          description: "Invalid input data."
+        500:
+          $ref: "#/responses/ServerError"

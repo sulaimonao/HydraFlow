@@ -1,36 +1,77 @@
-const feedbackLog = []; // Temporary in-memory storage (replace with DB if needed)
+// src/actions/feedback_collector.js
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
 // Collect feedback
-export const collectFeedback = ({ responseId, userFeedback, rating }) => {
+export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
   const feedbackEntry = {
-    responseId,
-    userFeedback,
+    response_id: responseId,
+    user_feedback: userFeedback,
     rating,
     timestamp: new Date().toISOString(),
   };
 
-  feedbackLog.push(feedbackEntry);
-  console.log("Feedback Collected:", feedbackEntry);
-  return { status: "success", message: "Feedback recorded successfully." };
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .insert([feedbackEntry]);
+
+    if (error) {
+      console.error('Error inserting feedback:', error);
+      return { status: 'error', message: 'Failed to record feedback.' };
+    }
+
+    console.log('Feedback Collected:', data);
+    return { status: 'success', message: 'Feedback recorded successfully.', data };
+  } catch (err) {
+    console.error('Unexpected error in collectFeedback:', err);
+    return { status: 'error', message: 'An unexpected error occurred.' };
+  }
 };
 
 // Get all feedback logs
-export const getFeedbackLog = () => {
-  return feedbackLog;
+export const getFeedbackLog = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .select('*');
+
+    if (error) {
+      console.error('Error retrieving feedback:', error);
+      return { status: 'error', message: 'Failed to retrieve feedback.', data: [] };
+    }
+
+    return { status: 'success', message: 'Feedback retrieved successfully.', data };
+  } catch (err) {
+    console.error('Unexpected error in getFeedbackLog:', err);
+    return { status: 'error', message: 'An unexpected error occurred.', data: [] };
+  }
 };
 
 // Generate summarized insights
-export const generateFeedbackSummary = () => {
-  const totalFeedback = feedbackLog.length;
-  const averageRating =
-    feedbackLog.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback || 0;
+export const generateFeedbackSummary = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('feedback_entries')
+      .select('rating');
 
-  const insights = {
-    totalFeedback,
-    averageRating: parseFloat(averageRating.toFixed(2)),
-    feedbackEntries: feedbackLog,
-  };
+    if (error) {
+      console.error('Error retrieving feedback for summary:', error);
+      return { status: 'error', message: 'Failed to generate feedback summary.' };
+    }
 
-  console.log("Generated Feedback Summary:", insights);
-  return insights;
+    const totalFeedback = data.length;
+    const averageRating =
+      data.reduce((sum, entry) => sum + entry.rating, 0) / totalFeedback || 0;
+
+    const insights = {
+      totalFeedback,
+      averageRating: parseFloat(averageRating.toFixed(2)),
+    };
+
+    console.log('Generated Feedback Summary:', insights);
+    return { status: 'success', message: 'Feedback summary generated successfully.', insights };
+  } catch (err) {
+    console.error('Unexpected error in generateFeedbackSummary:', err);
+    return { status: 'error', message: 'An unexpected error occurred.', insights: null };
+  }
 };

@@ -1,14 +1,14 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
-  title: HydraFlow Actions API
-  description: >
-    HydraFlow is an adaptive conversational assistant API for context management, query parsing,
-    dynamic sub-persona creation, memory compression, log summarization, and context recapping.
-  version: 1.2.0
+  title: "HydraFlow Actions API"
+  description: |
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
+    dynamic sub-persona creation, memory compression, and more. It supports integration with 
+    external systems like CustomGPT, ensuring smooth workflows with dynamic feedback and identifiers.
+  version: "1.6.0"
 servers:
-  - url: https://hydra-flow.vercel.app/api
-    description: Deployed API server
-
+  - url: "https://hydra-flow.vercel.app/api"
+    description: "Deployed API server"
 components:
   schemas:
     ParseQueryResponse:
@@ -18,21 +18,21 @@ components:
           type: array
           items:
             type: string
-          description: Keywords extracted from the query.
+          description: "Keywords extracted from the query."
         actionItems:
           type: array
           items:
             type: string
-          description: Actionable tasks identified from the query.
+          description: "Actionable tasks identified from the query."
         taskCard:
           type: object
           properties:
             goal:
               type: string
-              description: Goal of the task.
+              description: "Goal of the task."
             priority:
               type: string
-              description: Task priority (e.g., High, Medium).
+              description: "Task priority (e.g., High, Medium)."
             subtasks:
               type: array
               items:
@@ -40,217 +40,482 @@ components:
                 properties:
                   task:
                     type: string
-                    description: Subtask description.
+                    description: "Subtask description."
                   status:
                     type: string
-                    description: Subtask status (e.g., pending, completed).
-
-    FeedbackEntry:
+                    description: "Subtask status (e.g., pending, completed)."
+    MemoryOptimization:
       type: object
       properties:
-        responseId:
+        threshold:
+          type: integer
+          description: "Memory usage threshold to trigger compression."
+        status:
           type: string
-          description: Response ID associated with the feedback.
-        userFeedback:
+          description: "Status of memory optimization."
+    SubpersonaCreation:
+      type: object
+      properties:
+        name:
           type: string
-          description: Feedback text provided by the user.
+          description: "Name of the sub-persona."
+        capabilities:
+          type: object
+          description: "Capabilities for the sub-persona."
+        preferences:
+          type: object
+          description: "Preferences for the sub-persona."
+        user_id:
+          type: string
+          description: "Optional user identifier."
+        chatroom_id:
+          type: string
+          description: "Optional chatroom identifier."
+    LogSummary:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: "Summary of the log analysis."
+        patterns:
+          type: array
+          items:
+            type: string
+          description: "Key patterns identified in the logs."
+        errors:
+          type: array
+          items:
+            type: string
+          description: "Errors found in the logs."
+    FeedbackSubmission:
+      type: object
+      properties:
+        comment:
+          type: string
+          description: "The feedback comment."
         rating:
           type: integer
-          description: Rating given by the user (1-5).
-        timestamp:
-          type: string
-          format: date-time
-          description: Time of feedback submission.
-
+          description: "The rating (1-5)."
     FeedbackSummary:
       type: object
       properties:
         totalFeedback:
           type: integer
-          description: Total number of feedback entries.
+          description: "Total number of feedback entries."
         averageRating:
           type: number
-          description: Average rating from all feedback entries.
-        feedbackEntries:
+          description: "Average rating from the feedback."
+        comments:
           type: array
           items:
-            $ref: '#/components/schemas/FeedbackEntry'
-
-    LogSummary:
+            type: string
+          description: "List of feedback comments."
+    Recommendations:
       type: object
       properties:
-        totalEntries:
-          type: integer
-          description: Total number of log entries analyzed.
-        errorCount:
-          type: integer
-          description: Number of error-like patterns detected.
-        firstFiveLines:
-          type: string
-          description: The first five lines of the log for a quick overview.
-
-    ServerErrorResponse:
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: "Actionable recommendations based on current metrics."
+    ContextUpdate:
       type: object
       properties:
-        error:
-          type: string
-          description: Description of the error.
-
-  responses:
-    ServerError:
-      description: Server error while processing the request.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ServerErrorResponse'
-
+        newData:
+          type: object
+          description: "The updated context data."
+responses:
+  ServerError:
+    description: "Server error while processing the request."
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              description: "Error message."
 paths:
   /parse-query:
     post:
-      operationId: parseQuery
-      summary: Parse a query into actionable keywords and tasks
-      description: Parses user-provided query to extract keywords and actionable tasks.
+      operationId: "parseQuery"
+      summary: "Parse a query into actionable keywords and tasks"
+      description: "Parses user-provided query to extract keywords and actionable tasks."
       requestBody:
-        description: User query to parse.
+        description: "User query to parse."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - query
+              required: ["query"]
               properties:
                 query:
                   type: string
-                  description: The query input that needs parsing.
+                  description: "The query input that needs parsing."
       responses:
-        '200':
-          description: Successfully parsed query.
+        200:
+          description: "Successfully parsed query."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParseQueryResponse'
-        '400':
-          description: Invalid input; query missing or malformed.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/ParseQueryResponse"
+        400:
+          description: "Invalid input; query missing or malformed."
+        500:
+          $ref: "#/responses/ServerError"
   /create-subpersona:
     post:
-      operationId: createSubpersona
-      summary: Create a specialized sub-persona
-      description: Dynamically generates a specialized sub-persona for a specified task.
+      operationId: "createSubpersona"
+      summary: "Create a specialized sub-persona"
+      description: |
+        Dynamically generates a sub-persona for a task. If `user_id` or `chatroom_id` are missing,
+        defaults are generated and returned in the response.
       requestBody:
-        description: Details for sub-persona creation.
+        description: "Details for sub-persona creation."
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - task
-                - description
-              properties:
-                task:
-                  type: string
-                  description: The specific task the sub-persona will handle.
-                description:
-                  type: string
-                  description: A detailed description of the sub-persona's role.
+              $ref: "#/components/schemas/SubpersonaCreation"
       responses:
-        '200':
-          description: Successfully created a sub-persona.
+        200:
+          description: "Successfully created a sub-persona."
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  subPersonaName:
+                  message:
                     type: string
-                    description: Name assigned to the newly created sub-persona.
-                  status:
+                    description: "Response message."
+                  subPersona:
+                    type: object
+                    description: "Details of the created sub-persona."
+                  user_id:
                     type: string
-                    description: The status of the sub-persona creation process.
-        '400':
-          description: Missing task or description fields.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                    description: "Generated or provided user ID."
+                  chatroom_id:
+                    type: string
+                    description: "Generated or provided chatroom ID."
+        400:
+          description: "Missing required fields or invalid data."
+        500:
+          description: "Server error during sub-persona creation."
   /compress-memory:
     post:
-      operationId: compressMemory
-      summary: Compress and optimize memory
-      description: Compresses lengthy conversation memory for optimized context management.
+      operationId: "compressMemory"
+      summary: "Compress and optimize memory"
+      description: "Compresses lengthy conversation memory for optimized context management. Automatically triggers if memory usage exceeds the defined threshold."
       requestBody:
-        description: Full memory content to compress.
+        description: "Full memory content to compress."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - memory
+              required: ["memory"]
               properties:
                 memory:
                   type: string
-                  description: The full conversation memory to be compressed.
+                  description: "The full conversation memory to be compressed."
       responses:
-        '200':
-          description: Successfully compressed memory.
+        200:
+          description: "Successfully compressed memory."
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  compressedMemory:
-                    type: string
-                    description: Compressed memory summary.
-        '400':
-          description: Missing or invalid memory input.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/MemoryOptimization"
+        400:
+          description: "Missing or invalid memory input."
+        500:
+          $ref: "#/responses/ServerError"
   /summarize-logs:
     post:
-      operationId: summarizeLogs
-      summary: Summarize logs for patterns and errors
-      description: Analyzes log data to generate summaries of key patterns and errors.
+      operationId: "summarizeLogs"
+      summary: "Summarize logs for patterns and errors"
+      description: "Analyzes log data to generate summaries of key patterns and errors."
       requestBody:
-        description: Log data to summarize.
+        description: "Log data to summarize."
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - logs
+              required: ["logs"]
               properties:
                 logs:
                   type: string
-                  description: Log data to analyze and summarize.
+                  description: "Log data to analyze and summarize."
       responses:
-        '200':
-          description: Successfully summarized logs.
+        200:
+          description: "Successfully summarized logs."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LogSummary'
-        '400':
-          description: Missing or invalid log data.
-        '500':
-          $ref: '#/components/responses/ServerError'
-
+                $ref: "#/components/schemas/LogSummary"
+        400:
+          description: "Missing or invalid log data."
+        500:
+          $ref: "#/responses/ServerError"
   /feedback/summary:
     get:
-      operationId: getFeedbackSummary
-      summary: Retrieve feedback summary
-      description: Fetches a summarized view of all feedback, including totals and averages.
+      operationId: "getFeedbackSummary"
+      summary: "Retrieve feedback summary"
+      description: "Fetches a summarized view of all feedback, including totals and averages."
       responses:
-        '200':
-          description: Successfully retrieved feedback summary.
+        200:
+          description: "Successfully retrieved feedback summary."
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FeedbackSummary'
-        '500':
-          $ref: '#/components/responses/ServerError'
+                $ref: "#/components/schemas/FeedbackSummary"
+        500:
+          $ref: "#/responses/ServerError"
+  /fetch-gauge-metrics:
+    get:
+      operationId: "fetchGaugeMetrics"
+      summary: "Fetch gauge metrics for the user interface"
+      description: "Provides real-time metrics including token usage, engine load, and latency."
+      responses:
+        200:
+          description: "Successfully fetched metrics."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokenUsage:
+                    type: object
+                    properties:
+                      used:
+                        type: integer
+                      total:
+                        type: integer
+                      remaining:
+                        type: integer
+                      status:
+                        type: string
+                  engineLoad:
+                    type: string
+                  latency:
+                    type: number
+                  recommendations:
+                    type: array
+                    items:
+                      type: string
+        500:
+          description: "Server error."
+  /recommendations:
+    get:
+      operationId: "getRecommendations"
+      summary: "Fetch actionable recommendations"
+      description: "Provides recommendations based on system performance and metrics."
+      responses:
+        200:
+          description: "Successfully fetched recommendations."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendations"
+        500:
+          $ref: "#/responses/ServerError"
+  /tasks/dependency:
+    post:
+      operationId: "addTaskDependency"
+      summary: "Add a dependency for a subtask"
+      description: "Creates a dependency relationship between subtasks."
+      requestBody:
+        description: "Details of the dependency to add."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["taskId", "dependencyId"]
+              properties:
+                taskId:
+                  type: integer
+                  description: "ID of the subtask."
+                dependencyId:
+                  type: integer
+                  description: "ID of the subtask it depends on."
+      responses:
+        200:
+          description: "Successfully added the dependency."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: integer
+                  dependencies:
+                    type: array
+                    items:
+                      type: integer
+        400:
+          description: "Invalid input or existing dependency."
+        500:
+          $ref: "#/responses/ServerError"
+  /tasks/dependencies/{subtaskId}:
+    get:
+      operationId: "getTaskDependencies"
+      summary: "Fetch task dependencies"
+      description: "Fetches all dependencies for a given subtask."
+      parameters:
+        - name: subtaskId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "ID of the subtask."
+      responses:
+        200:
+          description: "Successfully fetched task dependencies."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+                  dependencies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: "Dependency ID."
+                        dependsOn:
+                          type: integer
+                          description: "ID of the subtask it depends on."
+        400:
+          description: "Invalid subtaskId."
+        500:
+          $ref: "#/responses/ServerError"
+  /tasks/{taskCardId}:
+    get:
+      operationId: "getTaskCard"
+      summary: "Fetch a task card with its subtasks and dependencies"
+      description: "Fetches a specific task card and its associated subtasks and dependencies."
+      parameters:
+        - name: taskCardId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: "The ID of the task card."
+      responses:
+        200:
+          description: "Successfully fetched the task card."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskCard:
+                    type: object
+                    description: "Details of the task card."
+        400:
+          description: "Invalid or missing taskCardId."
+        500:
+          $ref: "#/responses/ServerError"
+  /context/state:
+    get:
+      operationId: "getContextState"
+      summary: "Retrieve the current context state"
+      description: "Fetches the current context state for the user and chatroom."
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "User ID."
+        - name: chatroom_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "Chatroom ID."
+      responses:
+        200:
+          description: "Successfully retrieved the context state."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentContext:
+                    type: object
+                    description: "Details of the current context state."
+        400:
+          description: "Invalid input or missing parameters."
+        500:
+          $ref: "#/responses/ServerError"
+    post:
+      operationId: "updateContextState"
+      summary: "Update the context state"
+      description: "Updates the current context state with new data."
+      requestBody:
+        description: "Details of the new context state."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContextUpdate"
+      responses:
+        200:
+          description: "Successfully updated the context state."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedContext:
+                    type: object
+                    description: "The updated context data."
+        400:
+          description: "Invalid input data."
+        500:
+          $ref: "#/responses/ServerError"
+  /feedback:
+    get:
+      operationId: "getFeedback"
+      summary: "Retrieve all feedback"
+      description: "Fetches all feedback entries."
+      responses:
+        200:
+          description: "Successfully retrieved feedback."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: array
+                    items:
+                      type: object
+        500:
+          $ref: "#/responses/ServerError"
+    post:
+      operationId: "submitFeedback"
+      summary: "Submit feedback"
+      description: "Submits feedback for a task or workflow."
+      requestBody:
+        description: "Details of the feedback to submit."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackSubmission"
+      responses:
+        200:
+          description: "Successfully submitted feedback."
+        400:
+          description: "Invalid feedback input."
+        500:
+          $ref: "#/responses/ServerError"

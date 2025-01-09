@@ -1,43 +1,42 @@
-//task_manager.js
+// src/state/task_manager.js
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
 
-const tasks = []; // In-memory task storage (replace with DB if needed)
-
-export const createTaskCard = (goal, subtasks) => {
+export const createTaskCard = async (goal, subtasks) => {
   const taskCard = {
-    id: `task_${Date.now()}`,
     goal,
     priority: "High",
-    subtasks: subtasks.map((task, index) => ({
-      id: `subtask_${Date.now()}_${index}`,
-      task,
+    subtasks: subtasks.map((task) => ({
+      description: task,
       status: "pending",
       dependencies: [],
     })),
     createdAt: new Date().toISOString(),
   };
 
-  tasks.push(taskCard);
-  return taskCard;
+  const data = await supabaseRequest(
+    supabase.from('task_cards').insert([taskCard])
+  );
+  return data[0];
 };
 
-export const addDependency = (taskId, dependencyId) => {
-  const task = tasks.find((t) => t.id === taskId);
-  if (!task) throw new Error(`Task ${taskId} not found`);
+export const addDependency = async (taskId, dependencyId) => {
+  const task = await getTaskCard(taskId);
+  if (!task) throw new Error(`Task ${taskId} not found.`);
 
-  task.subtasks.forEach((subtask) => {
-    if (subtask.id === dependencyId) {
-      subtask.dependencies.push(taskId);
-    }
-  });
+  const existingDependencies = task.subtasks.find((sub) => sub.id === taskId)?.dependencies || [];
+  if (existingDependencies.includes(dependencyId)) {
+    throw new Error(`Dependency ${dependencyId} already exists for task ${taskId}.`);
+  }
+
+  existingDependencies.push(dependencyId);
+  await supabaseRequest(
+    supabase.from('subtasks').update({ dependencies: existingDependencies }).eq('id', taskId)
+  );
+  return { taskId, dependencies: existingDependencies };
 };
 
-export const updateTaskStatus = (taskId, status) => {
-  const task = tasks.find((t) => t.id === taskId);
-  if (!task) throw new Error(`Task ${taskId} not found`);
-
-  task.subtasks.forEach((subtask) => {
-    subtask.status = status;
-  });
+export const updateTaskStatus = async (taskId, status) => {
+  await supabaseRequest(
+    supabase.from('subtasks').update({ status }).eq('id', taskId)
+  );
 };
-
-export const getTaskCard = (taskId) => tasks.find((t) => t.id === taskId);

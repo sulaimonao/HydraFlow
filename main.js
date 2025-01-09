@@ -1,4 +1,4 @@
-//main.js
+// main.js
 
 import express from "express";
 import fetch from "node-fetch";
@@ -32,8 +32,9 @@ async function callApi(endpoint, payload) {
 const actionHandlers = {
   "create-subpersona": async () => {
     return await callApi("/create-subpersona", {
-      task: "speak like a Pokémon",
-      description: "This sub-persona communicates like a Pokémon.",
+      task: "analyze logs",
+      description: "This sub-persona specializes in log analysis.",
+      triggerCondition: "new log uploaded",
     });
   },
   "compress-memory": async () => {
@@ -41,7 +42,11 @@ const actionHandlers = {
       memory: "A long conversation history.",
     });
   },
-  // Add new action handlers here as needed
+  "summarize-logs": async () => {
+    return await callApi("/summarize-logs", {
+      logs: "Error and access logs from the server.",
+    });
+  },
 };
 
 app.post("/api/autonomous", async (req, res) => {

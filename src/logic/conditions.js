@@ -1,4 +1,5 @@
-// Enhanced conditions.js
+// src/logic/conditions.js
+
 import { currentContext } from "../state/context_state.js";
 import { getTaskCard } from "../state/task_manager.js";
 

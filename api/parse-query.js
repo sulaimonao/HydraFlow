@@ -1,4 +1,7 @@
-// parse-query.js
+// api/parse-query.js
+
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
+import { fetchTaskCards } from '../lib/db.js';
 
 export default async (req, res) => {
   try {
@@ -9,11 +12,14 @@ export default async (req, res) => {
       return res.status(400).json({ error: "A valid query string is required." });
     }
 
+    // Fetch related data from the database
+    const existingTaskCards = await fetchTaskCards();
+
     // Initialize tasks and details
     const actionItems = [];
     const extractedDetails = {};
 
-    // Extract specific actions based on keywords
+    // Predictive parsing and task identification
     if (/summarize.*logs/i.test(query)) {
       actionItems.push("summarize-logs");
       extractedDetails["summarize-logs"] = "Summarize the provided logs for key patterns and errors.";
@@ -24,6 +30,11 @@ export default async (req, res) => {
       const personaDescriptionMatch = query.match(/create.*persona.*(?:like|inspired by)?\s(.*)/i);
       extractedDetails["create-subpersona"] =
         personaDescriptionMatch?.[1] || "Generic persona for dynamic user interaction.";
+    }
+
+    if (/optimize.*memory/i.test(query)) {
+      actionItems.push("compress-memory");
+      extractedDetails["compress-memory"] = "Compress and optimize memory for efficient usage.";
     }
 
     // Construct a structured task card
@@ -37,12 +48,21 @@ export default async (req, res) => {
       })),
     };
 
-    // Respond with structured data
+    // Predictive analysis and workflow orchestration
+    const workflowPlan = await orchestrateContextWorkflow({
+      query,
+      existingTasks: existingTaskCards,
+      proposedTasks: taskCard.subtasks,
+    });
+
+    // Respond with structured data and gauge metrics
     res.status(200).json({
       keywords: query.split(" "), // Basic keyword extraction
       actionItems,
       taskCard,
-      message: "Query parsed successfully.",
+      workflowPlan,
+      gaugeMetrics: res.locals.gaugeMetrics,
+      message: "Query parsed and workflow planned successfully.",
     });
   } catch (error) {
     console.error("Error in parse-query:", error);

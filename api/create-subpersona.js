@@ -1,13 +1,20 @@
 // api/create-subpersona.js
 import supabase from '../lib/supabaseClient.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
   try {
-    const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
+    let { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
-    // Input validation
-    if (!name || !user_id || !chatroom_id) {
-      return res.status(400).json({ error: 'Name, user_id, and chatroom_id are required.' });
+    // Generate defaults if missing
+    if (!name) {
+      name = `Subpersona_${Date.now()}`;
+    }
+    if (!user_id) {
+      user_id = uuidv4();
+    }
+    if (!chatroom_id) {
+      chatroom_id = uuidv4();
     }
 
     const { data, error } = await supabase

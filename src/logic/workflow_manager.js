@@ -58,7 +58,7 @@ export const orchestrateContextWorkflow = async ({
     const taskCard = createTaskCard(query, actionItems);
 
     // Resolve dependencies
-    await resolveDependencies(taskCard);
+    await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
     // Handle memory compression
     if (shouldCompressMemory(tokenCount) && existingMemory?.length > 1000) {
@@ -68,10 +68,17 @@ export const orchestrateContextWorkflow = async ({
     }
 
     // Prune sub-personas if necessary
-    heads.forEach(async (head) => {
+    for (const head of heads) {
       const { updatedMainMemory } = pruneHead(head.id, updatedContext.memory);
       updatedContext.memory = updatedMainMemory;
-    });
+    }
+
+    // Check if sub-persona creation is required
+    if (actionItems.includes("create-subpersona")) {
+      const subpersona = await createSubpersona(query, "Sub-persona created for specific task", generatedUserId, generatedChatroomId);
+      updatedContext.subpersona = subpersona;
+      response.subpersona = subpersona;
+    }
 
     // Update context and generate context digest
     logContextUpdate(updatedContext);
@@ -138,7 +145,7 @@ export const orchestrateContextWorkflow = async ({
 };
 
 // Resolve dependencies for a task card
-async function resolveDependencies(taskCard) {
+async function resolveDependencies(taskCard, user_id, chatroom_id) {
   for (const subtask of taskCard.subtasks) {
     if (subtask.dependencies && subtask.dependencies.length > 0) {
       const unresolved = subtask.dependencies.filter((dep) => !dep.resolved);
@@ -147,7 +154,7 @@ async function resolveDependencies(taskCard) {
         continue;
       }
     }
-    await updateTaskStatus(subtask.id, "in_progress");
+    await updateTaskStatus(subtask.id, "in_progress", user_id, chatroom_id);
     console.log(`Subtask ${subtask.description} is now in progress.`);
   }
 }

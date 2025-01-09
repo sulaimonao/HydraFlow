@@ -75,9 +75,10 @@ async function getFeedbackByPersona(req, res) {
   const { personaId } = req.query;
 
   try {
-    const data = await supabaseRequest(
-      supabase.from('feedback_entries').select('*').eq('persona_id', personaId)
-    );
+    const data = await supabase
+      .from('feedback_entries')
+      .select('*')
+      .eq('persona_id', personaId);
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });

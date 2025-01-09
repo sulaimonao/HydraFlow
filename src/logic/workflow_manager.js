@@ -1,6 +1,6 @@
 // src/logic/workflow_manager.js
 import { gatherGaugeData } from "../logic/gauge_logic.js";
-import { parseQuery } from "../logic/query_parser.js";
+import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory } from "../logic/memory_compressor.js";
 import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersona, pruneHead } from "../actions/subpersona_creator.js";

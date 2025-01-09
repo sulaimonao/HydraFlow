@@ -1,7 +1,7 @@
 // api/parse-query.js
 
-import { orchestrateContextWorkflow } from "../src/logic/workflow_manager.js";
-import { fetchTaskCards } from "../lib/db.js";
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
+import { fetchTaskCards } from '../lib/db.js';
 
 export default async (req, res) => {
   try {

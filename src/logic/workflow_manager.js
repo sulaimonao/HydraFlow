@@ -11,6 +11,7 @@ import { collectFeedback } from "../logic/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory } from "../state/memory_state.js";
 import { logIssue } from "../../api/debug.js"; // Import logIssue function
+import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 
 import { shouldCompressMemory, canCreateNewHead } from "./conditions.js";
 
@@ -27,15 +28,19 @@ export const orchestrateContextWorkflow = async ({
     const response = {};
     const updatedContext = {};
 
+    // Generate user_id and chatroom_id if not provided
+    const generatedUserId = user_id || uuidv4();
+    const generatedChatroomId = chatroom_id || uuidv4();
+
     // Retrieve memory and heads
-    const existingMemory = await getMemory(user_id, chatroom_id);
-    const heads = await getHeads(user_id, chatroom_id);
+    const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
+    const heads = await getHeads(generatedUserId, generatedChatroomId);
     const headCount = heads.length;
 
     // Log the start of the workflow
     await logIssue({
-      userId: user_id,
-      contextId: chatroom_id,
+      userId: generatedUserId,
+      contextId: generatedChatroomId,
       issue: 'Workflow started',
       resolution: `Query: ${query}`,
     });
@@ -46,7 +51,7 @@ export const orchestrateContextWorkflow = async ({
     updatedContext.actionItems = actionItems || [];
 
     // Append query to memory
-    const updatedMemory = await appendMemory(query, user_id, chatroom_id);
+    const updatedMemory = await appendMemory(query, generatedUserId, generatedChatroomId);
     updatedContext.memory = updatedMemory;
 
     // Create task card
@@ -74,7 +79,7 @@ export const orchestrateContextWorkflow = async ({
     response.contextDigest = generateContextDigest(updatedContext.memory);
 
     // Gather gauge data
-    response.gaugeData = await gatherGaugeData({ user_id, chatroom_id });
+    response.gaugeData = await gatherGaugeData({ user_id: generatedUserId, chatroom_id: generatedChatroomId });
 
     // Final user-facing response
     response.finalResponse = await generateFinalResponse({
@@ -105,8 +110,8 @@ export const orchestrateContextWorkflow = async ({
 
     // Log the successful completion of the workflow
     await logIssue({
-      userId: user_id,
-      contextId: chatroom_id,
+      userId: generatedUserId,
+      contextId: generatedChatroomId,
       issue: 'Workflow completed successfully',
       resolution: `Final response: ${response.finalResponse}`,
     });
@@ -122,8 +127,8 @@ export const orchestrateContextWorkflow = async ({
 
     // Log the error
     await logIssue({
-      userId: user_id,
-      contextId: chatroom_id,
+      userId: generatedUserId,
+      contextId: generatedChatroomId,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });

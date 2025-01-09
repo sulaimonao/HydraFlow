@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   try {
     let { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
-    // Generate defaults if missing
     if (!name) {
       name = `Subpersona_${Date.now()}`;
     }
@@ -19,7 +18,6 @@ export default async function handler(req, res) {
       console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
     }
 
-    // Insert sub-persona into database
     const data = await supabaseRequest(
       supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
     );

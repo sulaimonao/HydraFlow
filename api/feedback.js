@@ -28,7 +28,7 @@ async function submitFeedback(req, res) {
 
   try {
     const data = await supabaseRequest(
-      supabase.from('feedback_entries').insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
+      () => supabase.from('feedback_entries').insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
     );
     return res.status(200).json(data);
   } catch (error) {

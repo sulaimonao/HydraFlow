@@ -13,7 +13,6 @@ project_context_summary.txt
 .DS_Store
 vercel_root_dir_checker.py
 /.vercel
-lib/db_SupaBase.txt
 lib/.env
 .vercel
 test.txt
@@ -31,4 +30,3 @@ test_command.txt
 analyzeSyntax.js
 *.csv
 *.py
-lib/supabase_rls_policy.txt

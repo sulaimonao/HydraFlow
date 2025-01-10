@@ -50,7 +50,8 @@ export default async function handler(req, res) {
       throw new Error(`Error inserting head: ${error.message}`);
     }
 
-    res.status(200).json(data);
+    // Include generated IDs in the response
+    res.status(200).json({ ...data, user_id, chatroom_id });
   } catch (error) {
     console.error("Error in create-subpersona:", error);
     res.status(500).json({ error: error.message });

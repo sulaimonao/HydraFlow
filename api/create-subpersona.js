@@ -18,7 +18,18 @@ export default async function handler(req, res) {
       console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
     }
 
-    // Wrapped in a function to avoid TypeError
+    const contextExists = await supabase
+      .from('contexts')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('chatroom_id', chatroom_id)
+      .single();
+
+    if (contextExists.error) {
+      throw new Error("Invalid context: Missing user_id or chatroom_id");
+    }
+
+    // Proceed with inserting into heads
     const data = await supabaseRequest(() =>
       supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
     );

@@ -19,6 +19,9 @@ export default async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
+    // Log the start of the workflow
+    console.log(`Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
+
     // Delegate task orchestration to workflow_manager
     const result = await orchestrateContextWorkflow({ query, memory, feedback, context });
 
@@ -29,10 +32,18 @@ export default async (req, res) => {
       gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object
     };
 
+    // Log the successful completion of the workflow
+    console.log(`Workflow completed successfully for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
+
     // Respond with the results of the workflow
     res.status(200).json(responsePayload);
   } catch (error) {
     console.error("Error in autonomous:", error);
-    res.status(500).json({ error: "Failed to execute workflow. Please try again." });
+
+    // Log the error with additional context
+    console.error(`Error details: user: ${req.body.user_id}, chatroom: ${req.body.chatroom_id}, query: ${req.body.query}`);
+
+    // Respond with a detailed error message
+    res.status(500).json({ error: "Failed to execute workflow. Please try again.", details: error.message });
   }
 };

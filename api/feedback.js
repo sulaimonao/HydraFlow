@@ -38,10 +38,23 @@ async function submitFeedback(req, res) {
     const data = await supabaseRequest(
       () => supabase.from('feedback_entries').insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
     );
+
+    // Use feedback to improve workflows
+    await improveWorkflowsBasedOnFeedback(userFeedback, rating);
+
     return res.status(200).json(data);
   } catch (error) {
     console.error('Error inserting feedback:', error);
     return res.status(500).json({ error: error.message });
+  }
+}
+
+async function improveWorkflowsBasedOnFeedback(userFeedback, rating) {
+  // Analyze feedback and adjust workflows dynamically
+  if (rating < 3) {
+    // Example: Adjust workflow if feedback is negative
+    console.log('Adjusting workflow based on negative feedback:', userFeedback);
+    // Implement logic to adjust workflows based on feedback
   }
 }
 

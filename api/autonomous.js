@@ -2,10 +2,15 @@
 
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export default async (req, res) => {
   try {
-    const { query, memory, feedback, user_id, chatroom_id } = req.body;
+    const { query, memory, feedback } = req.body;
+
+    // Generate default user_id and chatroom_id if missing
+    const user_id = req.body.user_id || uuidv4();
+    const chatroom_id = req.body.chatroom_id || uuidv4();
 
     // Validate required input
     if (!query) {
@@ -14,8 +19,8 @@ export default async (req, res) => {
 
     // Prepare additional context
     const context = {
-      user_id: user_id || "default_user",
-      chatroom_id: chatroom_id || "default_chatroom",
+      user_id,
+      chatroom_id,
       timestamp: new Date().toISOString(),
     };
 
@@ -32,7 +37,7 @@ export default async (req, res) => {
         actionResult = await fetchData(query.data, context);
         break;
       default:
-        actionResult = await orchestrateContextWorkflow({ query, memory, feedback, context });
+        actionResult = await orchestrateContextWorkflow({ query, memory, feedback, user_id, chatroom_id });
     }
 
     // Update context based on action result

@@ -1,5 +1,5 @@
 import { compressMemory } from '../actions/memory_compressor.js';
-import { prioritizeTasks, limitResponses, simplifyResponses } from '../actions/task_manager.js';
+import { prioritizeTasks, limitResponses, simplifyResponses } from '../state/task_manager.js'; 
 
 export async function handleActions(actions, context) {
   const feedback = [];

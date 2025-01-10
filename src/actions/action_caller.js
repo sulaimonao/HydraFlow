@@ -24,8 +24,6 @@ function shouldRetry(error) {
 
 export { callApiWithRetry };
 
-const { generateResponse } = require("./response_generator");
-
 async function callAction(action, payload, context) {
   switch (action) {
     case "generate_response":
@@ -37,6 +35,4 @@ async function callAction(action, payload, context) {
   }
 }
 
-module.exports = {
-  callAction,
-};
+export { callAction };

@@ -18,21 +18,37 @@ export default async function handler(req, res) {
       console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
     }
 
-    const contextExists = await supabase
+    // Check if context exists
+    const { data: contextExists, error: contextError } = await supabase
       .from('contexts')
       .select('id')
       .eq('user_id', user_id)
       .eq('chatroom_id', chatroom_id)
       .single();
 
-    if (contextExists.error) {
-      throw new Error("Invalid context: Missing user_id or chatroom_id");
+    if (contextError && contextError.code !== 'PGRST116') {
+      throw new Error(`Error checking context: ${contextError.message}`);
+    }
+
+    // Create context if it doesn't exist
+    if (!contextExists) {
+      const { error: insertContextError } = await supabase
+        .from('contexts')
+        .insert([{ user_id, chatroom_id }]);
+
+      if (insertContextError) {
+        throw new Error(`Error creating context: ${insertContextError.message}`);
+      }
     }
 
     // Proceed with inserting into heads
-    const data = await supabaseRequest(() =>
+    const { data, error } = await supabaseRequest(() =>
       supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
     );
+
+    if (error) {
+      throw new Error(`Error inserting head: ${error.message}`);
+    }
 
     res.status(200).json(data);
   } catch (error) {

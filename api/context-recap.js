@@ -28,10 +28,10 @@ export default async function handler(req, res) {
     `;
 
     // Fallback for gauge metrics
-    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to empty object if undefined
+    const gaugeMetrics = res.locals?.gaugeMetrics || {}; // Default to empty object if undefined
 
     // Log a warning if gauge metrics are missing
-    if (!res.locals.gaugeMetrics) {
+    if (!res.locals?.gaugeMetrics) {
       console.warn("Warning: gaugeMetrics is missing. Using default values.");
     }
 

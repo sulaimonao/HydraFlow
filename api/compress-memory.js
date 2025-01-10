@@ -15,16 +15,14 @@ export default async (req, res) => {
       return res.status(400).json({ error: "Threshold must be a number if provided." });
     }
 
+    // Fallback for gauge metrics
+    const gaugeMetrics = data?.gaugeMetrics ?? [];
+    if (!gaugeMetrics.length) {
+      console.warn("No gauge metrics available for compression.");
+    }
+
     // Perform memory compression with optional threshold
     const compressedMemory = compressMemory(memory, threshold);
-
-    // Fallback for gauge metrics
-    const gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to an empty object if undefined
-
-    // Log a warning if gauge metrics are missing
-    if (!res.locals.gaugeMetrics) {
-      console.warn("Warning: gaugeMetrics is missing. Using default values.");
-    }
 
     // Respond with compressed memory, additional metrics, and gauge metrics
     return res.status(200).json({

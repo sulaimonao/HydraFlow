@@ -41,26 +41,28 @@ export const getTaskCard = async (taskId) => {
   }
 };
 
-export const addDependency = async (taskId, dependencyId) => {
+/**
+ * Adds a dependency between two tasks.
+ * @param {string} taskId - The ID of the task that depends on another task.
+ * @param {string} dependencyId - The ID of the task that is a dependency.
+ * @returns {Promise<object>} - The result of the dependency addition.
+ */
+export async function addDependency(taskId, dependencyId) {
   try {
-    const task = await getTaskCard(taskId);
-    if (!task) throw new Error(`Task ${taskId} not found.`);
+    const { data, error } = await supabase
+      .from('task_dependencies')
+      .insert([{ task_id: taskId, dependency_id: dependencyId }]);
 
-    const existingDependencies = task.subtasks.find((sub) => sub.id === taskId)?.dependencies || [];
-    if (existingDependencies.includes(dependencyId)) {
-      throw new Error(`Dependency ${dependencyId} already exists for task ${taskId}.`);
+    if (error) {
+      throw new Error(`Error adding dependency: ${error.message}`);
     }
 
-    existingDependencies.push(dependencyId);
-    await supabaseRequest(
-      supabase.from('subtasks').update({ dependencies: existingDependencies }).eq('id', taskId)
-    );
-    return { taskId, dependencies: existingDependencies };
+    return data;
   } catch (error) {
-    console.error('Error adding dependency:', error);
+    console.error("Error in addDependency:", error);
     throw error;
   }
-};
+}
 
 export const updateTaskStatus = async (taskId, status) => {
   try {

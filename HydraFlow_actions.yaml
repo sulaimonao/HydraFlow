@@ -563,6 +563,7 @@ paths:
     get:
       summary: "Get heads"
       description: "Retrieve heads based on user_id and chatroom_id."
+      operationId: getHeads
       parameters:
         - name: user_id
           in: query
@@ -587,6 +588,7 @@ paths:
     get:
       summary: "Get memories"
       description: "Retrieve memories based on user_id and chatroom_id."
+      operationId: getMemories
       parameters:
         - name: user_id
           in: query
@@ -611,6 +613,7 @@ paths:
     get:
       summary: "Get task cards"
       description: "Retrieve task cards based on user_id and chatroom_id."
+      operationId: getTaskCards
       parameters:
         - name: user_id
           in: query
@@ -633,8 +636,9 @@ paths:
                   $ref: '#/components/schemas/TaskCard'
   /feedback_entries:
     post:
-      summary: "Insert feedback entry"
-      description: "Insert a new feedback entry."
+      summary: "Post feedback entries"
+      description: "Submit feedback entries."
+      operationId: postFeedbackEntries
       requestBody:
         required: true
         content:
@@ -642,15 +646,8 @@ paths:
             schema:
               type: object
               properties:
-                response_id:
+                feedback:
                   type: string
-                  description: "Response ID of the feedback."
-                user_feedback:
-                  type: string
-                  description: "User feedback."
-                rating:
-                  type: integer
-                  description: "Rating given by the user."
       responses:
         '201':
           description: "Feedback entry created."

@@ -6,7 +6,7 @@ import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersona, pruneHead } from "../actions/subpersona_creator.js";
 import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
-import { generateFinalResponse } from "../actions/response_generator.js";
+import { generateFinalResponse } from "../actions/response_generator_actions.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";

@@ -1,5 +1,6 @@
 // src/actions/action_caller.js
 import axios from 'axios';
+import { calculateMetrics } from "../util/metrics.js";
 
 async function callApiWithRetry(endpoint, payload, retries = 3, backoff = 300) {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -22,7 +23,6 @@ function shouldRetry(error) {
 
 export { callApiWithRetry };
 
-const { calculateMetrics } = require("../util/metrics");
 const { generateResponse } = require("./response_generator");
 
 async function callAction(action, payload, context) {

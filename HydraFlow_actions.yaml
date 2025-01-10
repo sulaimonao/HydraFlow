@@ -559,3 +559,102 @@ paths:
                 properties:
                   error:
                     type: string
+  /heads:
+    get:
+      summary: "Get heads"
+      description: "Retrieve heads based on user_id and chatroom_id."
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: chatroom_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "A list of heads."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Head'
+  /memories:
+    get:
+      summary: "Get memories"
+      description: "Retrieve memories based on user_id and chatroom_id."
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: chatroom_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "A list of memories."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Memory'
+  /task_cards:
+    get:
+      summary: "Get task cards"
+      description: "Retrieve task cards based on user_id and chatroom_id."
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: chatroom_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "A list of task cards."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskCard'
+  /feedback_entries:
+    post:
+      summary: "Insert feedback entry"
+      description: "Insert a new feedback entry."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                response_id:
+                  type: string
+                  description: "Response ID of the feedback."
+                user_feedback:
+                  type: string
+                  description: "User feedback."
+                rating:
+                  type: integer
+                  description: "Rating given by the user."
+      responses:
+        '201':
+          description: "Feedback entry created."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackEntry'

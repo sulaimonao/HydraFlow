@@ -21,6 +21,16 @@ export const appendGaugeMetrics = async (req, res, next) => {
       recommendations: generateRecommendations(metrics), // Add recommendations
     };
 
+    // Ensure gauge metrics are included in the final response
+    const originalSend = res.send;
+    res.send = function (body) {
+      if (typeof body === 'string') {
+        body = JSON.parse(body);
+      }
+      body.gaugeMetrics = res.locals.gaugeMetrics;
+      originalSend.call(this, JSON.stringify(body));
+    };
+
     next(); // Proceed to the next middleware or route handler
   } catch (error) {
     console.error("Error appending gauge metrics:", error);

@@ -24,6 +24,23 @@ export const createTaskCard = async (goal, subtasks) => {
   }
 };
 
+export const getTaskCard = async (taskId) => {
+  try {
+    const { data, error } = await supabaseRequest(
+      supabase.from('task_cards').select('*').eq('id', taskId)
+    );
+
+    if (error) {
+      throw new Error(`Error fetching task card: ${error.message}`);
+    }
+
+    return data[0];
+  } catch (error) {
+    console.error('Error in getTaskCard:', error);
+    throw error;
+  }
+};
+
 export const addDependency = async (taskId, dependencyId) => {
   try {
     const task = await getTaskCard(taskId);

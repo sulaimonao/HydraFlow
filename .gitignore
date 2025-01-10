@@ -30,3 +30,4 @@ test_command.txt
 analyzeSyntax.js
 *.csv
 *.py
+test_simulation.js

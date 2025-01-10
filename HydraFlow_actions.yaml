@@ -124,6 +124,12 @@ components:
         newData:
           type: object
           description: "The updated context data."
+    FeedbackEntry:
+      type: object
+      properties:
+        feedback:
+          type: string
+          description: "The feedback entry."
 responses:
   ServerError:
     description: "Server error while processing the request."

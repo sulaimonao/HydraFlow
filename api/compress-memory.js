@@ -4,7 +4,8 @@ import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 export default async (req, res) => {
   try {
-    const { memory, threshold } = req.body;
+    // Destructure memory, threshold, and data from the request body
+    const { memory, threshold, data } = req.body;
 
     // Input validation
     if (!memory || typeof memory !== "string") {
@@ -30,11 +31,10 @@ export default async (req, res) => {
       originalLength: memory.length,
       compressedLength: compressedMemory.length,
       compressionRatio: (compressedMemory.length / memory.length).toFixed(2),
-      gaugeMetrics,
-      message: "Memory compressed successfully."
+      gaugeMetrics
     });
   } catch (error) {
     console.error("Error in compress-memory:", error);
-    return res.status(500).json({ error: "Failed to compress memory. Please try again." });
+    res.status(500).json({ error: error.message });
   }
 };

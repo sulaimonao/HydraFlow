@@ -34,14 +34,9 @@ export default async function handler(req, res) {
       supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
     );
 
-    res.status(200).json({
-      message: 'Sub-persona created successfully.',
-      subPersona: data[0],
-      user_id, 
-      chatroom_id,
-    });
+    res.status(200).json(data);
   } catch (error) {
-    console.error('Error in create-subpersona:', error);
-    res.status(500).json({ error: 'Failed to create sub-persona.' });
+    console.error("Error in create-subpersona:", error);
+    res.status(500).json({ error: error.message });
   }
 }

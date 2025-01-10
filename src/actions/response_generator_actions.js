@@ -1,6 +1,6 @@
 //src/actions/response_generator.js
 
-const { calculateMetrics } = require("../util/metrics.js");
+import { calculateMetrics } from "../util/metrics.js";
 
 export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed }) => {
   const response = [];
@@ -34,7 +34,7 @@ export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerforme
   return response.join("\n\n");
 };
 
-async function generateResponse(input, context) {
+export async function generateResponse(input, context) {
   // Mocked response generation logic
   const response = `Processed input: ${input}`;
 
@@ -46,7 +46,3 @@ async function generateResponse(input, context) {
     gauge: gaugeMetrics, // Include the gauge data
   };
 }
-
-module.exports = {
-  generateResponse,
-};

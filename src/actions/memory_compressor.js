@@ -1,15 +1,24 @@
 // src/actions/memory_compressor.js
 
-// Deduplicates and compresses text-based memory
-export function compressTextMemory(memory) {
+// Enhanced deduplication and segmentation
+export function compressMemory(memory) {
+  if (typeof memory === "string") {
+    return compressTextMemory(memory);
+  } else if (Array.isArray(memory)) {
+    return { compressedMemory: compressArrayMemory(memory) };
+  } else {
+    throw new Error("Unsupported memory format. Expected a string or an array.");
+  }
+}
+
+function compressTextMemory(memory) {
   const sentences = memory.split(". ").map((sentence) => sentence.trim());
   const uniqueSentences = [...new Set(sentences)];
   const summarizedContent = uniqueSentences.slice(0, 3).join(". ") + "...";
   return { compressedMemory: summarizedContent };
 }
 
-// Deduplicates and compresses array-based memory
-export function compressArrayMemory(memory) {
+function compressArrayMemory(memory) {
   const compressedMemory = new Map();
   memory.forEach((item) => {
     if (item.key && !compressedMemory.has(item.key)) {
@@ -19,13 +28,8 @@ export function compressArrayMemory(memory) {
   return Array.from(compressedMemory.values());
 }
 
-// Main compressMemory function to handle multiple formats
-export function compressMemory(memory) {
-  if (typeof memory === "string") {
-    return compressTextMemory(memory);
-  } else if (Array.isArray(memory)) {
-    return { compressedMemory: compressArrayMemory(memory) };
-  } else {
-    throw new Error("Unsupported memory format. Expected a string or an array.");
-  }
+// Periodic cleanup
+export function periodicCleanup(memory) {
+  const currentTime = Date.now();
+  return memory.filter(entry => currentTime - entry.timestamp < 30 * 24 * 60 * 60 * 1000); // Keep entries from the last 30 days
 }

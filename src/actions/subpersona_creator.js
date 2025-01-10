@@ -1,32 +1,45 @@
 //src/actions/subpersona_creator.js
 
-import { compressMemory } from './memory_compressor.js';
-import { v4 as uuidv4 } from 'uuid';
 import { insertHead } from '../lib/db.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const activeHeads = {}; // Store active heads temporarily
 
-// Create a specialized sub-persona for a task
-async function createSubpersona(task, description) {
+// Template-based creation
+const subpersonaTemplates = {
+  logAnalyzer: {
+    task: "analyze logs",
+    description: "This sub-persona specializes in log analysis.",
+  },
+  memoryOptimizer: {
+    task: "optimize memory",
+    description: "This sub-persona specializes in memory optimization.",
+  },
+};
+
+async function createSubpersona(templateName, user_id, chatroom_id) {
+  const template = subpersonaTemplates[templateName];
+  if (!template) {
+    throw new Error(`Unknown template: ${templateName}`);
+  }
+
   const headId = `head_${uuidv4()}`;
-  const name = `Head for ${task}`;
-  const user_id = uuidv4();
-  const chatroom_id = uuidv4();
+  const name = `Head for ${template.task}`;
 
   console.log('Creating sub-persona with:', { name, user_id, chatroom_id });
 
   try {
     const head = await insertHead({
       name,
-      capabilities: { task },
-      preferences: { description },
+      capabilities: { task: template.task },
+      preferences: { description: template.description },
       user_id,
       chatroom_id
     });
 
     activeHeads[headId] = {
       name: head.name,
-      task_description: description,
+      task_description: template.description,
       status: "active",
       memory: []
     };
@@ -39,25 +52,14 @@ async function createSubpersona(task, description) {
   }
 }
 
-// Assign task results to a head
-function assignHeadTask(headId, taskResult) {
+// Lifecycle management
+function deactivateSubpersona(headId) {
   if (activeHeads[headId]) {
-    activeHeads[headId].memory.push(taskResult);
-    return { status: "updated", headId, taskResult };
+    activeHeads[headId].status = "inactive";
+    console.log(`Sub-persona ${headId} deactivated.`);
+  } else {
+    console.warn(`Sub-persona ${headId} not found.`);
   }
-  return { error: "Head not found", headId };
 }
 
-// Prune a head and merge its results back into main memory
-function pruneHead(headId, mainMemory) {
-  if (activeHeads[headId]) {
-    const headMemory = activeHeads[headId].memory.join(". ");
-    const compressedResult = compressMemory(headMemory).compressedMemory;
-
-    delete activeHeads[headId]; // Remove the head after pruning
-    return { updatedMainMemory: mainMemory + ` ${compressedResult}` };
-  }
-  return { error: "Head not found for pruning", headId };
-}
-
-export { createSubpersona, assignHeadTask, pruneHead };
+export { createSubpersona, deactivateSubpersona };

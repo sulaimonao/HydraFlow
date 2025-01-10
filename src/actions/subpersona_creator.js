@@ -1,6 +1,6 @@
 //src/actions/subpersona_creator.js
 
-import { insertHead } from '../lib/db.js';
+import { insertHead } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const activeHeads = {}; // Store active heads temporarily

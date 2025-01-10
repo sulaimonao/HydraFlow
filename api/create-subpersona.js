@@ -9,13 +9,10 @@ export default async function handler(req, res) {
     if (!name) {
       name = `Subpersona_${Date.now()}`;
     }
-    if (!user_id) {
-      user_id = uuidv4();
-      console.warn(`Missing user_id; generated: ${user_id}`);
-    }
-    if (!chatroom_id) {
-      chatroom_id = uuidv4();
-      console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
+
+    // Ensure user_id and chatroom_id are provided
+    if (!user_id || !chatroom_id) {
+      return res.status(400).json({ error: "user_id and chatroom_id are required." });
     }
 
     // Check if context exists
@@ -48,6 +45,10 @@ export default async function handler(req, res) {
 
     if (error) {
       throw new Error(`Error inserting head: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('No data returned from supabaseRequest');
     }
 
     // Include generated IDs in the response

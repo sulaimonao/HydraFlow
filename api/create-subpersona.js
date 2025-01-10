@@ -18,7 +18,8 @@ export default async function handler(req, res) {
       console.warn(`Missing chatroom_id; generated: ${chatroom_id}`);
     }
 
-    const data = await supabaseRequest(
+    // Wrapped in a function to avoid TypeError
+    const data = await supabaseRequest(() =>
       supabase.from('heads').insert([{ name, capabilities, preferences, user_id, chatroom_id }])
     );
 
@@ -30,6 +31,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error in create-subpersona:', error);
-    res.status(500).json({ error: 'Failed to create sub-persona. Please try again.' });
+    res.status(500).json({ error: 'Failed to create sub-persona.' });
   }
 }

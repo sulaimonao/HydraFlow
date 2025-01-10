@@ -8,6 +8,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "metricType is required" });
     }
 
+    const { metricType } = req.query; // Ensure metricType is extracted from query
     const { tokenUsage, responseLatency, activeSubpersonas } = req.body;
 
     // Validate required parameters
@@ -31,24 +32,12 @@ export default async function handler(req, res) {
     const enrichedMetrics = {
       ...metrics,
       totalSubpersonas: activeSubpersonas ? activeSubpersonas.length : 0,
-      suggestions: metrics.tokenUsage.used / metrics.tokenUsage.total > 0.8
-        ? ['Consider reducing token usage to optimize performance.']
-        : [],
+      metricType, // Include metricType in the response
     };
 
-    // Fallback for gauge metrics
-    res.locals.gaugeMetrics = res.locals.gaugeMetrics || {}; // Default to empty object if undefined
-
-    // Attach enriched metrics to global gauge metrics
-    res.locals.gaugeMetrics = enrichedMetrics;
-
-    res.status(200).json({
-      enrichedMetrics,
-      gaugeMetrics: res.locals.gaugeMetrics,
-      message: "Gauge metrics calculated successfully."
-    });
+    res.status(200).json(enrichedMetrics);
   } catch (error) {
-    console.error('Error fetching gauge metrics:', error);
-    res.status(500).json({ error: 'Failed to fetch gauge metrics.' });
+    console.error("Error fetching gauge metrics:", error);
+    res.status(500).json({ error: error.message });
   }
 }

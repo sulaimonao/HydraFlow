@@ -4,7 +4,7 @@ import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
 import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersona, pruneHead } from "../actions/subpersona_creator.js";
-import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
+import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js"; // Correct path
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator_actions.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
@@ -12,11 +12,10 @@ import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";
 import { logIssue } from "../../api/debug.js";
 import { v4 as uuidv4 } from 'uuid';
-
-import { shouldCompressMemory, canCreateNewHead } from "./conditions.js";
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
-import { shouldCompress, needsContextRecap } from "./conditions.js";
+import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
+import supabase from '../lib/supabaseClient.js';
 
 // Orchestrates the entire workflow
 export const orchestrateContextWorkflow = async ({
@@ -69,11 +68,18 @@ export const orchestrateContextWorkflow = async ({
     await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
     // Handle memory compression
-    if (tokenCount > 7000) { // Example threshold
+    if (shouldCompress(actionItems, existingMemory.length)) {
       const compressed = compressMemory(existingMemory);
       await storeCompressedMemory(generatedUserId, generatedChatroomId, compressed);
       updatedContext.memory = compressed;
       response.compressedMemory = compressed;
+    }
+
+    // Check if a new head should be created
+    if (shouldCreateHead(actionItems)) {
+      const newHead = await createSubpersona(query, "New head created for specific task", generatedUserId, generatedChatroomId);
+      updatedContext.newHead = newHead;
+      response.newHead = newHead;
     }
 
     // Store project data
@@ -83,13 +89,6 @@ export const orchestrateContextWorkflow = async ({
     for (const head of heads) {
       const { updatedMainMemory } = pruneHead(head.id, updatedContext.memory);
       updatedContext.memory = updatedMainMemory;
-    }
-
-    // Check if sub-persona creation is required
-    if (actionItems.includes("create-subpersona")) {
-      const subpersona = await createSubpersona(query, "Sub-persona created for specific task", generatedUserId, generatedChatroomId);
-      updatedContext.subpersona = subpersona;
-      response.subpersona = subpersona;
     }
 
     // Update context and generate context digest
@@ -186,5 +185,28 @@ async function resolveDependencies(taskCard, user_id, chatroom_id) {
     }
     await updateTaskStatus(subtask.id, "in_progress", user_id, chatroom_id);
     console.log(`Subtask ${subtask.description} is now in progress.`);
+  }
+}
+
+/**
+ * Adds a dependency between two tasks.
+ * @param {string} taskId - The ID of the task that depends on another task.
+ * @param {string} dependencyId - The ID of the task that is a dependency.
+ * @returns {Promise<object>} - The result of the dependency addition.
+ */
+export async function addDependency(taskId, dependencyId) {
+  try {
+    const { data, error } = await supabase
+      .from('task_dependencies')
+      .insert([{ task_id: taskId, dependency_id: dependencyId }]);
+
+    if (error) {
+      throw new Error(`Error adding dependency: ${error.message}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in addDependency:", error);
+    throw error;
   }
 }

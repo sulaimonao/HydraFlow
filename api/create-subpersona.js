@@ -7,17 +7,8 @@ export default async function handler(req, res) {
     let { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
     // Generate default user_id and chatroom_id if missing
-    try {
-      user_id = user_id || uuidv4();
-    } catch (error) {
-      user_id = `user_${Date.now()}`;
-    }
-
-    try {
-      chatroom_id = chatroom_id || uuidv4();
-    } catch (error) {
-      chatroom_id = `chat_${Date.now()}`;
-    }
+    user_id = user_id || uuidv4();
+    chatroom_id = chatroom_id || uuidv4();
 
     if (!name) {
       return res.status(400).json({ error: 'Subpersona name is required.' });

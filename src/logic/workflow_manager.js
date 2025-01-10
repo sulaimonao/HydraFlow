@@ -14,6 +14,9 @@ import { logIssue } from "../../api/debug.js";
 import { v4 as uuidv4 } from 'uuid';
 
 import { shouldCompressMemory, canCreateNewHead } from "./conditions.js";
+import { calculateMetrics } from '../util/metrics.js';
+import { handleActions } from '../util/actionHandler.js';
+import { shouldCompress, needsContextRecap } from "./conditions.js";
 
 // Orchestrates the entire workflow
 export const orchestrateContextWorkflow = async ({
@@ -97,6 +100,22 @@ export const orchestrateContextWorkflow = async ({
     // Gather gauge data
     response.gaugeData = await gatherGaugeData({ user_id: generatedUserId, chatroom_id: generatedChatroomId });
 
+    // Calculate metrics and determine actions
+    const metrics = calculateMetrics(context);
+    const actions = metrics.actions;
+
+    // Check conditions before handling actions
+    if (shouldCompress(actions, memory.length)) {
+      actions.push('compressMemory');
+    }
+
+    if (needsContextRecap(memory.length, feedback.engagement)) {
+      actions.push('contextRecap');
+    }
+
+    // Handle actions and get user feedback
+    const actionFeedback = await handleActions(actions, context);
+
     // Final user-facing response
     response.finalResponse = await generateFinalResponse({
       userInput: query,
@@ -105,6 +124,7 @@ export const orchestrateContextWorkflow = async ({
       taskCard,
       actionsPerformed: response,
       gaugeData: response.gaugeData,
+      actionFeedback, // Include action feedback
     });
 
     // Prompt for feedback

@@ -26,15 +26,19 @@ async function createSubpersona(templateName, user_id, chatroom_id) {
   const headId = `head_${uuidv4()}`;
   const name = `Head for ${template.task}`;
 
-  console.log('Creating sub-persona with:', { name, user_id, chatroom_id });
+  // Generate default user_id and chatroom_id if missing
+  const generatedUserId = user_id || uuidv4();
+  const generatedChatroomId = chatroom_id || uuidv4();
+
+  console.log('Creating sub-persona with:', { name, user_id: generatedUserId, chatroom_id: generatedChatroomId });
 
   try {
     const head = await insertHead({
       name,
       capabilities: { task: template.task },
       preferences: { description: template.description },
-      user_id,
-      chatroom_id
+      user_id: generatedUserId,
+      chatroom_id: generatedChatroomId
     });
 
     activeHeads[headId] = {

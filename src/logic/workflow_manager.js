@@ -1,7 +1,7 @@
 // src/logic/workflow_manager.js
 import { gatherGaugeData } from "../logic/gauge_logic.js";
 import { parseQuery } from "../actions/query_parser.js";
-import { compressMemory } from "../actions/memory_compressor.js";
+import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
 import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersona, pruneHead } from "../actions/subpersona_creator.js";
 import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
@@ -9,7 +9,7 @@ import { generateContextDigest } from "../logic/context_digest.js";
 import { generateFinalResponse } from "../logic/response_generator.js";
 import { collectFeedback } from "../logic/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
-import { appendMemory, getMemory } from "../state/memory_state.js";
+import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";
 import { logIssue } from "../../api/debug.js";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -66,11 +66,15 @@ export const orchestrateContextWorkflow = async ({
     await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
     // Handle memory compression
-    if (shouldCompressMemory(tokenCount) && existingMemory?.length > 1000) {
+    if (tokenCount > 7000) { // Example threshold
       const compressed = compressMemory(existingMemory);
-      updatedContext.memory = compressed.compressedMemory;
-      response.compressedMemory = compressed.compressedMemory;
+      await storeCompressedMemory(generatedUserId, generatedChatroomId, compressed);
+      updatedContext.memory = compressed;
+      response.compressedMemory = compressed;
     }
+
+    // Store project data
+    await storeProjectData(generatedUserId, generatedChatroomId, query);
 
     // Prune sub-personas if necessary
     for (const head of heads) {

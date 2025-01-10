@@ -1,6 +1,7 @@
 // src/actions/memory_compressor.js
 
-// Enhanced deduplication and segmentation
+import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+
 export function compressMemory(memory) {
   if (typeof memory === "string") {
     return compressTextMemory(memory);
@@ -32,4 +33,14 @@ function compressArrayMemory(memory) {
 export function periodicCleanup(memory) {
   const currentTime = Date.now();
   return memory.filter(entry => currentTime - entry.timestamp < 30 * 24 * 60 * 60 * 1000); // Keep entries from the last 30 days
+}
+
+export async function storeCompressedMemory(userId, chatroomId, compressedMemory) {
+  try {
+    await supabaseRequest(
+      supabase.from('memory_state').insert([{ user_id: userId, chatroom_id: chatroomId, memory: compressedMemory, updated_at: new Date().toISOString() }])
+    );
+  } catch (error) {
+    console.error('Error storing compressed memory:', error);
+  }
 }

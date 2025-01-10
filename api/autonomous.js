@@ -22,13 +22,28 @@ export default async (req, res) => {
     // Log the start of the workflow
     console.log(`Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
-    // Delegate task orchestration to workflow_manager
-    const result = await orchestrateContextWorkflow({ query, memory, feedback, context });
+    // Dynamic action handling based on query
+    let actionResult;
+    switch (query.action) {
+      case 'updateContext':
+        actionResult = await updateContext(query.data, context);
+        break;
+      case 'fetchData':
+        actionResult = await fetchData(query.data, context);
+        break;
+      default:
+        actionResult = await orchestrateContextWorkflow({ query, memory, feedback, context });
+    }
+
+    // Update context based on action result
+    if (actionResult.updatedContext) {
+      context.updatedContext = actionResult.updatedContext;
+    }
 
     // Attach gauge metrics to the response
     const responsePayload = {
       message: "Workflow executed successfully",
-      ...result,
+      ...actionResult,
       gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object
     };
 
@@ -47,3 +62,14 @@ export default async (req, res) => {
     res.status(500).json({ error: "Failed to execute workflow. Please try again.", details: error.message });
   }
 };
+
+// functions for dynamic action handling
+async function updateContext(data, context) {
+  // Implement context update logic here
+  return { updatedContext: { ...context, ...data } };
+}
+
+async function fetchData(data, context) {
+  // Implement data fetching logic here
+  return { fetchedData: [] }; // Example response
+}

@@ -23,6 +23,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Subpersona name is required.' });
     }
 
+    // Check if user_id and chatroom_id exist in contexts table
+    let { data: contextData, error: contextError } = await supabase
+      .from('contexts')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('chatroom_id', chatroom_id)
+      .single();
+
+    if (contextError || !contextData) {
+      // Insert new context if it does not exist
+      const { data: newContextData, error: newContextError } = await supabase
+        .from('contexts')
+        .insert([{ user_id, chatroom_id }])
+        .single();
+
+      if (newContextError) {
+        return res.status(500).json({ error: 'Failed to create new context.' });
+      }
+
+      contextData = newContextData;
+    }
+
     const subPersona = {
       name,
       capabilities,

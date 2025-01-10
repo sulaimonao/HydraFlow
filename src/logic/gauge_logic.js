@@ -1,7 +1,7 @@
 // src/logic/gauge_logic.js
 import os from 'os';
 import { performance } from 'perf_hooks';
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 // Collect system metrics
 export const gatherSystemMetrics = () => {

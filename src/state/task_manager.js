@@ -1,5 +1,5 @@
 // src/state/task_manager.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 export const createTaskCard = async (goal, subtasks) => {
   const taskCard = {

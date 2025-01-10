@@ -1,5 +1,5 @@
 // api/context-recap.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {

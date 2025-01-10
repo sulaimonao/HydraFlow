@@ -1,4 +1,4 @@
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 // Log an issue
 export async function logIssue({ userId, contextId, issue, resolution }) {

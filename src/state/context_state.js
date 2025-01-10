@@ -1,5 +1,5 @@
 //src/state/context_state.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 class ContextState {
   constructor() {

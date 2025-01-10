@@ -1,5 +1,5 @@
 // src/actions/feedback_collector.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 // Collect feedback
 export const collectFeedback = async ({ responseId, userFeedback, rating }) => {

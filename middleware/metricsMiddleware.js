@@ -1,8 +1,8 @@
 // middleware/metricsMiddleware.js
 
-import { calculateMetrics } from "../src/util/metrics";
-import { generateRecommendations } from "../src/util/recommendations";
-import supabase, { supabaseRequest } from '../lib/supabaseClient';
+import { calculateMetrics } from "../src/util/metrics.js";
+import { generateRecommendations } from "../src/util/recommendations.js";
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 export const appendGaugeMetrics = async (req, res, next) => {
   try {

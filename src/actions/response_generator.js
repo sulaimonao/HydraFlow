@@ -1,6 +1,6 @@
 //src/actions/response_generator.js
 
-const { calculateMetrics } = require("../util/metrics");
+const { calculateMetrics } = require("../util/metrics.js");
 
 export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed }) => {
   const response = [];

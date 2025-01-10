@@ -1,5 +1,5 @@
 // src/state/memory_state.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 let memory = "";
 

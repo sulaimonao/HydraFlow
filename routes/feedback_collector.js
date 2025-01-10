@@ -2,7 +2,7 @@
 
 import express from "express";
 import { getFeedbackLog, generateFeedbackSummary } from "../actions/feedback_collector.js";
-import supabase, { supabaseRequest } from '../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 const router = express.Router();
 

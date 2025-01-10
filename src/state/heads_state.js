@@ -1,5 +1,5 @@
 // src/state/heads_state.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 export async function addHead(name, status) {
   try {

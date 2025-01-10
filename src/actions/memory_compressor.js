@@ -1,6 +1,6 @@
 // src/actions/memory_compressor.js
 
-import supabase, { supabaseRequest } from '../../lib/supabaseClient';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 export function compressMemory(memory) {
   if (typeof memory === "string") {

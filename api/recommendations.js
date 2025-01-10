@@ -1,5 +1,5 @@
 //api/recommendations.js
-import { generateRecommendations } from "../src/util/recommendations";
+import { generateRecommendations } from "../src/util/recommendations.js";
 
 export default async (req, res) => {
   try {

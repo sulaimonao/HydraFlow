@@ -1,6 +1,6 @@
 //src/actions/subpersona_creator.js
 
-import { insertHead } from '../../lib/db.js';
+import { insertHead, getHeads } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const activeHeads = {}; // Store active heads temporarily
@@ -29,6 +29,15 @@ async function createSubpersona(templateName, user_id, chatroom_id) {
   // Generate default user_id and chatroom_id if missing
   const generatedUserId = user_id || uuidv4();
   const generatedChatroomId = chatroom_id || uuidv4();
+
+  console.log('Generated UUIDs:', { user_id: generatedUserId, chatroom_id: generatedChatroomId });
+
+  // Check if a sub-persona with the same UUIDs already exists
+  const existingHeads = await getHeads(generatedUserId, generatedChatroomId);
+  if (existingHeads.length > 0) {
+    console.warn(`Sub-persona already exists for user_id: ${generatedUserId} and chatroom_id: ${generatedChatroomId}`);
+    return { error: "Sub-persona already exists", details: existingHeads };
+  }
 
   console.log('Creating sub-persona with:', { name, user_id: generatedUserId, chatroom_id: generatedChatroomId });
 

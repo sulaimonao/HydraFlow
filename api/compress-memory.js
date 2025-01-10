@@ -27,7 +27,7 @@ export default async (req, res) => {
 
     // Respond with compressed memory, additional metrics, and gauge metrics
     return res.status(200).json({
-      compressedMemory,
+      compressedMemory, 
       originalLength: memory.length,
       compressedLength: compressedMemory.length,
       compressionRatio: (compressedMemory.length / memory.length).toFixed(2),

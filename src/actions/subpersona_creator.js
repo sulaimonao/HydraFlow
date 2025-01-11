@@ -125,10 +125,11 @@ async function pruneHead(headId) {
  * @param {object} preferences - JSON object describing preferences
  * @returns {object} - { message, data } on success, or { error } if fails
  */
+// src/actions/subpersona_creator.js
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    // 1️⃣ Query for existing active head
-    const existingHeadResult = await supabaseRequest(() =>
+    // 1. Look for an existing active head
+    const existingHead = await supabaseRequest(() =>
       supabase
         .from('heads')
         .select('*')
@@ -139,17 +140,16 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
         .maybeSingle()
     );
 
-    // 2️⃣ Check if 'existingHeadResult' is null
-    if (existingHeadResult === null) {
-      console.log("No active subpersona with that name found. Proceeding to create...");
-      // => That means no row found
+    // 2. If null => no row found
+    if (existingHead === null) {
+      console.log(`No active subpersona named '${name}' found. Proceeding to create...`);
     } else {
-      // existingHeadResult is a row/object
-      console.warn(`An active subpersona '${name}' already exists for user_id=${user_id}, chatroom_id=${chatroom_id}`);
-      return { error: `Subpersona '${name}' already exists and is active.` };
+      // We found a row => bail out
+      console.warn(`Active subpersona '${name}' already exists for user_id=${user_id}, chatroom_id=${chatroom_id}`);
+      return { error: `Subpersona '${name}' already exists.` };
     }
 
-    // 3️⃣ Insert new subpersona
+    // 3. Insert new subpersona
     const newSubpersona = {
       name,
       status: 'active',
@@ -167,13 +167,13 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
         .select()
     );
 
-    // 4️⃣ If insertResult is null, that would be odd—likely means the insert returned no rows
+    // 4. If 'insertResult' is null => the insert returned no rows
     if (insertResult === null) {
-      console.warn("Insert returned no data. Possibly the row was not created?");
+      console.warn("Insert returned no data. Possibly row not created?");
       return { error: "Failed to create subpersona." };
     }
 
-    // 'insertResult' might be an array containing the inserted row, or an object—depends on your setup
+    // 5. Otherwise, we have newly inserted data
     console.log('Subpersona created successfully:', insertResult);
     return { message: 'Subpersona created successfully', data: insertResult };
   } catch (error) {

@@ -32,3 +32,5 @@ analyzeSyntax.js
 *.py
 test_simulation.js
 fix-imports.js
+auto-fix-imports.js
+detect-and-fix.js

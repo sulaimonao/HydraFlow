@@ -2,7 +2,7 @@
 import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
-import feedbackRoutes from './routes/feedback.js';
+import feedbackRoutes from './routes/feedback_collector.js';
 import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { generateRecommendations } from './src/util/recommendations.js';

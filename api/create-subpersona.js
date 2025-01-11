@@ -1,5 +1,5 @@
 // api/create-subpersona.js
-import { createSubpersona } from '../../actions/subpersona_creator.js';
+import { createSubpersona } from '../src/actions/subpersona_creator.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const handleCreateSubpersona = async (req, res) => {

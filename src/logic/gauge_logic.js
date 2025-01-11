@@ -60,3 +60,8 @@ export const collectGaugeMetrics = async () => {
 
     return metrics;
 };
+
+// Alias function to fix import issues
+export const gatherGaugeData = async () => {
+    return await collectGaugeMetrics();
+};

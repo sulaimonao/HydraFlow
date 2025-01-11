@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
-import supabase from '../lib/supabaseClient.js';
+import supabase from '../../lib/supabaseClient.js';
 
 // Orchestrates the entire workflow
 export const orchestrateContextWorkflow = async ({

@@ -1,14 +1,15 @@
 // server.js
-const express = require("express");
-const session = require("express-session");
-const { v4: uuidv4 } = require("uuid");
-const feedbackRoutes = require("./routes/feedback");
-const { calculateMetrics } = require("./src/util/metrics");
-const { appendGaugeMetrics } = require("./middleware/metricsMiddleware");
-const { generateRecommendations } = require("./src/util/recommendations");
-const { validateRequest } = require("./middleware/validationMiddleware");
-const Joi = require("joi");
-const createSubpersona = require('./api/create-subpersona');
+import express from 'express';
+import session from 'express-session';
+import { v4 as uuidv4 } from 'uuid';
+import feedbackRoutes from './routes/feedback.js';
+import { calculateMetrics } from './src/util/metrics.js';
+import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
+import { generateRecommendations } from './src/util/recommendations.js';
+import { validateRequest } from './middleware/validationMiddleware.js';
+import Joi from 'joi';
+import createSubpersona from './api/create-subpersona.js';
+import compressMemory from './api/compress-memory.js';
 
 const app = express();
 app.use(express.json());
@@ -63,7 +64,7 @@ const validateInput = (requiredFields) => (req, res, next) => {
 
 // Use validation middleware
 app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), createSubpersona);
-app.post("/api/compress-memory", validateRequest(compressMemorySchema), require("./api/compress-memory"));
+app.post("/api/compress-memory", validateRequest(compressMemorySchema), compressMemory);
 
 // Feedback routes
 app.use("/api/feedback", feedbackRoutes);
@@ -109,4 +110,4 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+export default app;

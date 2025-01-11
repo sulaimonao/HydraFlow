@@ -30,7 +30,6 @@
 | heads             | id                | integer                     | NO          |
 | heads             | name              | text                        | YES         |
 | heads             | status            | text                        | YES         |
-| heads             | createdat         | bigint                      | YES         |
 | heads             | user_id           | text                        | YES         |
 | heads             | chatroom_id       | text                        | YES         |
 | heads             | capabilities      | jsonb                       | YES         |
@@ -38,6 +37,8 @@
 | heads             | subpersona_id     | integer                     | YES         |
 | heads             | task_description  | text                        | YES         |
 | heads             | trigger_condition | text                        | YES         |
+| heads             | createdAt         | timestamp without time zone | YES         |
+| heads             | createdat         | bigint                      | YES         |
 | memories          | id                | integer                     | NO          |
 | memories          | user_id           | text                        | YES         |
 | memories          | chatroom_id       | text                        | YES         |

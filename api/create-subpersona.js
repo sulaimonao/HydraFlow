@@ -42,22 +42,22 @@ const createSubpersona = async (req, res) => {
       user_id: generatedUserId,
       chatroom_id: generatedChatroomId,
       status: 'active',
-      createdat: Date.now(),  // bigint timestamp to match schema
+      createdAt: new Date().toISOString(),  // Correct timestamp format
       subpersona_id: null,    // Set to null if optional
       task_description: '',   // Default empty description
       trigger_condition: null // Default null if optional
     };
 
-    // Insert into 'heads' instead of 'subpersonas'
+    // Insert into 'heads' and return the inserted data
     const { data, error } = await supabaseRequest(() =>
-      supabase.from('heads').insert([subPersona])
+      supabase.from('heads').insert([subPersona]).select()
     );
 
     if (error) {
       throw new Error(`Error inserting subpersona into heads: ${error.message}`);
     }
 
-    res.status(200).json({ message: 'Subpersona created successfully.', subPersona });
+    res.status(200).json({ message: 'Subpersona created successfully.', data });
   } catch (error) {
     console.error("Error in create-subpersona:", error);
     res.status(500).json({ error: error.message });

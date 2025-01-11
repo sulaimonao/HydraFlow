@@ -10,6 +10,7 @@ import { validateRequest } from './middleware/validationMiddleware.js';
 import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
+import supabase, { supabaseRequest } from './lib/supabaseClient.js';
 
 const app = express();
 app.use(express.json());
@@ -24,14 +25,34 @@ app.use(
 );
 
 // Middleware to initialize user and chatroom data
-app.use((req, res, next) => {
-  if (!req.session.userId) {
-    req.session.userId = uuidv4();
+app.use(async (req, res, next) => {
+  try {
+    if (!req.session.userId) {
+      req.session.userId = uuidv4();
+    }
+    if (!req.session.chatroomId) {
+      req.session.chatroomId = uuidv4();
+    }
+
+    // Ensure context exists in Supabase
+    const { data, error } = await supabase
+      .from('contexts')
+      .select('id')
+      .eq('user_id', req.session.userId)
+      .eq('chatroom_id', req.session.chatroomId)
+      .single();
+
+    if (error || !data) {
+      await supabase
+        .from('contexts')
+        .insert([{ user_id: req.session.userId, chatroom_id: req.session.chatroomId }]);
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error initializing context:", error);
+    next();
   }
-  if (!req.session.chatroomId) {
-    req.session.chatroomId = uuidv4();
-  }
-  next();
 });
 
 // Middleware to append gauge metrics to all responses
@@ -72,12 +93,9 @@ app.use("/api/feedback", feedbackRoutes);
 // Fetch gauge metrics
 app.get("/api/fetch-gauge-metrics", (req, res) => {
   const context = req.context || {
-    tokenUsage: { used: 6000, total: 8192 },
-    responseLatency: 0.8,
-    activeSubpersonas: [
-      { name: "LogAnalyzer", status: "active" },
-      { name: "MemoryOptimizer", status: "idle" },
-    ],
+    tokenUsage: { used: 0, total: 10000 },
+    responseLatency: 0.5,
+    activeSubpersonas: [],
   };
   const metrics = calculateMetrics(context);
   res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });

@@ -115,50 +115,57 @@ async function pruneHead(headId) {
 }
 
 /**
- * Main exported function: Create a new subpersona
- * - Does NOT use a template
- * - Checks if a subpersona with the same name already exists
- * - Avoids .single() to prevent the "JSON object requested..." error
+ * Create a new subpersona (head) only if there's no
+ * existing active head with the same name for this user & chatroom.
+ *
+ * @param {string} name - The subpersona name (e.g., "Optimizer")
+ * @param {string} user_id - The user ID to associate with this subpersona
+ * @param {string} chatroom_id - The chatroom ID to associate with this subpersona
+ * @param {object} capabilities - JSON object describing capabilities
+ * @param {object} preferences - JSON object describing preferences
+ * @returns {object} - { message, data } on success, or { error } if fails
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    // Attempt to find if a subpersona with this name already exists
-    // .maybeSingle() returns `data` as null if no row found, or the row if exactly one row found
-    const { data: existingSubpersona, error: findError } = await supabaseRequest(() =>
+    // 1. Check if there's already an active head with this name
+    const { data: existingHead, error: findError } = await supabaseRequest(() =>
       supabase
         .from('heads')
         .select('*')
         .eq('name', name)
-        .maybeSingle() 
+        .eq('status', 'active')       // only active heads
+        .eq('user_id', user_id)
+        .eq('chatroom_id', chatroom_id)
+        .maybeSingle()                // returns null if no rows, or one row if exactly one found
     );
 
     if (findError) {
-      console.error('Failed to verify existing subpersona name:', findError);
-      return { error: 'Failed to verify existing subpersona name.' };
+      console.error('Supabase error verifying existing subpersona:', findError);
+      return { error: 'Failed to verify existing subpersona.' };
     }
 
-    // If we found a subpersona with the same name, bail out
-    if (existingSubpersona) {
-      console.warn(`Subpersona '${name}' already exists:`, existingSubpersona);
-      return { error: `Subpersona '${name}' already exists.`, details: existingSubpersona };
+    // If we found a row, bail out
+    if (existingHead) {
+      console.warn(`An active subpersona '${name}' already exists for user_id=${user_id} and chatroom_id=${chatroom_id}`);
+      return { error: `Subpersona '${name}' already exists and is active.` };
     }
 
-    // Otherwise, proceed to create
-    const subPersona = {
+    // 2. Create the new subpersona record
+    const newSubpersona = {
       name,
-      capabilities: capabilities || {},
-      preferences: preferences || {},
+      status: 'active',
       user_id,
       chatroom_id,
-      createdAt: new Date().toISOString(),
+      capabilities: capabilities || {},
+      preferences: preferences || {},
+      createdat: new Date().toISOString(), // or createdAt, depending on your DB column name
     };
 
-    // Insert new record
     const { data, error } = await supabaseRequest(() =>
       supabase
         .from('heads')
-        .insert([subPersona])
-        .select() // Return created record(s)
+        .insert([newSubpersona])
+        .select() // Return the newly inserted record(s)
     );
 
     if (error) {

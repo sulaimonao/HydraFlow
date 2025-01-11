@@ -44,9 +44,9 @@ const createSubpersona = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    const { data, error } = await supabaseRequest(
+    const { data, error } = await supabaseRequest(() =>
       supabase.from('subpersonas').insert([subPersona])
-    );
+    );    
 
     if (error) {
       throw new Error(`Error inserting subpersona: ${error.message}`);

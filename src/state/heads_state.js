@@ -14,9 +14,7 @@ export async function addHead(name, status) {
 
 export async function getHeads() {
   try {
-    const data = await supabaseRequest(
-      supabase.from('heads').select('*')
-    );
+    const data = await supabaseRequest(() => supabase.from('heads').select('*'));
     return data;
   } catch (error) {
     console.error('Error fetching heads:', error);

@@ -21,9 +21,7 @@ export function compressMemory(memory) {
 
 export async function storeCompressedMemory(userId, chatroomId, compressedMemory) {
   try {
-    await supabaseRequest(
-      supabase.from('memory_state').insert([{ user_id: userId, chatroom_id: chatroomId, memory: compressedMemory, updated_at: new Date().toISOString() }])
-    );
+    await supabaseRequest(() => supabase.from('memory_state').insert([{ user_id: userId, chatroom_id: chatroomId, memory: compressedMemory, updated_at: new Date().toISOString() }]));
   } catch (error) {
     console.error('Error storing compressed memory:', error);
   }

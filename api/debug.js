@@ -20,9 +20,7 @@ export async function logIssue({ userId, contextId, issue, resolution }) {
 // Fetch debug logs
 export async function fetchDebugLogs(contextId) {
   try {
-    const data = await supabaseRequest(
-      supabase.from('debug_logs').select('*').eq('context_id', contextId)
-    );
+    const data = await supabaseRequest(() => supabase.from('debug_logs').select('*').eq('context_id', contextId));
 
     return data;
   } catch (error) {

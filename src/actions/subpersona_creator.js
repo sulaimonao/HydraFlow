@@ -103,9 +103,7 @@ async function pruneHead(headId) {
 // **Keep this as the main exported function**
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    const { data: context, error: contextError } = await supabaseRequest(
-      supabase.from('subpersonas').select('*').eq('name', name).single()
-    );
+    const { data: context, error: contextError } = await supabaseRequest(() => supabase.from('subpersonas').select('*').eq('name', name).single());
 
     if (contextError && contextError.message !== "No rows found") {
       return { error: 'Failed to verify existing context.' };
@@ -120,9 +118,7 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
       createdAt: new Date().toISOString(),
     };
 
-    const { data, error } = await supabaseRequest(
-      supabase.from('subpersonas').insert([subPersona])
-    );
+    const { data, error } = await supabaseRequest(() => supabase.from('subpersonas').insert([subPersona]));
 
     if (error) {
       return { error: 'Failed to create subpersona.' };

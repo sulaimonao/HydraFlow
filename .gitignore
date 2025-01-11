@@ -36,3 +36,4 @@ auto-fix-imports.js
 detect-and-fix.js
 enhanced-auto-fix-imports.js
 diagnostic-check.js
+lib/test_db.js

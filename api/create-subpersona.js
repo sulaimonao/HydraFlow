@@ -2,7 +2,7 @@
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export default async function handler(req, res) {
+const createSubpersona = async (req, res) => {
   try {
     const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
@@ -58,4 +58,6 @@ export default async function handler(req, res) {
     console.error("Error in create-subpersona:", error);
     res.status(500).json({ error: error.message });
   }
-}
+};
+
+module.exports = createSubpersona;

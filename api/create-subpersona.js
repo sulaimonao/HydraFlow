@@ -42,7 +42,10 @@ const createSubpersona = async (req, res) => {
       user_id: generatedUserId,
       chatroom_id: generatedChatroomId,
       status: 'active',
-      createdAt: new Date().toISOString(),
+      createdat: Date.now(),  // bigint timestamp to match schema
+      subpersona_id: null,    // Set to null if optional
+      task_description: '',   // Default empty description
+      trigger_condition: null // Default null if optional
     };
 
     // Insert into 'heads' instead of 'subpersonas'

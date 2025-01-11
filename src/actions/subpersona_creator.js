@@ -75,6 +75,32 @@ function deactivateSubpersona(headId) {
   }
 }
 
+/**
+ * Prunes (removes) inactive or redundant subpersonas.
+ * @param {string} headId - The ID of the subpersona to prune.
+ * @returns {Object} - Success or error message.
+ */
+async function pruneHead(headId) {
+  if (!activeHeads[headId]) {
+    console.warn(`Sub-persona ${headId} does not exist or is already pruned.`);
+    return { error: "Sub-persona not found or already inactive." };
+  }
+
+  try {
+    delete activeHeads[headId];
+
+    await supabaseRequest(
+      supabase.from('heads').delete().eq('id', headId)
+    );
+
+    console.log(`Sub-persona ${headId} has been pruned.`);
+    return { success: `Sub-persona ${headId} has been successfully pruned.` };
+  } catch (error) {
+    console.error(`Error pruning sub-persona ${headId}:`, error);
+    return { error: `Failed to prune sub-persona ${headId}.` };
+  }
+}
+
 // **Keep this as the main exported function**
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
@@ -111,4 +137,4 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
 }
 
 // Export updated functions
-export { createSubpersonaFromTemplate, deactivateSubpersona };
+export { createSubpersonaFromTemplate, deactivateSubpersona, pruneHead };

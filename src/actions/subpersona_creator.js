@@ -2,6 +2,7 @@
 
 import { insertHead, getHeads } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 const activeHeads = {}; // Store active heads temporarily
 
@@ -76,3 +77,37 @@ function deactivateSubpersona(headId) {
 }
 
 export { createSubpersona, deactivateSubpersona };
+
+export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
+  try {
+    const { data: context, error: contextError } = await supabaseRequest(
+      supabase.from('subpersonas').select('*').eq('name', name).single()
+    );
+
+    if (contextError && contextError.message !== "No rows found") {
+      return { error: 'Failed to verify existing context.' };
+    }
+
+    const subPersona = {
+      name,
+      capabilities: capabilities || {},
+      preferences: preferences || {},
+      user_id,
+      chatroom_id,
+      createdAt: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabaseRequest(
+      supabase.from('subpersonas').insert([subPersona])
+    );
+
+    if (error) {
+      return { error: 'Failed to create subpersona.' };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating subpersona:', error);
+    return { error: error.message };
+  }
+}

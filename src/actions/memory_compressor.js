@@ -8,7 +8,8 @@ export function compressMemory(memory) {
   }
 
   const originalLength = memory.length;
-  const compressedMemory = memory.replace(/\s+/g, ' ');
+  // Enhanced compression: remove redundant punctuation and extra spaces
+  const compressedMemory = memory.replace(/\s+/g, ' ').replace(/([.,!?])\1+/g, '$1');
   const compressionRatio = ((1 - (compressedMemory.length / originalLength)) * 100).toFixed(2);
 
   return {

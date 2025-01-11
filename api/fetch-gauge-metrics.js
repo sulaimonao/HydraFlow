@@ -4,11 +4,7 @@ import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 export default async function handler(req, res) {
   try {
-    if (!req.query.metricType) {
-      return res.status(400).json({ error: "metricType is required" });
-    }
-
-    const { metricType } = req.query; // Ensure metricType is extracted from query
+    const metricType = req.query.metricType || 'default'; // Set default metricType if not provided
     const { tokenUsage, responseLatency, activeSubpersonas } = req.body;
 
     // Validate required parameters

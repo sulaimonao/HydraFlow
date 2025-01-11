@@ -127,30 +127,29 @@ async function pruneHead(headId) {
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    // 1. Check if there's already an active head with this name
-    const { data: existingHead, error: findError } = await supabaseRequest(() =>
+    // 1️⃣ Query for existing active head
+    const existingHeadResult = await supabaseRequest(() =>
       supabase
         .from('heads')
         .select('*')
         .eq('name', name)
-        .eq('status', 'active')       // only active heads
+        .eq('status', 'active')
         .eq('user_id', user_id)
         .eq('chatroom_id', chatroom_id)
-        .maybeSingle()                // returns null if no rows, or one row if exactly one found
+        .maybeSingle()
     );
 
-    if (findError) {
-      console.error('Supabase error verifying existing subpersona:', findError);
-      return { error: 'Failed to verify existing subpersona.' };
-    }
-
-    // If we found a row, bail out
-    if (existingHead) {
-      console.warn(`An active subpersona '${name}' already exists for user_id=${user_id} and chatroom_id=${chatroom_id}`);
+    // 2️⃣ Check if 'existingHeadResult' is null
+    if (existingHeadResult === null) {
+      console.log("No active subpersona with that name found. Proceeding to create...");
+      // => That means no row found
+    } else {
+      // existingHeadResult is a row/object
+      console.warn(`An active subpersona '${name}' already exists for user_id=${user_id}, chatroom_id=${chatroom_id}`);
       return { error: `Subpersona '${name}' already exists and is active.` };
     }
 
-    // 2. Create the new subpersona record
+    // 3️⃣ Insert new subpersona
     const newSubpersona = {
       name,
       status: 'active',
@@ -158,23 +157,25 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
       chatroom_id,
       capabilities: capabilities || {},
       preferences: preferences || {},
-      createdat: new Date().toISOString(), // or createdAt, depending on your DB column name
+      createdat: new Date().toISOString(),
     };
 
-    const { data, error } = await supabaseRequest(() =>
+    const insertResult = await supabaseRequest(() =>
       supabase
         .from('heads')
         .insert([newSubpersona])
-        .select() // Return the newly inserted record(s)
+        .select()
     );
 
-    if (error) {
-      console.error('Error inserting new subpersona:', error);
-      return { error: 'Failed to create subpersona.' };
+    // 4️⃣ If insertResult is null, that would be odd—likely means the insert returned no rows
+    if (insertResult === null) {
+      console.warn("Insert returned no data. Possibly the row was not created?");
+      return { error: "Failed to create subpersona." };
     }
 
-    console.log('Subpersona created successfully:', data);
-    return { message: 'Subpersona created successfully', data };
+    // 'insertResult' might be an array containing the inserted row, or an object—depends on your setup
+    console.log('Subpersona created successfully:', insertResult);
+    return { message: 'Subpersona created successfully', data: insertResult };
   } catch (error) {
     console.error('Error creating subpersona:', error);
     return { error: error.message };

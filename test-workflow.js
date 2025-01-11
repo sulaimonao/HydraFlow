@@ -1,5 +1,5 @@
 // test-workflow.js
-
+import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
 // Replace with your deployed URL
@@ -14,11 +14,13 @@ const logResult = (action, success, message) => {
 // ✅ Updated Subpersona Creation with user_id
 async function testSubpersonaCreation() {
   try {
+    const userId = uuidv4();  // ✅ Generate userId if req is unavailable
+
     const response = await axios.post(`${BASE_URL}/create-subpersona`, {
       name: "Optimizer",
       capabilities: { analyze: true },
       preferences: { priority: "high" },
-      user_id: req.session.userId  // ✅ Explicitly passing user_id
+      user_id: userId  // ✅ Explicitly passing user_id
     });
 
     if (response.status === 200) {

@@ -2,7 +2,7 @@
 
 import { insertHead, getHeads } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 const activeHeads = {}; // Store active heads temporarily
 

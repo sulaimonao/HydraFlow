@@ -3,7 +3,7 @@ import { gatherGaugeData } from "../logic/gauge_logic.js";
 import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
 import { updateContext, logContextUpdate } from "../state/context_state.js";
-import { createSubpersona, pruneHead } from "../actions/subpersona_creator.js";
+import { createSubpersonaFromTemplate, pruneHead } from "../actions/subpersona_creator.js";
 import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js"; // Correct path
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator_actions.js";
@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
-import supabase from '../../lib/supabaseClient.js';
+import supabase from '../lib/supabaseClient.js';
 
 // Orchestrates the entire workflow
 export const orchestrateContextWorkflow = async ({
@@ -77,7 +77,7 @@ export const orchestrateContextWorkflow = async ({
 
     // Check if a new head should be created
     if (shouldCreateHead(actionItems)) {
-      const newHead = await createSubpersona(query, "New head created for specific task", generatedUserId, generatedChatroomId);
+      const newHead = await createSubpersonaFromTemplate($1);
       updatedContext.newHead = newHead;
       response.newHead = newHead;
     }

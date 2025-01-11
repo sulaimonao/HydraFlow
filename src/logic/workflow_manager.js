@@ -188,25 +188,4 @@ async function resolveDependencies(taskCard, user_id, chatroom_id) {
   }
 }
 
-/**
- * Adds a dependency between two tasks.
- * @param {string} taskId - The ID of the task that depends on another task.
- * @param {string} dependencyId - The ID of the task that is a dependency.
- * @returns {Promise<object>} - The result of the dependency addition.
- */
-export async function addDependency(taskId, dependencyId) {
-  try {
-    const { data, error } = await supabase
-      .from('task_dependencies')
-      .insert([{ task_id: taskId, dependency_id: dependencyId }]);
 
-    if (error) {
-      throw new Error(`Error adding dependency: ${error.message}`);
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error in addDependency:", error);
-    throw error;
-  }
-}

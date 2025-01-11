@@ -8,6 +8,7 @@ const { appendGaugeMetrics } = require("./middleware/metricsMiddleware");
 const { generateRecommendations } = require("./src/util/recommendations");
 const { validateRequest } = require("./middleware/validationMiddleware");
 const Joi = require("joi");
+const createSubpersona = require('./api/create-subpersona');
 
 const app = express();
 app.use(express.json());
@@ -61,7 +62,7 @@ const validateInput = (requiredFields) => (req, res, next) => {
 };
 
 // Use validation middleware
-app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), require("./api/create-subpersona"));
+app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), createSubpersona);
 app.post("/api/compress-memory", validateRequest(compressMemorySchema), require("./api/compress-memory"));
 
 // Feedback routes

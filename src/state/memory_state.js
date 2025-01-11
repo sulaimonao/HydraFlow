@@ -24,3 +24,31 @@ export async function storeProjectData(userId, chatroomId, projectData) {
     console.error('Error storing project data:', error);
   }
 }
+
+/**
+ * Retrieves the stored memory for a specific user and chatroom.
+ * @param {string} userId - The user ID.
+ * @param {string} chatroomId - The chatroom ID.
+ * @returns {Promise<string>} - The retrieved memory data.
+ */
+export async function getMemory(userId, chatroomId) {
+  try {
+    const { data, error } = await supabaseRequest(
+      supabase
+        .from('memory_state')
+        .select('memory')
+        .eq('user_id', userId)
+        .eq('chatroom_id', chatroomId)
+        .single()
+    );
+
+    if (error) {
+      throw new Error(`Error fetching memory: ${error.message}`);
+    }
+
+    return data ? data.memory : "";
+  } catch (error) {
+    console.error('Error retrieving memory:', error);
+    return "";
+  }
+}

@@ -21,15 +21,9 @@ export async function storeProjectData(userId, chatroomId, projectData) {
   }
 }
 
-/**
- * Retrieves the stored memory for a specific user and chatroom.
- * @param {string} userId - The user ID.
- * @param {string} chatroomId - The chatroom ID.
- * @returns {Promise<string>} - The retrieved memory data.
- */
 export async function getMemory(userId, chatroomId) {
   try {
-    const { data, error } = await supabaseRequest(
+    const { data, error } = await supabaseRequest(() =>
       supabase
         .from('memory_state')
         .select('memory')

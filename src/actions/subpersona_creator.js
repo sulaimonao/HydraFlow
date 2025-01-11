@@ -1,4 +1,4 @@
-//src/actions/subpersona_creator.js
+// src/actions/subpersona_creator.js
 
 import { insertHead, getHeads } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,7 +6,7 @@ import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
 const activeHeads = {}; // Store active heads temporarily
 
-// Template-based creation
+// Template-based creation (optional)
 const subpersonaTemplates = {
   logAnalyzer: {
     task: "analyze logs",
@@ -18,7 +18,10 @@ const subpersonaTemplates = {
   },
 };
 
-// **Renamed to avoid conflict**
+/**
+ * Create a subpersona from a known template
+ * - This remains available if you need it in other parts of your code.
+ */
 async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) {
   const template = subpersonaTemplates[templateName];
   if (!template) {
@@ -31,15 +34,25 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
   const generatedUserId = user_id || uuidv4();
   const generatedChatroomId = chatroom_id || uuidv4();
 
-  console.log('Generated UUIDs:', { user_id: generatedUserId, chatroom_id: generatedChatroomId });
+  console.log('Generated UUIDs:', {
+    user_id: generatedUserId,
+    chatroom_id: generatedChatroomId
+  });
 
+  // Check if there's already a head for this user+chatroom
   const existingHeads = await getHeads(generatedUserId, generatedChatroomId);
   if (existingHeads.length > 0) {
-    console.warn(`Sub-persona already exists for user_id: ${generatedUserId} and chatroom_id: ${generatedChatroomId}`);
+    console.warn(
+      `Sub-persona already exists for user_id: ${generatedUserId} and chatroom_id: ${generatedChatroomId}`
+    );
     return { error: "Sub-persona already exists", details: existingHeads };
   }
 
-  console.log('Creating sub-persona with:', { name, user_id: generatedUserId, chatroom_id: generatedChatroomId });
+  console.log('Creating sub-persona with:', {
+    name,
+    user_id: generatedUserId,
+    chatroom_id: generatedChatroomId
+  });
 
   try {
     const head = await insertHead({
@@ -65,7 +78,9 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
   }
 }
 
-// Lifecycle management
+/**
+ * Deactivate a subpersona in memory
+ */
 function deactivateSubpersona(headId) {
   if (activeHeads[headId]) {
     activeHeads[headId].status = "inactive";
@@ -76,9 +91,7 @@ function deactivateSubpersona(headId) {
 }
 
 /**
- * Prunes (removes) inactive or redundant subpersonas.
- * @param {string} headId - The ID of the subpersona to prune.
- * @returns {Object} - Success or error message.
+ * Prune (delete) a subpersona from the database + our in-memory store
  */
 async function pruneHead(headId) {
   if (!activeHeads[headId]) {
@@ -101,17 +114,36 @@ async function pruneHead(headId) {
   }
 }
 
-// **Keep this as the main exported function**
+/**
+ * Main exported function: Create a new subpersona
+ * - Does NOT use a template
+ * - Checks if a subpersona with the same name already exists
+ * - Avoids .single() to prevent the "JSON object requested..." error
+ */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    const { data: context, error: contextError } = await supabaseRequest(() =>
-      supabase.from('heads').select('*').eq('name', name).single()
+    // Attempt to find if a subpersona with this name already exists
+    // .maybeSingle() returns `data` as null if no row found, or the row if exactly one row found
+    const { data: existingSubpersona, error: findError } = await supabaseRequest(() =>
+      supabase
+        .from('heads')
+        .select('*')
+        .eq('name', name)
+        .maybeSingle() 
     );
 
-    if (contextError && contextError.message !== "No rows found") {
-      return { error: 'Failed to verify existing context.' };
+    if (findError) {
+      console.error('Failed to verify existing subpersona name:', findError);
+      return { error: 'Failed to verify existing subpersona name.' };
     }
 
+    // If we found a subpersona with the same name, bail out
+    if (existingSubpersona) {
+      console.warn(`Subpersona '${name}' already exists:`, existingSubpersona);
+      return { error: `Subpersona '${name}' already exists.`, details: existingSubpersona };
+    }
+
+    // Otherwise, proceed to create
     const subPersona = {
       name,
       capabilities: capabilities || {},
@@ -121,15 +153,21 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
       createdAt: new Date().toISOString(),
     };
 
+    // Insert new record
     const { data, error } = await supabaseRequest(() =>
-      supabase.from('heads').insert([subPersona])
+      supabase
+        .from('heads')
+        .insert([subPersona])
+        .select() // Return created record(s)
     );
 
     if (error) {
+      console.error('Error inserting new subpersona:', error);
       return { error: 'Failed to create subpersona.' };
     }
 
-    return data;
+    console.log('Subpersona created successfully:', data);
+    return { message: 'Subpersona created successfully', data };
   } catch (error) {
     console.error('Error creating subpersona:', error);
     return { error: error.message };
@@ -137,4 +175,8 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
 }
 
 // Export updated functions
-export { createSubpersonaFromTemplate, deactivateSubpersona, pruneHead };
+export {
+  createSubpersonaFromTemplate,
+  deactivateSubpersona,
+  pruneHead
+};

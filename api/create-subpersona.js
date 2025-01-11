@@ -1,5 +1,6 @@
 // api/create-subpersona.js
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 
 const createSubpersona = async (req, res) => {

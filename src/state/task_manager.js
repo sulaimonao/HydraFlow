@@ -88,3 +88,25 @@ export const limitResponses = (responses, maxLimit = 5) => {
   }
   return responses.slice(0, maxLimit);
 };
+
+/**
+ * Prioritizes tasks based on their status and priority.
+ * @param {Array} tasks - The array of tasks to prioritize.
+ * @returns {Array} - Sorted tasks with high-priority and pending tasks first.
+ */
+export const prioritizeTasks = (tasks) => {
+  if (!Array.isArray(tasks)) {
+    console.warn("Invalid input: tasks should be an array.");
+    return [];
+  }
+
+  return tasks.sort((a, b) => {
+    const priorityOrder = { High: 3, Medium: 2, Low: 1 };
+    const statusOrder = { pending: 3, in_progress: 2, completed: 1 };
+
+    return (
+      statusOrder[b.status] - statusOrder[a.status] ||
+      priorityOrder[b.priority] - priorityOrder[a.priority]
+    );
+  });
+};

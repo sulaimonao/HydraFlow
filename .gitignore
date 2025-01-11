@@ -34,3 +34,4 @@ test_simulation.js
 fix-imports.js
 auto-fix-imports.js
 detect-and-fix.js
+enhanced-auto-fix-imports.js

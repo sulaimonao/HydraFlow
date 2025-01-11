@@ -41,15 +41,17 @@ const createSubpersona = async (req, res) => {
       preferences: preferences || {},
       user_id: generatedUserId,
       chatroom_id: generatedChatroomId,
+      status: 'active',
       createdAt: new Date().toISOString(),
     };
 
+    // Insert into 'heads' instead of 'subpersonas'
     const { data, error } = await supabaseRequest(() =>
-      supabase.from('subpersonas').insert([subPersona])
-    );    
+      supabase.from('heads').insert([subPersona])
+    );
 
     if (error) {
-      throw new Error(`Error inserting subpersona: ${error.message}`);
+      throw new Error(`Error inserting subpersona into heads: ${error.message}`);
     }
 
     res.status(200).json({ message: 'Subpersona created successfully.', subPersona });

@@ -37,3 +37,4 @@ detect-and-fix.js
 enhanced-auto-fix-imports.js
 diagnostic-check.js
 lib/test_db.js
+dump-codebase.js

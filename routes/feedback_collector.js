@@ -9,8 +9,7 @@ const router = express.Router();
 // Get all feedback
 router.get("/all", async (req, res) => {
   try {
-    const feedback = await supabaseRequest(
-      supabase.from('feedback_entries').select('*')
+    const feedback = await supabaseRequest(() => supabase.from('feedback_entries').select('*')
     );
     res.status(200).json({ status: "success", data: feedback });
   } catch (error) {
@@ -34,8 +33,7 @@ router.get("/summary", async (req, res) => {
 router.get("/task/:taskId", async (req, res) => {
   try {
     const { taskId } = req.params;
-    const feedback = await supabaseRequest(
-      supabase.from('feedback_entries').select('*').eq('task_id', taskId)
+    const feedback = await supabaseRequest(() => supabase.from('feedback_entries').select('*').eq('task_id', taskId)
     );
     res.status(200).json({ status: "success", data: feedback });
   } catch (error) {

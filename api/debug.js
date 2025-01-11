@@ -7,8 +7,7 @@ const router = express.Router();  // Define a router
 // Log an issue
 export async function logIssue({ userId, contextId, issue, resolution }) {
   try {
-    const data = await supabaseRequest(
-      supabase.from('debug_logs').insert([{ user_id: userId, context_id: contextId, issue, resolution }])
+    const data = await supabaseRequest(() => supabase.from('debug_logs').insert([{ user_id: userId, context_id: contextId, issue, resolution }])
     );
 
     return data[0];

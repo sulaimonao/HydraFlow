@@ -60,8 +60,7 @@ async function improveWorkflowsBasedOnFeedback(userFeedback, rating) {
 
 async function getFeedbackSummary(req, res) {
   try {
-    const data = await supabaseRequest(
-      supabase.from('feedback_entries').select('rating')
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('rating')
     );
     const averageRating = data.reduce((acc, entry) => acc + entry.rating, 0) / data.length;
     return res.status(200).json({ averageRating });
@@ -72,8 +71,7 @@ async function getFeedbackSummary(req, res) {
 
 async function getAllFeedback(req, res) {
   try {
-    const data = await supabaseRequest(
-      supabase.from('feedback_entries').select('*')
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*')
     );
     return res.status(200).json(data);
   } catch (error) {
@@ -85,8 +83,7 @@ async function getFeedbackByTask(req, res) {
   const { taskId } = req.query;
 
   try {
-    const data = await supabaseRequest(
-      supabase.from('feedback_entries').select('*').eq('task_id', taskId)
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*').eq('task_id', taskId)
     );
     return res.status(200).json(data);
   } catch (error) {

@@ -14,8 +14,7 @@ export const createTaskCard = async (goal, subtasks) => {
   };
 
   try {
-    const data = await supabaseRequest(
-      supabase.from('task_cards').insert([taskCard])
+    const data = await supabaseRequest(() => supabase.from('task_cards').insert([taskCard])
     );
     return data[0];
   } catch (error) {

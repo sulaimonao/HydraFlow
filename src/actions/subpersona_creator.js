@@ -89,8 +89,7 @@ async function pruneHead(headId) {
   try {
     delete activeHeads[headId];
 
-    await supabaseRequest(
-      supabase.from('heads').delete().eq('id', headId)
+    await supabaseRequest(() => supabase.from('heads').delete().eq('id', headId)
     );
 
     console.log(`Sub-persona ${headId} has been pruned.`);

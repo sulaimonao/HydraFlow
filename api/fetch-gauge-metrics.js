@@ -5,21 +5,35 @@ import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 export default async function handler(req, res) {
   try {
     const metricType = req.query.metricType || 'default'; // Set default metricType if not provided
-    const { tokenUsage, responseLatency, activeSubpersonas } = req.body;
+    let { tokenUsage, responseLatency, activeSubpersonas } = req.body;
 
-    // Validate required parameters
-    if (!tokenUsage || !responseLatency) {
-      return res.status(400).json({ error: 'Missing required parameters: tokenUsage and responseLatency.' });
+    // Fetch dynamic token usage if not provided
+    if (!tokenUsage) {
+      const { data, error } = await supabase
+        .from('gauge_metrics')
+        .select('token_used, token_total')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        console.warn("Token usage not found. Using default values.");
+        tokenUsage = { used: 0, total: 10000 }; // Default values
+      } else {
+        tokenUsage = { used: data.token_used, total: data.token_total };
+      }
     }
 
-    if (activeSubpersonas && !Array.isArray(activeSubpersonas)) {
-      return res.status(400).json({ error: 'activeSubpersonas must be an array if provided.' });
-    }
+    // Default response latency if not provided
+    responseLatency = responseLatency || 0.5;
+
+    // Ensure activeSubpersonas is an array
+    activeSubpersonas = activeSubpersonas || [];
 
     const context = {
       tokenUsage,
       responseLatency,
-      activeSubpersonas: activeSubpersonas || [],
+      activeSubpersonas,
     };
 
     const metrics = calculateMetrics(context);
@@ -27,7 +41,7 @@ export default async function handler(req, res) {
     // Enrich metrics with additional details
     const enrichedMetrics = {
       ...metrics,
-      totalSubpersonas: activeSubpersonas ? activeSubpersonas.length : 0,
+      totalSubpersonas: activeSubpersonas.length,
       metricType, // Include metricType in the response
     };
 

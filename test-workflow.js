@@ -17,8 +17,9 @@ async function testSubpersonaCreation() {
     const response = await axios.post(`${BASE_URL}/create-subpersona`, {
       name: "Optimizer",
       capabilities: { analyze: true },
-      preferences: { priority: "high" }
-    });
+      preferences: { priority: "high" },
+      user_id: req.session.userId  // ✅ Explicitly pass user_id
+    });    
 
     if (response.status === 200) {
       logResult('Subpersona Creation', true, 'Subpersona created successfully');

@@ -28,11 +28,11 @@ app.use(
 app.use(async (req, res, next) => {
   try {
     if (!req.session.userId) {
-      req.session.userId = uuidv4();
+      req.session.userId = uuidv4();  // ✅ Ensure user_id is always set
     }
     if (!req.session.chatroomId) {
       req.session.chatroomId = uuidv4();
-    }
+    }    
 
     // Ensure context exists in Supabase
     const { data, error } = await supabase

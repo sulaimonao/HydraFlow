@@ -18,7 +18,8 @@ const subpersonaTemplates = {
   },
 };
 
-async function createSubpersona(templateName, user_id, chatroom_id) {
+// **Renamed to avoid conflict**
+async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) {
   const template = subpersonaTemplates[templateName];
   if (!template) {
     throw new Error(`Unknown template: ${templateName}`);
@@ -27,13 +28,11 @@ async function createSubpersona(templateName, user_id, chatroom_id) {
   const headId = `head_${uuidv4()}`;
   const name = `Head for ${template.task}`;
 
-  // Generate default user_id and chatroom_id if missing
   const generatedUserId = user_id || uuidv4();
   const generatedChatroomId = chatroom_id || uuidv4();
 
   console.log('Generated UUIDs:', { user_id: generatedUserId, chatroom_id: generatedChatroomId });
 
-  // Check if a sub-persona with the same UUIDs already exists
   const existingHeads = await getHeads(generatedUserId, generatedChatroomId);
   if (existingHeads.length > 0) {
     console.warn(`Sub-persona already exists for user_id: ${generatedUserId} and chatroom_id: ${generatedChatroomId}`);
@@ -76,8 +75,7 @@ function deactivateSubpersona(headId) {
   }
 }
 
-export { createSubpersona, deactivateSubpersona };
-
+// **Keep this as the main exported function**
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
     const { data: context, error: contextError } = await supabaseRequest(
@@ -111,3 +109,6 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
     return { error: error.message };
   }
 }
+
+// Export updated functions
+export { createSubpersonaFromTemplate, deactivateSubpersona };

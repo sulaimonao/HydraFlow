@@ -110,3 +110,21 @@ export const prioritizeTasks = (tasks) => {
     );
   });
 };
+
+/**
+ * Simplifies response objects by removing unnecessary properties.
+ * @param {Array} responses - The array of response objects.
+ * @returns {Array} - Simplified response objects.
+ */
+export const simplifyResponses = (responses) => {
+  if (!Array.isArray(responses)) {
+    console.warn("Invalid input: responses should be an array.");
+    return [];
+  }
+
+  return responses.map(response => ({
+    id: response.id,
+    status: response.status,
+    message: response.message || "No message provided",
+  }));
+};

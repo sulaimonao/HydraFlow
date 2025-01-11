@@ -4,7 +4,7 @@ import { parseQuery } from "../actions/query_parser.js";
 import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
 import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersonaFromTemplate, pruneHead } from "../actions/subpersona_creator.js";
-import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js"; // Correct path
+import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
 import { generateFinalResponse } from "../actions/response_generator_actions.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
@@ -17,7 +17,6 @@ import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
 import supabase from '../../lib/supabaseClient.js';
 
-// Orchestrates the entire workflow
 export const orchestrateContextWorkflow = async ({
   query,
   memory,
@@ -30,7 +29,6 @@ export const orchestrateContextWorkflow = async ({
     const response = {};
     const updatedContext = {};
 
-    // Generate user_id and chatroom_id if not provided
     const generatedUserId = user_id || uuidv4();
     const generatedChatroomId = chatroom_id || uuidv4();
 
@@ -39,12 +37,9 @@ export const orchestrateContextWorkflow = async ({
       chatroom_id: generatedChatroomId,
     };
 
-    // Retrieve memory and heads
     const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
     const heads = await getHeads(generatedUserId, generatedChatroomId);
-    const headCount = heads.length;
 
-    // Log the start of the workflow
     await logIssue({
       userId: generatedUserId,
       contextId: generatedChatroomId,
@@ -52,22 +47,16 @@ export const orchestrateContextWorkflow = async ({
       resolution: `Query: ${query}`,
     });
 
-    // Parse query
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords || [];
     updatedContext.actionItems = actionItems || [];
 
-    // Append query to memory
     const updatedMemory = await appendMemory(query, generatedUserId, generatedChatroomId);
     updatedContext.memory = updatedMemory;
 
-    // Create task card
     const taskCard = createTaskCard(query, actionItems);
-
-    // Resolve dependencies
     await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
-    // Handle memory compression
     if (shouldCompress(actionItems, existingMemory.length)) {
       const compressed = compressMemory(existingMemory);
       await storeCompressedMemory(generatedUserId, generatedChatroomId, compressed);
@@ -75,35 +64,27 @@ export const orchestrateContextWorkflow = async ({
       response.compressedMemory = compressed;
     }
 
-    // Check if a new head should be created
     if (shouldCreateHead(actionItems)) {
-      const newHead = await createSubpersonaFromTemplate($1);
+      const newHead = await createSubpersonaFromTemplate("workflow_optimizer", generatedUserId, generatedChatroomId);
       updatedContext.newHead = newHead;
       response.newHead = newHead;
     }
 
-    // Store project data
     await storeProjectData(generatedUserId, generatedChatroomId, query);
 
-    // Prune sub-personas if necessary
     for (const head of heads) {
-      const { updatedMainMemory } = pruneHead(head.id, updatedContext.memory);
-      updatedContext.memory = updatedMainMemory;
+      await pruneHead(head.id);
     }
 
-    // Update context and generate context digest
     logContextUpdate(updatedContext);
     const context = await updateContext(updatedContext);
     response.contextDigest = generateContextDigest(updatedContext.memory);
 
-    // Gather gauge data
     response.gaugeData = await gatherGaugeData({ user_id: generatedUserId, chatroom_id: generatedChatroomId });
 
-    // Calculate metrics and determine actions
     const metrics = calculateMetrics(context);
     const actions = metrics.actions;
 
-    // Check conditions before handling actions
     if (shouldCompress(actions, memory.length)) {
       actions.push('compressMemory');
     }
@@ -112,10 +93,8 @@ export const orchestrateContextWorkflow = async ({
       actions.push('contextRecap');
     }
 
-    // Handle actions and get user feedback
     const actionFeedback = await handleActions(actions, context);
 
-    // Final user-facing response
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
@@ -123,10 +102,9 @@ export const orchestrateContextWorkflow = async ({
       taskCard,
       actionsPerformed: response,
       gaugeData: response.gaugeData,
-      actionFeedback, // Include action feedback
+      actionFeedback,
     });
 
-    // Prompt for feedback
     if (taskCard.status === "completed") {
       response.feedbackPrompt = {
         message: "How was the workflow? Please provide your feedback (e.g., 'Great job! 5').",
@@ -134,7 +112,6 @@ export const orchestrateContextWorkflow = async ({
       };
     }
 
-    // Handle feedback submission
     if (feedback) {
       await collectFeedback({
         responseId: Date.now().toString(),
@@ -143,7 +120,6 @@ export const orchestrateContextWorkflow = async ({
       });
     }
 
-    // Log the successful completion of the workflow
     await logIssue({
       userId: generatedUserId,
       contextId: generatedChatroomId,
@@ -161,10 +137,9 @@ export const orchestrateContextWorkflow = async ({
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);
 
-    // Log the error
     await logIssue({
-      userId: generatedUserId,
-      contextId: generatedChatroomId,
+      userId: user_id,
+      contextId: chatroom_id,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });
@@ -173,19 +148,12 @@ export const orchestrateContextWorkflow = async ({
   }
 };
 
-// Resolve dependencies for a task card
 async function resolveDependencies(taskCard, user_id, chatroom_id) {
   for (const subtask of taskCard.subtasks) {
     if (subtask.dependencies && subtask.dependencies.length > 0) {
       const unresolved = subtask.dependencies.filter((dep) => !dep.resolved);
-      if (unresolved.length > 0) {
-        console.warn(`Unresolved dependencies for subtask ${subtask.description}:`, unresolved);
-        continue;
-      }
+      if (unresolved.length > 0) continue;
     }
     await updateTaskStatus(subtask.id, "in_progress", user_id, chatroom_id);
-    console.log(`Subtask ${subtask.description} is now in progress.`);
   }
 }
-
-

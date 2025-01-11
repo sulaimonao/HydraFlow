@@ -74,3 +74,17 @@ export const updateTaskStatus = async (taskId, status) => {
     throw error;
   }
 };
+
+/**
+ * Limits the number of responses to avoid overflow.
+ * @param {Array} responses - The array of responses.
+ * @param {number} maxLimit - Maximum number of responses to return.
+ * @returns {Array} - Limited array of responses.
+ */
+export const limitResponses = (responses, maxLimit = 5) => {
+  if (!Array.isArray(responses)) {
+    console.warn("Invalid input: responses should be an array.");
+    return [];
+  }
+  return responses.slice(0, maxLimit);
+};

@@ -31,3 +31,4 @@ analyzeSyntax.js
 *.csv
 *.py
 test_simulation.js
+fix-imports.js

@@ -4,9 +4,20 @@ import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
 const router = express.Router();
 
+// ✅ Ensure user_id is passed during debug log creation
 export async function logIssue({ userId, contextId, issue, resolution }) {
   try {
-    const data = await supabaseRequest(() => supabase.from('debug_logs').insert([{ user_id: userId, context_id: contextId, issue, resolution }]));
+    const data = await supabaseRequest(() =>
+      supabase.from('debug_logs').insert([
+        {
+          user_id: userId,        // ✅ Include user_id
+          context_id: contextId,
+          issue,
+          resolution,
+          created_at: new Date().toISOString()
+        }
+      ])
+    );
     return data[0];
   } catch (error) {
     console.error('Error in logIssue:', error);

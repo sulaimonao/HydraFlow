@@ -11,15 +11,15 @@ const logResult = (action, success, message) => {
   console.log(`${status} - ${action}: ${message}`);
 };
 
-// 1️⃣ Test Subpersona Creation
+// ✅ Updated Subpersona Creation with user_id
 async function testSubpersonaCreation() {
   try {
     const response = await axios.post(`${BASE_URL}/create-subpersona`, {
       name: "Optimizer",
       capabilities: { analyze: true },
       preferences: { priority: "high" },
-      user_id: req.session.userId  // ✅ Explicitly pass user_id
-    });    
+      user_id: req.session.userId  // ✅ Explicitly passing user_id
+    });
 
     if (response.status === 200) {
       logResult('Subpersona Creation', true, 'Subpersona created successfully');

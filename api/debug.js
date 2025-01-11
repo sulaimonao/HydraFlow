@@ -1,4 +1,8 @@
+// api/debug.js
+import express from 'express';
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+
+const router = express.Router();  // Define a router
 
 // Log an issue
 export async function logIssue({ userId, contextId, issue, resolution }) {
@@ -28,8 +32,8 @@ export async function fetchDebugLogs(contextId) {
   }
 }
 
-// Log an issue
-app.post('/debug/log', async (req, res) => {
+// Log an issue (API route)
+router.post('/debug/log', async (req, res) => {
   try {
     const { userId, contextId, issue, resolution } = req.body;
     const log = await logIssue({ userId, contextId, issue, resolution });
@@ -39,8 +43,8 @@ app.post('/debug/log', async (req, res) => {
   }
 });
 
-// Fetch debug logs
-app.get('/debug/logs/:contextId', async (req, res) => {
+// Fetch debug logs (API route)
+router.get('/debug/logs/:contextId', async (req, res) => {
   try {
     const { contextId } = req.params;
     const logs = await fetchDebugLogs(contextId);
@@ -49,3 +53,5 @@ app.get('/debug/logs/:contextId', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+export default router;  // Export the router

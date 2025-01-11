@@ -4,29 +4,29 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
   try {
-    let { name, capabilities, preferences, user_id, chatroom_id } = req.body;
-
-    // Generate default user_id and chatroom_id if missing
-    user_id = user_id || uuidv4();
-    chatroom_id = chatroom_id || uuidv4();
+    const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Subpersona name is required.' });
     }
 
+    // Generate default user_id and chatroom_id if missing
+    const generatedUserId = user_id || uuidv4();
+    const generatedChatroomId = chatroom_id || uuidv4();
+
     // Check if user_id and chatroom_id exist in contexts table
     let { data: contextData, error: contextError } = await supabase
       .from('contexts')
       .select('id')
-      .eq('user_id', user_id)
-      .eq('chatroom_id', chatroom_id)
+      .eq('user_id', generatedUserId)
+      .eq('chatroom_id', generatedChatroomId)
       .single();
 
     if (contextError || !contextData) {
       // Insert new context if it does not exist
       const { data: newContextData, error: newContextError } = await supabase
         .from('contexts')
-        .insert([{ user_id, chatroom_id }])
+        .insert([{ user_id: generatedUserId, chatroom_id: generatedChatroomId }])
         .single();
 
       if (newContextError) {
@@ -38,19 +38,19 @@ export default async function handler(req, res) {
 
     const subPersona = {
       name,
-      capabilities,
-      preferences,
-      user_id,
-      chatroom_id,
+      capabilities: capabilities || {},
+      preferences: preferences || {},
+      user_id: generatedUserId,
+      chatroom_id: generatedChatroomId,
       createdAt: new Date().toISOString(),
     };
 
-    const { data, error } = await supabaseRequest(() =>
-      supabase.from('heads').insert([subPersona])
+    const { data, error } = await supabaseRequest(
+      supabase.from('subpersonas').insert([subPersona])
     );
 
     if (error) {
-      throw new Error(`Error inserting head: ${error.message}`);
+      throw new Error(`Error inserting subpersona: ${error.message}`);
     }
 
     res.status(200).json({ message: 'Subpersona created successfully.', subPersona });

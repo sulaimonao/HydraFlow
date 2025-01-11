@@ -2,39 +2,17 @@
 import { compressMemory } from "../src/actions/memory_compressor.js";
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 
-export default async (req, res) => {
+export default async function handler(req, res) {
   try {
-    // Destructure memory, threshold, and data from the request body
-    const { memory, threshold, data } = req.body;
-
-    // Input validation
-    if (!memory || typeof memory !== "string") {
-      return res.status(400).json({ error: "A valid memory string is required." });
+    const { gaugeMetrics } = req.body;
+    if (!gaugeMetrics) {
+      return res.status(400).json({ error: 'Gauge metrics data is required for compression.' });
     }
 
-    if (threshold !== undefined && typeof threshold !== "number") {
-      return res.status(400).json({ error: "Threshold must be a number if provided." });
-    }
-
-    // Fallback for gauge metrics
-    const gaugeMetrics = data?.gaugeMetrics ?? [];
-    if (!gaugeMetrics.length) {
-      console.warn("No gauge metrics available for compression.");
-    }
-
-    // Perform memory compression with optional threshold
-    const compressedMemory = compressMemory(memory, threshold);
-
-    // Respond with compressed memory, additional metrics, and gauge metrics
-    return res.status(200).json({
-      compressedMemory, 
-      originalLength: memory.length,
-      compressedLength: compressedMemory.length,
-      compressionRatio: (compressedMemory.length / memory.length).toFixed(2),
-      gaugeMetrics
-    });
+    const result = compressMemory(gaugeMetrics);
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error in compress-memory:", error);
     res.status(500).json({ error: error.message });
   }
-};
+}

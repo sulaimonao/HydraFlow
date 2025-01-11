@@ -1,9 +1,8 @@
 // api/create-subpersona.js
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
-import fetch from 'node-fetch';
+import { createSubpersona } from '../actions/subpersona_creator.js';
 import { v4 as uuidv4 } from 'uuid';
 
-const createSubpersona = async (req, res) => {
+const handleCreateSubpersona = async (req, res) => {
   try {
     const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
@@ -14,54 +13,24 @@ const createSubpersona = async (req, res) => {
     const generatedUserId = user_id || uuidv4();
     const generatedChatroomId = chatroom_id || uuidv4();
 
-    // Check if user_id and chatroom_id exist
-    let { data: contextData, error: contextError } = await supabase
-      .from('contexts')
-      .select('id')
-      .eq('user_id', generatedUserId)
-      .eq('chatroom_id', generatedChatroomId)
-      .single();
-
-    if (contextError || !contextData) {
-      const { data: newContextData, error: newContextError } = await supabase
-        .from('contexts')
-        .insert([{ user_id: generatedUserId, chatroom_id: generatedChatroomId }])
-        .single();
-
-      if (newContextError) {
-        return res.status(500).json({ error: 'Failed to create new context.' });
-      }
-
-      contextData = newContextData;
-    }
-
-    const subPersona = {
+    // Use the imported createSubpersona for database logic
+    const result = await createSubpersona(
       name,
-      capabilities: capabilities || {},
-      preferences: preferences || {},
-      user_id: generatedUserId,
-      chatroom_id: generatedChatroomId,
-      status: 'active',
-      createdAt: new Date().toISOString(),  // Correct timestamp format
-      subpersona_id: null,    // Set to null if optional
-      task_description: '',   // Default empty description
-      trigger_condition: null // Default null if optional
-    };
-
-    // Insert into 'heads' and return the inserted data
-    const { data, error } = await supabaseRequest(() =>
-      supabase.from('heads').insert([subPersona]).select()
+      generatedUserId,
+      generatedChatroomId,
+      capabilities,
+      preferences
     );
 
-    if (error) {
-      throw new Error(`Error inserting subpersona into heads: ${error.message}`);
+    if (result.error) {
+      throw new Error(result.error);
     }
 
-    res.status(200).json({ message: 'Subpersona created successfully.', data });
+    res.status(200).json({ message: 'Subpersona created successfully.', data: result });
   } catch (error) {
     console.error("Error in create-subpersona:", error);
     res.status(500).json({ error: error.message });
   }
 };
 
-export default createSubpersona;
+export default handleCreateSubpersona;

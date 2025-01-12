@@ -30,10 +30,7 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
   const headId = `head_${uuidv4()}`;
   const name = `Head for ${template.task}`;
 
-  const generatedUserId = user_id || uuidv4();
-  const generatedChatroomId = chatroom_id || uuidv4();
-
-  const existingHeads = await getHeads(generatedUserId, generatedChatroomId);
+  const existingHeads = await getHeads(user_id, chatroom_id);
   if (existingHeads.length > 0) {
     return { error: "Sub-persona already exists", details: existingHeads };
   }
@@ -43,8 +40,8 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
       name,
       capabilities: { task: template.task },
       preferences: { description: template.description },
-      user_id: generatedUserId,
-      chatroom_id: generatedChatroomId
+      user_id,
+      chatroom_id
     });
 
     activeHeads[headId] = {
@@ -57,6 +54,18 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
     return { headId, name: head.name, status: "active" };
   } catch (error) {
     return { error: "Failed to create sub-persona", details: error.message };
+  }
+}
+
+/**
+ * Activate a previously deactivated subpersona
+ */
+function activateSubpersona(headId) {
+  if (activeHeads[headId]) {
+    activeHeads[headId].status = "active";
+    console.log(`Sub-persona ${headId} activated.`);
+  } else {
+    console.warn(`Sub-persona ${headId} not found.`);
   }
 }
 
@@ -97,38 +106,38 @@ async function pruneHead(headId) {
 }
 
 /**
+ * List all active subpersonas
+ */
+function listActiveSubpersonas() {
+  return Object.entries(activeHeads)
+    .filter(([_, head]) => head.status === "active")
+    .map(([headId, head]) => ({ headId, ...head }));
+}
+
+/**
  * Create a new subpersona with RLS-compliant user_id
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData) {
-      return { error: 'Authentication error. Cannot create subpersona.' };
-    }
-
-    const authenticatedUserId = authData.user.id;
-
     const existingHead = await supabaseRequest(() =>
       supabase
         .from('heads')
         .select('*')
         .eq('name', name)
         .eq('status', 'active')
-        .eq('user_id', authenticatedUserId)
+        .eq('user_id', user_id)
         .eq('chatroom_id', chatroom_id)
         .maybeSingle()
     );
 
-    if (existingHead === null) {
-      console.log(`No active subpersona named '${name}' found. Proceeding to create...`);
-    } else {
+    if (existingHead !== null) {
       return { error: `Subpersona '${name}' already exists.` };
     }
 
     const newSubpersona = {
       name,
       status: 'active',
-      user_id: authenticatedUserId,
+      user_id,
       chatroom_id,
       capabilities: capabilities || {},
       preferences: preferences || {},
@@ -154,6 +163,8 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
 
 export {
   createSubpersonaFromTemplate,
+  activateSubpersona,
   deactivateSubpersona,
-  pruneHead
+  pruneHead,
+  listActiveSubpersonas
 };

@@ -7,6 +7,7 @@ import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { generateRecommendations } from './src/util/recommendations.js';
 import { validateRequest } from './middleware/validationMiddleware.js';
+import { initializeUserContext } from './middleware/authMiddleware.js';
 import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
@@ -24,40 +25,8 @@ app.use(
   })
 );
 
-// Middleware to initialize user and chatroom data
-app.use(async (req, res, next) => {
-  try {
-    if (!req.session.userId) {
-      req.session.userId = uuidv4();
-    }
-    if (!req.session.chatroomId) {
-      req.session.chatroomId = uuidv4();
-    }
-
-    const { data, error } = await supabase
-      .from('contexts')
-      .select('id')
-      .eq('user_id', req.session.userId)
-      .eq('chatroom_id', req.session.chatroomId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error("Supabase error during context check:", error);
-      return next(error);
-    }
-
-    if (!data) {
-      await supabase
-        .from('contexts')
-        .insert([{ user_id: req.session.userId, chatroom_id: req.session.chatroomId }]);
-    }
-
-    next();
-  } catch (error) {
-    console.error("Error initializing context:", error);
-    next(error);
-  }
-});
+// Apply the user context middleware globally
+app.use(initializeUserContext);
 
 // Middleware to append gauge metrics to all responses
 app.use(appendGaugeMetrics);
@@ -89,8 +58,8 @@ const validateInput = (requiredFields) => (req, res, next) => {
 // Use validation middleware
 app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), async (req, res) => {
   try {
-    const user_id = req.session.userId;
-    const chatroom_id = req.session.chatroomId;
+    const user_id = req.userId;  // Using the initialized user_id
+    const chatroom_id = req.chatroomId;  // Using the initialized chatroom_id
     const { name, capabilities, preferences } = req.body;
 
     // Pass user and chatroom IDs explicitly

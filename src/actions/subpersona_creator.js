@@ -61,6 +61,18 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
 }
 
 /**
+ * Deactivate a subpersona in memory
+ */
+function deactivateSubpersona(headId) {
+  if (activeHeads[headId]) {
+    activeHeads[headId].status = "inactive";
+    console.log(`Sub-persona ${headId} deactivated.`);
+  } else {
+    console.warn(`Sub-persona ${headId} not found.`);
+  }
+}
+
+/**
  * Create a new subpersona with RLS-compliant user_id
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {

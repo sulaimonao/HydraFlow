@@ -147,16 +147,16 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
     const insertResult = await supabaseRequest(() =>
       supabase
         .from('heads')
-        .insert([newSubpersona])
-        .select()
+        .insert([newSubpersona], { returning: 'representation' })
     );
 
-    if (insertResult === null) {
-      return { error: "Failed to create subpersona." };
+    if (insertResult.error) {
+      throw new Error(`Insert failed: ${insertResult.error.message}`);
     }
 
-    return { message: 'Subpersona created successfully', data: insertResult };
+    return { message: 'Subpersona created successfully', data: insertResult.data };
   } catch (error) {
+    console.error('Insert failed:', error.message);
     return { error: error.message };
   }
 }

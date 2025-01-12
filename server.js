@@ -28,13 +28,12 @@ app.use(
 app.use(async (req, res, next) => {
   try {
     if (!req.session.userId) {
-      req.session.userId = uuidv4();  // ✅ Ensure user_id is always set
+      req.session.userId = uuidv4();
     }
     if (!req.session.chatroomId) {
       req.session.chatroomId = uuidv4();
-    }    
+    }
 
-    // Ensure context exists in Supabase
     const { data, error } = await supabase
       .from('contexts')
       .select('id')
@@ -42,7 +41,12 @@ app.use(async (req, res, next) => {
       .eq('chatroom_id', req.session.chatroomId)
       .single();
 
-    if (error || !data) {
+    if (error && error.code !== 'PGRST116') {
+      console.error("Supabase error during context check:", error);
+      return next(error);
+    }
+
+    if (!data) {
       await supabase
         .from('contexts')
         .insert([{ user_id: req.session.userId, chatroom_id: req.session.chatroomId }]);
@@ -51,7 +55,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Error initializing context:", error);
-    next();
+    next(error);
   }
 });
 
@@ -71,6 +75,7 @@ const compressMemorySchema = Joi.object({
   memory: Joi.string().required(),
   threshold: Joi.number().optional(),
   data: Joi.object().optional(),
+  gaugeMetrics: Joi.object().required()
 });
 
 // Input validation middleware
@@ -84,7 +89,18 @@ const validateInput = (requiredFields) => (req, res, next) => {
 };
 
 // Use validation middleware
-app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), createSubpersona);
+app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), async (req, res) => {
+  try {
+    await createSubpersona(req, res);
+  } catch (error) {
+    if (error.message.includes("RLS")) {
+      return res.status(403).json({ error: "Access denied due to RLS policy. Check your permissions." });
+    }
+    console.error("Error creating subpersona:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/api/compress-memory", validateRequest(compressMemorySchema), compressMemory);
 
 // Feedback routes
@@ -106,7 +122,6 @@ app.get("/api/recommendations", (req, res) => {
   try {
     const gaugeMetrics = res.locals.gaugeMetrics || {};
     const recommendations = generateRecommendations(gaugeMetrics);
-
     res.status(200).json({ recommendations, gaugeMetrics });
   } catch (error) {
     console.error("Error generating recommendations:", error);

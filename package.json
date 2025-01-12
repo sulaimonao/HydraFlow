@@ -12,7 +12,8 @@
     "node-fetch": "^3.3.2",
     "uuid": "^11.0.4",
     "vercel": "^28.18.5",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "zlib": "^1.0.5"
   },
   "scripts": {
     "start": "node --experimental-specifier-resolution=node server.js",

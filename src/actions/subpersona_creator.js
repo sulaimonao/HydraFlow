@@ -73,6 +73,30 @@ function deactivateSubpersona(headId) {
 }
 
 /**
+ * Prune (delete) a subpersona from the database + our in-memory store
+ */
+async function pruneHead(headId) {
+  if (!activeHeads[headId]) {
+    console.warn(`Sub-persona ${headId} does not exist or is already pruned.`);
+    return { error: "Sub-persona not found or already inactive." };
+  }
+
+  try {
+    delete activeHeads[headId];
+
+    await supabaseRequest(() =>
+      supabase.from('heads').delete().eq('id', headId)
+    );
+
+    console.log(`Sub-persona ${headId} has been pruned.`);
+    return { success: `Sub-persona ${headId} has been successfully pruned.` };
+  } catch (error) {
+    console.error(`Error pruning sub-persona ${headId}:`, error);
+    return { error: `Failed to prune sub-persona ${headId}.` };
+  }
+}
+
+/**
  * Create a new subpersona with RLS-compliant user_id
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {

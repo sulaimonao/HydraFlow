@@ -67,8 +67,6 @@ const createSubpersonaSchema = Joi.object({
   name: Joi.string().required(),
   capabilities: Joi.object().required(),
   preferences: Joi.object().required(),
-  user_id: Joi.string().optional(),
-  chatroom_id: Joi.string().optional(),
 });
 
 const compressMemorySchema = Joi.object({
@@ -91,7 +89,14 @@ const validateInput = (requiredFields) => (req, res, next) => {
 // Use validation middleware
 app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), async (req, res) => {
   try {
-    await createSubpersona(req, res);
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
+    const { name, capabilities, preferences } = req.body;
+
+    // Pass user and chatroom IDs explicitly
+    await createSubpersona(name, user_id, chatroom_id, capabilities, preferences);
+
+    res.status(201).json({ message: "Subpersona created successfully." });
   } catch (error) {
     if (error.message.includes("RLS")) {
       return res.status(403).json({ error: "Access denied due to RLS policy. Check your permissions." });

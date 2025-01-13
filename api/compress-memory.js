@@ -1,6 +1,6 @@
 // compress-memory.js
 
-import { compressMemory } from '../utils/memoryUtils.js';
+import { compressMemory } from '../src/util/memoryUtils.js';
 import { supabaseRequest } from '../lib/supabaseClient.js';
 
 export default async function handler(req, res) {

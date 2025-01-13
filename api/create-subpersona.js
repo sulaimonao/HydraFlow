@@ -1,5 +1,3 @@
-// api/create-subpersona.js
-
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,24 +12,31 @@ const handleCreateSubpersona = async (req, res) => {
       return res.status(400).json({ error: 'Subpersona name is required.' });
     }
 
-    // Ensure user_id and chatroom_id are provided or generate new ones if missing
-    const generatedUserId = user_id || uuidv4();  // Generate a new UUID if user_id is missing
-    const generatedChatroomId = chatroom_id || uuidv4();  // Generate a new UUID if chatroom_id is missing
+    // Generate new UUIDs if user_id or chatroom_id are missing
+    const generatedUserId = user_id || uuidv4();  
+    const generatedChatroomId = chatroom_id || uuidv4();  
 
-    // Insert the new subpersona into the 'heads' table using supabaseRequest
-    const data = await supabaseRequest(() =>
-      supabase.from('heads').insert([
+    // Insert the new subpersona into the 'heads' table
+    const { data, error } = await supabase
+      .from('heads')
+      .insert([
         {
           name,
-          user_id: generatedUserId,
-          chatroom_id: generatedChatroomId,
+          user_id: generatedUserId,      // ✅ Directly referencing user_id
+          chatroom_id: generatedChatroomId,  // ✅ Directly referencing chatroom_id
           capabilities,
           preferences,
           status: 'active',
-          createdat: new Date().toISOString()
+          createdat: new Date().toISOString(),
         }
       ])
-    );
+      .select(); // Optional: retrieve inserted data
+
+    // Handle any errors returned from the database operation
+    if (error) {
+      console.error('Database Error:', error);
+      throw new Error(`Failed to create subpersona: ${error.message}`);
+    }
 
     // Respond with success if the subpersona was created successfully
     res.status(200).json({ message: 'Subpersona created successfully.', data });

@@ -4,9 +4,9 @@ import { insertHead, getHeads } from '../../lib/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 
-const activeHeads = {}; // Store active heads temporarily
+const activeHeads = {}; // In-memory store for active heads
 
-// Template-based creation (optional)
+// Predefined subpersona templates
 const subpersonaTemplates = {
   logAnalyzer: {
     task: "analyze logs",
@@ -19,9 +19,7 @@ const subpersonaTemplates = {
 };
 
 /**
- * Middleware to validate user_id and chatroom_id before database operations.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
+ * Validates user_id and chatroom_id for operations
  */
 const validateIds = (user_id, chatroom_id) => {
   if (!user_id || !chatroom_id) {
@@ -30,7 +28,7 @@ const validateIds = (user_id, chatroom_id) => {
 };
 
 /**
- * Create a subpersona from a known template
+ * Creates a subpersona based on a template
  */
 async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) {
   try {
@@ -72,7 +70,7 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
 }
 
 /**
- * Activate a previously deactivated subpersona
+ * Activates a subpersona by headId
  */
 function activateSubpersona(headId) {
   if (activeHeads[headId]) {
@@ -84,7 +82,7 @@ function activateSubpersona(headId) {
 }
 
 /**
- * Deactivate a subpersona in memory
+ * Deactivates a subpersona by headId
  */
 function deactivateSubpersona(headId) {
   if (activeHeads[headId]) {
@@ -96,7 +94,7 @@ function deactivateSubpersona(headId) {
 }
 
 /**
- * Prune (delete) a subpersona from the database + our in-memory store
+ * Removes a subpersona from both memory and the database
  */
 async function pruneHead(headId) {
   if (!activeHeads[headId]) {
@@ -120,7 +118,7 @@ async function pruneHead(headId) {
 }
 
 /**
- * List all active subpersonas
+ * Lists all active subpersonas
  */
 function listActiveSubpersonas() {
   return Object.entries(activeHeads)
@@ -129,7 +127,7 @@ function listActiveSubpersonas() {
 }
 
 /**
- * Create a new subpersona with RLS-compliant user_id and chatroom_id.
+ * Creates a new subpersona with enforced user and chatroom IDs
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {

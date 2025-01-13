@@ -19,23 +19,36 @@ const subpersonaTemplates = {
 };
 
 /**
+ * Middleware to validate user_id and chatroom_id before database operations.
+ * @param {string} user_id - User identifier.
+ * @param {string} chatroom_id - Chatroom identifier.
+ */
+const validateIds = (user_id, chatroom_id) => {
+  if (!user_id || !chatroom_id) {
+    throw new Error("Missing user_id or chatroom_id. These must be provided.");
+  }
+};
+
+/**
  * Create a subpersona from a known template
  */
 async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) {
-  const template = subpersonaTemplates[templateName];
-  if (!template) {
-    throw new Error(`Unknown template: ${templateName}`);
-  }
-
-  const headId = `head_${uuidv4()}`;
-  const name = `Head for ${template.task}`;
-
-  const existingHeads = await getHeads(user_id, chatroom_id);
-  if (existingHeads.length > 0) {
-    return { error: "Sub-persona already exists", details: existingHeads };
-  }
-
   try {
+    validateIds(user_id, chatroom_id);
+
+    const template = subpersonaTemplates[templateName];
+    if (!template) {
+      throw new Error(`Unknown template: ${templateName}`);
+    }
+
+    const headId = `head_${uuidv4()}`;
+    const name = `Head for ${template.task}`;
+
+    const existingHeads = await getHeads(user_id, chatroom_id);
+    if (existingHeads.length > 0) {
+      return { error: "Sub-persona already exists", details: existingHeads };
+    }
+
     const head = await insertHead({
       name,
       capabilities: { task: template.task },
@@ -53,7 +66,8 @@ async function createSubpersonaFromTemplate(templateName, user_id, chatroom_id) 
 
     return { headId, name: head.name, status: "active" };
   } catch (error) {
-    return { error: "Failed to create sub-persona", details: error.message };
+    console.error("Error creating subpersona from template:", error.message);
+    return { error: error.message };
   }
 }
 
@@ -100,7 +114,7 @@ async function pruneHead(headId) {
     console.log(`Sub-persona ${headId} has been pruned.`);
     return { success: `Sub-persona ${headId} has been successfully pruned.` };
   } catch (error) {
-    console.error(`Error pruning sub-persona ${headId}:`, error);
+    console.error(`Error pruning sub-persona ${headId}:`, error.message);
     return { error: `Failed to prune sub-persona ${headId}.` };
   }
 }
@@ -115,10 +129,12 @@ function listActiveSubpersonas() {
 }
 
 /**
- * Create a new subpersona with RLS-compliant user_id
+ * Create a new subpersona with RLS-compliant user_id and chatroom_id.
  */
 export async function createSubpersona(name, user_id, chatroom_id, capabilities, preferences) {
   try {
+    validateIds(user_id, chatroom_id);
+
     const existingHead = await supabaseRequest(() =>
       supabase
         .from('heads')
@@ -156,7 +172,7 @@ export async function createSubpersona(name, user_id, chatroom_id, capabilities,
 
     return { message: 'Subpersona created successfully', data: insertResult.data };
   } catch (error) {
-    console.error('Insert failed:', error.message);
+    console.error('Error creating subpersona:', error.message);
     return { error: error.message };
   }
 }

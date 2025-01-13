@@ -1,31 +1,35 @@
 // middleware/authMiddleware.js
 
-import supabase from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Middleware to initialize user and chatroom context.
- * - Retrieves authenticated user_id using supabase.auth.getUser().
- * - Generates and attaches a chatroom_id if not already present.
+ * - Generates and attaches a unique user_id if not already provided.
+ * - Generates and attaches a chatroom_id for the session if missing.
  */
-export const initializeUserContext = async (req, res, next) => {
+export const initializeUserContext = (req, res, next) => {
   try {
-    // Retrieve authenticated user from Supabase
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    // Check for existing user_id in request headers or body
+    let userId = req.headers['x-user-id'] || req.body.user_id;
 
-    if (authError || !authData) {
-      console.error("Authentication error:", authError);
-      return res.status(401).json({ error: "Unauthorized. Please log in." });
+    // Generate user_id if not provided
+    if (!userId) {
+      userId = uuidv4();
     }
 
-    // Attach authenticated user_id to the request
-    req.userId = authData.user.id;
+    // Attach user_id to request for downstream use
+    req.userId = userId;
 
-    // Generate and attach chatroom_id if not already in session
-    if (!req.session.chatroomId) {
-      req.session.chatroomId = uuidv4();
+    // Check for an existing chatroom_id in session or headers
+    let chatroomId = req.session?.chatroomId || req.headers['x-chatroom-id'];
+
+    // Generate chatroom_id if missing
+    if (!chatroomId) {
+      chatroomId = uuidv4();
+      req.session.chatroomId = chatroomId;
     }
-    req.chatroomId = req.session.chatroomId;
+
+    req.chatroomId = chatroomId;
 
     next();
   } catch (error) {

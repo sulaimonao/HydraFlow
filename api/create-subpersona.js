@@ -18,27 +18,29 @@ const handleCreateSubpersona = async (req, res) => {
     const generatedUserId = user_id || uuidv4();  // Generate a new UUID if user_id is missing
     const generatedChatroomId = chatroom_id || uuidv4();  // Generate a new UUID if chatroom_id is missing
 
-    // Validate that both user_id and chatroom_id are present after generation
-    if (!generatedUserId || !generatedChatroomId) {
-      return res.status(400).json({ error: 'Missing user_id or chatroom_id. These must be provided.' });
-    }
-
-    // Use the createSubpersona function to handle database logic for subpersona creation
-    const result = await createSubpersona(
-      name,
-      generatedUserId,
-      generatedChatroomId,
-      capabilities,
-      preferences
+    // Insert the new subpersona into the 'heads' table
+    const { data, error } = await supabaseRequest(() =>
+      supabase.from('heads').insert([
+        {
+          name,
+          user_id: generatedUserId,
+          chatroom_id: generatedChatroomId,
+          capabilities,
+          preferences,
+          status: 'active',
+          createdat: new Date().toISOString()
+        }
+      ])
     );
 
     // Handle any errors returned from the database operation
-    if (result.error) {
-      throw new Error(result.error);
+    if (error) {
+      console.error('Database Error:', error);
+      throw new Error(`Failed to create subpersona: ${error.message}`);
     }
 
     // Respond with success if the subpersona was created successfully
-    res.status(200).json({ message: 'Subpersona created successfully.', data: result });
+    res.status(200).json({ message: 'Subpersona created successfully.', data });
   } catch (error) {
     // Log and return any errors that occur during the process
     console.error("Error in create-subpersona:", error);

@@ -42,7 +42,7 @@ const compressMemorySchema = Joi.object({
   memory: Joi.string().required(),
   threshold: Joi.number().optional(),
   data: Joi.object().optional(),
-  gaugeMetrics: Joi.object().required()
+  gaugeMetrics: Joi.object().required(),
 });
 
 // Input validation middleware
@@ -55,26 +55,32 @@ const validateInput = (requiredFields) => (req, res, next) => {
   next();
 };
 
-// Use validation middleware
-app.post("/api/create-subpersona", validateInput(['name']), validateRequest(createSubpersonaSchema), async (req, res) => {
-  try {
-    const user_id = req.userId;  // Using the initialized user_id
-    const chatroom_id = req.chatroomId;  // Using the initialized chatroom_id
-    const { name, capabilities, preferences } = req.body;
+// Use validation middleware for creating subpersona
+app.post(
+  "/api/create-subpersona",
+  validateInput(['name']),
+  validateRequest(createSubpersonaSchema),
+  async (req, res) => {
+    try {
+      const user_id = req.userId;  // Using the initialized user_id
+      const chatroom_id = req.chatroomId;  // Using the initialized chatroom_id
+      const { name, capabilities, preferences } = req.body;
 
-    // Pass user and chatroom IDs explicitly
-    await createSubpersona(name, user_id, chatroom_id, capabilities, preferences);
+      // Pass user and chatroom IDs explicitly
+      await createSubpersona(name, user_id, chatroom_id, capabilities, preferences);
 
-    res.status(201).json({ message: "Subpersona created successfully." });
-  } catch (error) {
-    if (error.message.includes("RLS")) {
-      return res.status(403).json({ error: "Access denied due to RLS policy. Check your permissions." });
+      res.status(201).json({ message: "Subpersona created successfully." });
+    } catch (error) {
+      if (error.message.includes("RLS")) {
+        return res.status(403).json({ error: "Access denied due to RLS policy. Check your permissions." });
+      }
+      console.error("Error creating subpersona:", error);
+      res.status(500).json({ error: error.message });
     }
-    console.error("Error creating subpersona:", error);
-    res.status(500).json({ error: error.message });
   }
-});
+);
 
+// Use validation middleware for compressing memory
 app.post("/api/compress-memory", validateRequest(compressMemorySchema), compressMemory);
 
 // Feedback routes

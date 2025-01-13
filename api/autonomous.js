@@ -6,13 +6,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default async (req, res) => {
   try {
-    const { query, memory, feedback } = req.body;
+    const { query, memory, feedback, user_id, chatroom_id } = req.body;
 
-    // Generate default user_id and chatroom_id if missing
-    const user_id = req.body.user_id || uuidv4();
-    const chatroom_id = req.body.chatroom_id || uuidv4();
+    // Validate that user_id and chatroom_id are provided
+    if (!user_id || !chatroom_id) {
+      return res.status(400).json({ error: "Missing user_id or chatroom_id. Both are required." });
+    }
 
-    // Validate required input
+    // Validate required input for query
     if (!query) {
       return res.status(400).json({ error: "Query is required." });
     }
@@ -49,7 +50,7 @@ export default async (req, res) => {
     const responsePayload = {
       message: "Workflow executed successfully",
       ...actionResult,
-      gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object
+      gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object if metrics are missing
     };
 
     // Log the successful completion of the workflow
@@ -68,13 +69,14 @@ export default async (req, res) => {
   }
 };
 
-// functions for dynamic action handling
+// Function to handle context updates
 async function updateContext(data, context) {
-  // Implement context update logic here
+  // Logic for updating the context with new data
   return { updatedContext: { ...context, ...data } };
 }
 
+// Function to handle data fetching
 async function fetchData(data, context) {
-  // Implement data fetching logic here
-  return { fetchedData: [] }; // Example response
+  // Logic for fetching data based on the provided context
+  return { fetchedData: [] }; // Example placeholder response
 }

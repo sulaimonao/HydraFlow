@@ -1,6 +1,6 @@
 // api/create-subpersona.js
 
-import { createSubpersona } from '../src/actions/subpersona_creator.js';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Handles the creation of a new subpersona
@@ -19,8 +19,9 @@ const handleCreateSubpersona = async (req, res) => {
     const generatedChatroomId = chatroom_id || uuidv4();  // Generate a new UUID if chatroom_id is missing
 
     // Insert the new subpersona into the 'heads' table
-    const { data, error } = await supabaseRequest(() =>
-      supabase.from('heads').insert([
+    const { data, error } = await supabase
+      .from('heads')
+      .insert([
         {
           name,
           user_id: generatedUserId,
@@ -30,8 +31,7 @@ const handleCreateSubpersona = async (req, res) => {
           status: 'active',
           createdat: new Date().toISOString()
         }
-      ])
-    );
+      ]);
 
     // Handle any errors returned from the database operation
     if (error) {

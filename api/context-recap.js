@@ -1,11 +1,17 @@
 // api/context-recap.js
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import { validateUserAndChatroom } from '../middleware/authMiddleware.js';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { history, compressedMemory, additionalNotes } = req.body;
+    const { history, compressedMemory, additionalNotes, user_id, chatroom_id } = req.body;
 
-    // Validate inputs
+    // Validate user_id and chatroom_id
+    if (!validateUserAndChatroom(user_id, chatroom_id)) {
+      return res.status(403).json({ error: "Invalid user_id or chatroom_id." });
+    }
+
+    // Validate required inputs
     if (!compressedMemory || !history) {
       return res.status(400).json({ error: "Both 'history' and 'compressedMemory' are required." });
     }
@@ -16,6 +22,9 @@ export default async function handler(req, res) {
 
     const recap = `
       === Context Recap ===
+      User ID: ${user_id}
+      Chatroom ID: ${chatroom_id}
+
       Compressed Memory:
       ${compressedMemory}
 

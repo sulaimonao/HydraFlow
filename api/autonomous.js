@@ -1,28 +1,33 @@
+// api/autonomous.js
+
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
-import { v4 as uuidv4 } from 'uuid';
 
 export default async (req, res) => {
   try {
-    const { query, memory, feedback, user_id, chatroom_id } = req.body;
+    const { query, memory, feedback } = req.body;
 
-    // Validate that user_id and chatroom_id are provided
-    if (!user_id || !chatroom_id) {
-      return res.status(400).json({ error: "Missing user_id or chatroom_id. Both are required." });
-    }
-
-    // Validate required input for query
+    // ✅ Validate required input for query
     if (!query) {
       return res.status(400).json({ error: "Query is required." });
     }
 
-    // 🛠️ Set the Supabase session context for RLS enforcement
-    await setSessionContext(user_id, chatroom_id);
+    // 🌐 Always retrieve persistent IDs from the workflow manager
+    const workflowContext = await orchestrateContextWorkflow({ query, memory, feedback });
+    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
+    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+
+    if (!persistentUserId || !persistentChatroomId) {
+      return res.status(400).json({ error: "Persistent user_id and chatroom_id are required." });
+    }
+
+    // 🔒 Set the Supabase session context for RLS enforcement
+    await setSessionContext(persistentUserId, persistentChatroomId);
 
     // Prepare additional context
     const context = {
-      user_id,
-      chatroom_id,
+      user_id: persistentUserId,
+      chatroom_id: persistentChatroomId,
       timestamp: new Date().toISOString(),
     };
 
@@ -39,7 +44,13 @@ export default async (req, res) => {
         actionResult = await fetchData(query.data, context);
         break;
       default:
-        actionResult = await orchestrateContextWorkflow({ query, memory, feedback, user_id, chatroom_id });
+        actionResult = await orchestrateContextWorkflow({
+          query,
+          memory,
+          feedback,
+          user_id: persistentUserId,
+          chatroom_id: persistentChatroomId
+        });
     }
 
     // Update context based on action result
@@ -51,7 +62,7 @@ export default async (req, res) => {
     const responsePayload = {
       message: "Workflow executed successfully",
       ...actionResult,
-      gaugeMetrics: res.locals.gaugeMetrics || {}, // Default to empty object if metrics are missing
+      gaugeMetrics: res.locals.gaugeMetrics || {},
     };
 
     // Log the successful completion of the workflow
@@ -59,11 +70,12 @@ export default async (req, res) => {
 
     // Respond with the results of the workflow
     res.status(200).json(responsePayload);
+
   } catch (error) {
     console.error("❌ Error in autonomous:", error);
 
     // Log the error with additional context
-    console.error(`Error details: user: ${req.body.user_id}, chatroom: ${req.body.chatroom_id}, query: ${req.body.query}`);
+    console.error(`Error details: query: ${req.body.query}`);
 
     // Respond with a detailed error message
     res.status(500).json({ error: "Failed to execute workflow. Please try again.", details: error.message });
@@ -73,7 +85,7 @@ export default async (req, res) => {
 // Function to handle context updates
 async function updateContext(data, context) {
   try {
-    // 🔄 Update context in the database (example implementation)
+    // 🔄 Update context in the database
     const updateAction = supabase
       .from('context')
       .update({ ...data })
@@ -92,7 +104,7 @@ async function updateContext(data, context) {
 // Function to handle data fetching
 async function fetchData(data, context) {
   try {
-    // 📦 Fetch data related to user and chatroom (example implementation)
+    // 📦 Fetch data related to user and chatroom
     const fetchAction = supabase
       .from('data')
       .select('*')

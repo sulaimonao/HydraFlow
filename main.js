@@ -3,6 +3,8 @@
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+import { createSession, setSessionContext } from './lib/supabaseClient.js';
 
 dotenv.config();
 
@@ -60,13 +62,24 @@ app.post("/api/autonomous", async (req, res) => {
       return res.status(400).json({ error: "Query is required." });
     }
 
-    // Step 1: Parse query
+    // 🚀 Step 1: Initialize session with unique user_id and chatroom_id
+    const user_id = uuidv4();
+    const chatroom_id = uuidv4();
+
+    console.log(`🔎 Initializing session: user_id=${user_id}, chatroom_id=${chatroom_id}`);
+
+    await createSession(user_id, chatroom_id);
+    await setSessionContext(user_id, chatroom_id);
+
+    console.log("✅ Session initialized successfully.");
+
+    // Step 2: Parse query
     const parseResponse = await callApi("/parse-query", { query });
     const { actionItems } = parseResponse;
 
     let results = {};
 
-    // Step 2: Execute actions dynamically
+    // Step 3: Execute actions dynamically
     for (const action of actionItems) {
       if (actionHandlers[action]) {
         results[action] = await actionHandlers[action]();

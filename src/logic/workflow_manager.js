@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from 'uuid';  // UUID for consistent ID handling
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
-import supabase from '../../lib/supabaseClient.js';
+import { createSession, setSessionContext } from '../../lib/supabaseClient.js';
 
 /**
  * Orchestrates the entire context workflow.
@@ -43,6 +43,10 @@ export const orchestrateContextWorkflow = async ({
       user_id: generatedUserId,
       chatroom_id: generatedChatroomId,
     };
+
+    // ✅ Ensure session context is initialized
+    await createSession(generatedUserId, generatedChatroomId);
+    await setSessionContext(generatedUserId, generatedChatroomId);
 
     // === Retrieve Existing Memory and Heads ===
     const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
@@ -114,12 +118,22 @@ export const orchestrateContextWorkflow = async ({
       actions.push('compressMemory');
     }
 
-    if (needsContextRecap(memory.length, feedback.engagement)) {
+    if (needsContextRecap(memory.length, feedback?.engagement)) {
       actions.push('contextRecap');
     }
 
     // === Execute Dynamic Actions ===
     const actionFeedback = await handleActions(actions, context);
+
+    // === Collect Feedback if Provided ===
+    if (feedback) {
+      await collectFeedback({
+        user_id: generatedUserId,
+        chatroom_id: generatedChatroomId,
+        feedback: feedback.comment,
+        rating: feedback.rating,
+      });
+    }
 
     // === Final Response Generation ===
     response.finalResponse = await generateFinalResponse({
@@ -135,27 +149,9 @@ export const orchestrateContextWorkflow = async ({
     // === Trigger Feedback Prompt if Task is Completed ===
     if (taskCard.status === "completed") {
       response.feedbackPrompt = {
-        message: "How was the workflow? Please provide your feedback (e.g., 'Great job! 5').",
-        hint: "Feedback and rating (1-5)",
+        message: "How was the workflow? Please provide your feedback.",
       };
     }
-
-    // === Store User Feedback if Provided ===
-    if (feedback) {
-      await collectFeedback({
-        responseId: Date.now().toString(),
-        userFeedback: feedback.comment,
-        rating: feedback.rating,
-      });
-    }
-
-    // === Log Workflow Completion ===
-    await logIssue({
-      userId: generatedUserId,
-      contextId: generatedChatroomId,
-      issue: 'Workflow completed successfully',
-      resolution: `Final response: ${response.finalResponse}`,
-    });
 
     // === Return Workflow Results ===
     return {
@@ -168,7 +164,6 @@ export const orchestrateContextWorkflow = async ({
   } catch (error) {
     console.error("Error in orchestrateContextWorkflow:", error);
 
-    // === Error Logging for Debugging ===
     await logIssue({
       userId: user_id,
       contextId: chatroom_id,
@@ -179,16 +174,3 @@ export const orchestrateContextWorkflow = async ({
     throw new Error("Workflow orchestration failed.");
   }
 };
-
-/**
- * Resolves dependencies for each subtask in the task card.
- */
-async function resolveDependencies(taskCard, user_id, chatroom_id) {
-  for (const subtask of taskCard.subtasks) {
-    if (subtask.dependencies && subtask.dependencies.length > 0) {
-      const unresolved = subtask.dependencies.filter((dep) => !dep.resolved);
-      if (unresolved.length > 0) continue;
-    }
-    await updateTaskStatus(subtask.id, "in_progress", user_id, chatroom_id);
-  }
-}

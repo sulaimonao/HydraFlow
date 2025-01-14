@@ -1,27 +1,74 @@
 // src/actions/context_recapper.js
-
 import { callApiWithRetry } from './action_caller.js';
 import { setSessionContext } from '../../lib/supabaseClient.js';
 
+/**
+ * Generates a context recap by summarizing history and updating the backend.
+ * @param {Array} history - The conversation history.
+ * @param {string} compressedMemory - Compressed memory snapshot.
+ * @param {string} user_id - User ID for session context.
+ * @param {string} chatroom_id - Chatroom ID for session context.
+ * @returns {Promise<Object>} - API response or error.
+ */
 export async function contextRecap(history, compressedMemory, user_id, chatroom_id) {
-  const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
-  const payload = {
-    history: JSON.stringify(history),
-    compressedMemory: compressedMemory || ""
-  };
+  try {
+    const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
 
-  // Set session context for Supabase if used
-  await setSessionContext(user_id, chatroom_id);
+    // ✅ Validate essential identifiers
+    if (!user_id || !chatroom_id) {
+      throw new Error("Missing user_id or chatroom_id for context recap.");
+    }
 
-  // Automated summarization
-  const summarizedHistory = summarizeHistory(history);
-  payload.history = JSON.stringify(summarizedHistory);
+    // 🔒 Set Supabase session context for RLS enforcement
+    await setSessionContext(user_id, chatroom_id);
 
-  // Context validation
-  const isValid = validateContextRecap(payload);
-  if (!isValid) {
-    throw new Error("Invalid context recap.");
+    // 📝 Summarize history for more efficient recap
+    const summarizedHistory = summarizeHistory(history);
+
+    // 📦 Prepare payload with context identifiers
+    const payload = {
+      user_id,             // ✅ Include user ID
+      chatroom_id,         // ✅ Include chatroom ID
+      history: JSON.stringify(summarizedHistory),
+      compressedMemory: compressedMemory || ""
+    };
+
+    // ⚠️ Validate payload before API call
+    const isValid = validateContextRecap(payload);
+    if (!isValid) {
+      throw new Error("Invalid context recap payload.");
+    }
+
+    // 🚀 Make API call with retries
+    return await callApiWithRetry(endpoint, payload);
+
+  } catch (error) {
+    console.error("❌ Error in contextRecap:", error.message);
+    throw new Error(`Context recap failed: ${error.message}`);
   }
+}
 
-  return callApiWithRetry(endpoint, payload);
+/**
+ * Summarizes the conversation history.
+ * @param {Array} history - Conversation history.
+ * @returns {Array} - Condensed version of history.
+ */
+function summarizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.slice(-5);  // 📌 Return the last 5 entries
+}
+
+/**
+ * Validates the context recap payload.
+ * @param {Object} payload - Data sent to the API.
+ * @returns {boolean} - Validation result.
+ */
+function validateContextRecap(payload) {
+  return (
+    payload &&
+    typeof payload.history === 'string' &&
+    payload.compressedMemory !== undefined &&
+    payload.user_id &&
+    payload.chatroom_id
+  );
 }

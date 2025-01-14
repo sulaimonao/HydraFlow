@@ -1,5 +1,3 @@
-// src/utils/memoryUtils.js
-
 import { logInfo, logError } from './logger.js';
 import zlib from 'zlib';
 
@@ -18,6 +16,32 @@ export function compressMemory(memory, gaugeMetrics = {}) {
   } catch (error) {
     logError(`Memory compression failed: ${error.message}`);
     throw new Error('Failed to compress memory.');
+  }
+}
+
+/**
+ * 🔍 Calculates the token usage of memory data.
+ * @param {string} memory - Memory data to analyze.
+ * @returns {object} - Token usage statistics.
+ */
+export function calculateTokenUsage(memory) {
+  try {
+    logInfo('Calculating token usage...');
+    
+    const tokenCount = memory.split(/\s+/).length;  // Basic word count as token estimate
+    const estimatedTokenLimit = 8000;  // Adjust this based on the model's max token limit
+    const remainingTokens = estimatedTokenLimit - tokenCount;
+
+    return {
+      used: tokenCount,
+      total: estimatedTokenLimit,
+      remaining: remainingTokens > 0 ? remainingTokens : 0,
+      status: tokenCount > estimatedTokenLimit * 0.8 ? 'high' : 'normal'
+    };
+
+  } catch (error) {
+    logError(`Token usage calculation failed: ${error.message}`);
+    throw new Error('Failed to calculate token usage.');
   }
 }
 

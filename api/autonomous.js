@@ -1,7 +1,5 @@
-// api/autonomous.js
-
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export default async (req, res) => {
@@ -18,6 +16,9 @@ export default async (req, res) => {
       return res.status(400).json({ error: "Query is required." });
     }
 
+    // 🛠️ Set the Supabase session context for RLS enforcement
+    await setSessionContext(user_id, chatroom_id);
+
     // Prepare additional context
     const context = {
       user_id,
@@ -26,7 +27,7 @@ export default async (req, res) => {
     };
 
     // Log the start of the workflow
-    console.log(`Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
+    console.log(`🚀 Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
     // Dynamic action handling based on query
     let actionResult;
@@ -54,12 +55,12 @@ export default async (req, res) => {
     };
 
     // Log the successful completion of the workflow
-    console.log(`Workflow completed successfully for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
+    console.log(`✅ Workflow completed successfully for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
     // Respond with the results of the workflow
     res.status(200).json(responsePayload);
   } catch (error) {
-    console.error("Error in autonomous:", error);
+    console.error("❌ Error in autonomous:", error);
 
     // Log the error with additional context
     console.error(`Error details: user: ${req.body.user_id}, chatroom: ${req.body.chatroom_id}, query: ${req.body.query}`);
@@ -71,12 +72,38 @@ export default async (req, res) => {
 
 // Function to handle context updates
 async function updateContext(data, context) {
-  // Logic for updating the context with new data
-  return { updatedContext: { ...context, ...data } };
+  try {
+    // 🔄 Update context in the database (example implementation)
+    const updateAction = supabase
+      .from('context')
+      .update({ ...data })
+      .eq('user_id', context.user_id)
+      .eq('chatroom_id', context.chatroom_id);
+
+    const updatedData = await supabaseRequest(updateAction, context.user_id, context.chatroom_id);
+
+    return { updatedContext: { ...context, ...updatedData } };
+  } catch (error) {
+    console.error("⚠️ Error updating context:", error.message);
+    throw new Error("Failed to update context.");
+  }
 }
 
 // Function to handle data fetching
 async function fetchData(data, context) {
-  // Logic for fetching data based on the provided context
-  return { fetchedData: [] }; // Example placeholder response
+  try {
+    // 📦 Fetch data related to user and chatroom (example implementation)
+    const fetchAction = supabase
+      .from('data')
+      .select('*')
+      .eq('user_id', context.user_id)
+      .eq('chatroom_id', context.chatroom_id);
+
+    const fetchedData = await supabaseRequest(fetchAction, context.user_id, context.chatroom_id);
+
+    return { fetchedData };
+  } catch (error) {
+    console.error("⚠️ Error fetching data:", error.message);
+    throw new Error("Failed to fetch data.");
+  }
 }

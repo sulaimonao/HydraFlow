@@ -1,13 +1,17 @@
 // src/actions/context_recapper.js
 
 import { callApiWithRetry } from './action_caller.js';
+import { setSessionContext } from '../../lib/supabaseClient.js';
 
-export async function contextRecap(history, compressedMemory) {
+export async function contextRecap(history, compressedMemory, user_id, chatroom_id) {
   const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
   const payload = {
-    history: JSON.stringify(history), // Serialize history for consistency
-    compressedMemory: compressedMemory || "" // Default value for robustness
+    history: JSON.stringify(history),
+    compressedMemory: compressedMemory || ""
   };
+
+  // Set session context for Supabase if used
+  await setSessionContext(user_id, chatroom_id);
 
   // Automated summarization
   const summarizedHistory = summarizeHistory(history);
@@ -20,14 +24,4 @@ export async function contextRecap(history, compressedMemory) {
   }
 
   return callApiWithRetry(endpoint, payload);
-}
-
-function summarizeHistory(history) {
-  // Implement summarization logic here
-  return history.slice(0, 5); // Example: Include the first 5 entries
-}
-
-function validateContextRecap(contextRecap) {
-  // Implement validation logic here
-  return contextRecap.history && contextRecap.compressedMemory;
 }

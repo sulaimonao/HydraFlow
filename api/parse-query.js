@@ -1,5 +1,5 @@
 // api/parse-query.js
-  
+
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
 
@@ -55,6 +55,9 @@ export default async (req, res) => {
       proposedTasks: taskCard.subtasks,
     });
 
+    const persistentUserId = workflowPlan.generatedIdentifiers.user_id;
+    const persistentChatroomId = workflowPlan.generatedIdentifiers.chatroom_id;
+
     // Respond with structured data and gauge metrics
     res.status(200).json({
       keywords: query.split(" "), // Basic keyword extraction
@@ -62,6 +65,8 @@ export default async (req, res) => {
       taskCard,
       workflowPlan,
       gaugeMetrics: res.locals.gaugeMetrics,
+      user_id: persistentUserId,
+      chatroom_id: persistentChatroomId,
       message: "Query parsed and workflow planned successfully.",
     });
   } catch (error) {

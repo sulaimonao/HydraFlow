@@ -1,23 +1,27 @@
 // api/compress-memory.js
 
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';  // ✅ Fix: Import supabase
-import { v4 as uuidv4 } from 'uuid';
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';  // ✅ Added setSessionContext for RLS
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';  // ✅ Import workflow manager for persistent IDs
 
 const TOKEN_THRESHOLD = 3000;  // 🔥 Adjust as needed
 
 export default async function handler(req, res) {
   try {
-    const { user_id, chatroom_id, gaugeMetrics, memory } = req.body;
+    const { query, memory, gaugeMetrics } = req.body;
 
-    // 🔒 Persistent session handling
-    const generatedUserId = user_id || uuidv4();
-    const generatedChatroomId = chatroom_id || uuidv4();
+    // 🌐 Retrieve persistent IDs from the workflow manager
+    const workflowContext = await orchestrateContextWorkflow({ query, memory });
+    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
+    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
     // ⚠️ Validate memory
     if (!memory) {
       return res.status(400).json({ error: 'Memory data is required for compression.' });
     }
+
+    // 🔒 Set session context for RLS enforcement
+    await setSessionContext(persistentUserId, persistentChatroomId);
 
     // 🔍 Calculate gauge metrics if missing
     const calculatedGaugeMetrics = gaugeMetrics || calculateTokenUsage(memory);
@@ -32,8 +36,8 @@ export default async function handler(req, res) {
       supabase
         .from('memories')
         .select('id, content')
-        .eq('user_id', generatedUserId)
-        .eq('chatroom_id', generatedChatroomId)
+        .eq('user_id', persistentUserId)
+        .eq('chatroom_id', persistentChatroomId)
         .limit(1)
     );
 
@@ -61,7 +65,7 @@ export default async function handler(req, res) {
     await supabaseRequest(
       supabase.from('debug_logs').insert([
         {
-          user_id: generatedUserId,
+          user_id: persistentUserId,
           context_id: existingMemory[0].id,
           issue: 'Memory compression executed',
           resolution: 'Memory compressed and updated in DB',
@@ -74,8 +78,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       message: 'Memory compression completed and updated successfully.',
       data: compressedMemory,
-      user_id: generatedUserId,
-      chatroom_id: generatedChatroomId
+      user_id: persistentUserId,
+      chatroom_id: persistentChatroomId
     });
 
   } catch (error) {

@@ -1,17 +1,23 @@
 // api/create-subpersona.js
 
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 
 const handleCreateSubpersona = async (req, res) => {
   try {
-    const { name, capabilities, preferences } = req.body;
-    const user_id = req.userId;
-    const chatroom_id = req.chatroomId;
+    const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
 
+    // ✅ Validate required fields
     if (!name) {
       return res.status(400).json({ error: 'Subpersona name is required.' });
     }
+    if (!user_id || !chatroom_id) {
+      return res.status(400).json({ error: 'user_id and chatroom_id are required.' });
+    }
 
+    // 🔒 Ensure session context is set for RLS
+    await setSessionContext(user_id, chatroom_id);
+
+    // 📝 Insert new subpersona into the heads table
     const data = await supabaseRequest(
       supabase.from('heads').insert([
         {
@@ -23,7 +29,9 @@ const handleCreateSubpersona = async (req, res) => {
           status: 'active',
           createdat: new Date().toISOString()
         }
-      ])
+      ]),
+      user_id,
+      chatroom_id
     );
 
     res.status(200).json({ message: 'Subpersona created successfully.', data });

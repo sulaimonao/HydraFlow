@@ -1,50 +1,40 @@
 // api/context-recap.js
 
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 import { validateUserAndChatroom } from '../middleware/authMiddleware.js';
-import { v4 as uuidv4 } from 'uuid';  // Import UUID for consistent ID handling
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';  // ✅ Import workflow manager for persistent IDs
 
 export default async function handler(req, res) {
-  // Ensure the request method is POST
   if (req.method === 'POST') {
-    const { history, compressedMemory, additionalNotes, user_id, chatroom_id } = req.body;
+    const { query, history, compressedMemory, additionalNotes } = req.body;
 
-    /**
-     * **UUID Generation for Missing IDs:**
-     * Generate new UUIDs if user_id or chatroom_id are missing.
-     */
-    const generatedUserId = user_id || uuidv4();
-    const generatedChatroomId = chatroom_id || uuidv4();
+    // 🌐 Retrieve persistent IDs from the workflow manager
+    const workflowContext = await orchestrateContextWorkflow({ query });
+    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
+    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
-    /**
-     * **Validation of User and Chatroom IDs:**
-     * Use middleware to confirm that the provided/generated IDs are valid.
-     */
-    if (!validateUserAndChatroom(generatedUserId, generatedChatroomId)) {
+    // 🔒 Set session context for RLS enforcement
+    await setSessionContext(persistentUserId, persistentChatroomId);
+
+    // ✅ Validate User and Chatroom IDs
+    if (!validateUserAndChatroom(persistentUserId, persistentChatroomId)) {
       return res.status(403).json({ error: "Invalid user_id or chatroom_id." });
     }
 
-    /**
-     * **Input Validation:**
-     * Ensure that 'history' and 'compressedMemory' are provided.
-     */
+    // ✅ Validate required inputs
     if (!compressedMemory || !history) {
       return res.status(400).json({ error: "Both 'history' and 'compressedMemory' are required." });
     }
 
-    // Ensure that 'additionalNotes' is a string if provided
     if (additionalNotes && typeof additionalNotes !== 'string') {
       return res.status(400).json({ error: "'additionalNotes' must be a string if provided." });
     }
 
-    /**
-     * **Context Recap Construction:**
-     * Build a recap of the current context including memory, history, and any additional notes.
-     */
+    // 📖 Construct the Context Recap
     const recap = `
       === Context Recap ===
-      User ID: ${generatedUserId}
-      Chatroom ID: ${generatedChatroomId}
+      User ID: ${persistentUserId}
+      Chatroom ID: ${persistentChatroomId}
 
       Compressed Memory:
       ${compressedMemory}
@@ -55,30 +45,21 @@ export default async function handler(req, res) {
       ${additionalNotes ? `Additional Notes:\n${additionalNotes}\n` : ''}
     `;
 
-    /**
-     * **Gauge Metrics Handling:**
-     * Safely retrieve gauge metrics, defaulting to an empty object if missing.
-     */
+    // 📊 Handle Gauge Metrics
     const gaugeMetrics = res.locals?.gaugeMetrics || {};
-
-    // Log a warning if gauge metrics are missing for debugging
     if (!res.locals?.gaugeMetrics) {
       console.warn("Warning: gaugeMetrics is missing. Using default values.");
     }
 
-    /**
-     * **Response Delivery:**
-     * Return the generated recap along with gauge metrics.
-     */
+    // 📤 Respond with Recap and Gauge Metrics
     res.status(200).json({
       recap: recap.trim(),
       gaugeMetrics,
-      user_id: generatedUserId,
-      chatroom_id: generatedChatroomId
+      user_id: persistentUserId,
+      chatroom_id: persistentChatroomId
     });
 
   } else {
-    // Handle unsupported HTTP methods
     res.status(405).json({ error: 'Method Not Allowed' });
   }
 }

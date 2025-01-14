@@ -1,6 +1,7 @@
 // api/feedback.js
 
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -24,22 +25,27 @@ export default async function handler(req, res) {
 }
 
 async function submitFeedback(req, res) {
-  const { chatroom_id, responseNumber, userFeedback, rating } = req.body;
+  const { query, chatroom_id, responseNumber, userFeedback, rating } = req.body;
 
-  if (!chatroom_id || responseNumber === undefined || !userFeedback) {
+  const workflowContext = await orchestrateContextWorkflow({ query });
+  const persistentUserId = workflowContext.generatedIdentifiers.user_id;
+  const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+
+  await setSessionContext(persistentUserId, persistentChatroomId);
+
+  if (!persistentChatroomId || responseNumber === undefined || !userFeedback) {
     return res.status(400).json({ error: 'chatroom_id, responseNumber, and userFeedback are required.' });
   }
 
-  const responseId = `${chatroom_id}_${responseNumber}`;
-
-  console.log('Inserting feedback:', { responseId, userFeedback, rating });
+  const responseId = `${persistentChatroomId}_${responseNumber}`;
 
   try {
     const data = await supabaseRequest(
-      () => supabase.from('feedback_entries').insert([{ response_id: responseId, user_feedback: userFeedback, rating }])
+      () => supabase.from('feedback_entries').insert([
+        { response_id: responseId, user_feedback: userFeedback, rating, user_id: persistentUserId, chatroom_id: persistentChatroomId }
+      ])
     );
 
-    // Use feedback to improve workflows
     await improveWorkflowsBasedOnFeedback(userFeedback, rating);
 
     return res.status(200).json(data);
@@ -50,18 +56,14 @@ async function submitFeedback(req, res) {
 }
 
 async function improveWorkflowsBasedOnFeedback(userFeedback, rating) {
-  // Analyze feedback and adjust workflows dynamically
   if (rating < 3) {
-    // Example: Adjust workflow if feedback is negative
     console.log('Adjusting workflow based on negative feedback:', userFeedback);
-    // Implement logic to adjust workflows based on feedback
   }
 }
 
 async function getFeedbackSummary(req, res) {
   try {
-    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('rating')
-    );
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('rating'));
     const averageRating = data.reduce((acc, entry) => acc + entry.rating, 0) / data.length;
     return res.status(200).json({ averageRating });
   } catch (error) {
@@ -71,8 +73,7 @@ async function getFeedbackSummary(req, res) {
 
 async function getAllFeedback(req, res) {
   try {
-    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*')
-    );
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*'));
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -81,10 +82,8 @@ async function getAllFeedback(req, res) {
 
 async function getFeedbackByTask(req, res) {
   const { taskId } = req.query;
-
   try {
-    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*').eq('task_id', taskId)
-    );
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*').eq('task_id', taskId));
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -93,12 +92,8 @@ async function getFeedbackByTask(req, res) {
 
 async function getFeedbackByPersona(req, res) {
   const { personaId } = req.query;
-
   try {
-    const data = await supabase
-      .from('feedback_entries')
-      .select('*')
-      .eq('persona_id', personaId);
+    const data = await supabaseRequest(() => supabase.from('feedback_entries').select('*').eq('persona_id', personaId));
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ error: error.message });

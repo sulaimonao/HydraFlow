@@ -1,9 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "main.js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "/", "dest": "/main.js" },
     { "src": "/api/parse-query", "dest": "/api/parse-query.js" },
     { "src": "/api/create-subpersona", "dest": "/api/create-subpersona.js" },
     { "src": "/api/compress-memory", "dest": "/api/compress-memory.js" },

@@ -1,7 +1,7 @@
 // api/compress-memory.js
 
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
-import { supabaseRequest } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';  // ✅ Fix: Import supabase
 import { v4 as uuidv4 } from 'uuid';
 
 const TOKEN_THRESHOLD = 3000;  // 🔥 Adjust as needed

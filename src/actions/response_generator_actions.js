@@ -7,12 +7,13 @@ import { calculateMetrics } from "../util/metrics.js";
  * @param {Object} params.contextDigest - Summary of memory and highlights.
  * @param {Object} params.taskCard - Current task and subtasks with statuses.
  * @param {Object} params.actionsPerformed - Results of executed actions.
+ * @param {Object} [params.gaugeMetrics] - Optional system performance metrics.
  * @returns {string} - Structured final response.
  */
-export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed }) => {
+export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed, gaugeMetrics }) => {
   const response = [];
 
-  // === 📂 Context Digest Summary ===
+  // === 🧠 Context Digest Summary ===
   if (contextDigest) {
     response.push(
       `### 🧠 Context Digest:\n- **Total Memory Entries:** ${contextDigest.totalEntries}\n- **Highlights:**\n${contextDigest.highlights
@@ -21,15 +22,16 @@ export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerforme
     );
   }
 
-  // === ✅ Task Card Overview ===
+  // === 📋 Task Card Overview ===
   if (taskCard) {
     response.push(`### 📋 Task Card: **${taskCard.goal}**`);
     taskCard.subtasks.forEach((subtask) => {
-      response.push(`- **${subtask.task}** → *${subtask.status}*`);
+      const statusIcon = subtask.status === "completed" ? "✅" : subtask.status === "in-progress" ? "⏳" : "❌";
+      response.push(`- **${subtask.task}** → *${statusIcon} ${subtask.status}*`);
     });
   }
 
-  // === ⚡ Actions Performed ===
+  // === ⚙️ Actions Performed ===
   if (actionsPerformed && Object.keys(actionsPerformed).length > 0) {
     response.push("### ⚙️ Actions Performed:");
     Object.entries(actionsPerformed).forEach(([action, result]) => {
@@ -40,28 +42,43 @@ export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerforme
     response.push("### ⚙️ Actions Performed:\n- No actions were executed in this workflow.");
   }
 
+  // === 📊 Gauge Metrics Overview ===
+  if (gaugeMetrics) {
+    response.push(`### 📊 Gauge Metrics:\n- **Token Usage:** ${gaugeMetrics.tokenUsage.used} / ${gaugeMetrics.tokenUsage.total}\n- **Latency:** ${gaugeMetrics.responseLatency}s\n- **Active Subpersonas:** ${gaugeMetrics.activeSubpersonas.length}`);
+  }
+
   return response.join("\n\n");
 };
 
 /**
- * Generates a response based on user input and workflow context.
+ * Generates a basic response based on user input and workflow context.
  * @param {string} input - The user's query or instruction.
  * @param {Object} context - Current state and data context.
  * @returns {Object} - Response with feedback and gauge metrics.
  */
 export async function generateResponse(input, context) {
-  if (!input || typeof input !== "string") {
-    throw new Error("Invalid input provided to generateResponse.");
+  try {
+    if (!input || typeof input !== "string" || input.trim() === "") {
+      throw new Error("❌ Invalid input provided to generateResponse. Input must be a non-empty string.");
+    }
+
+    // 🔎 Basic input processing
+    const responseText = `🔍 **Processed Input:** ${input.trim()}`;
+
+    // 📊 Calculate and attach system metrics
+    const gaugeMetrics = calculateMetrics(context);
+
+    return {
+      status: "success",
+      response: responseText,
+      gauge: gaugeMetrics, // Include system metrics
+    };
+  } catch (error) {
+    console.error("❌ Error generating response:", error.message);
+    return {
+      status: "error",
+      message: "Failed to generate a response. Please check your input.",
+      details: error.message,
+    };
   }
-
-  // 📝 Basic input processing
-  const response = `🔍 **Processed Input:** ${input}`;
-
-  // 📊 Attach calculated gauge metrics to the response
-  const gaugeMetrics = calculateMetrics(context);
-
-  return {
-    response,
-    gauge: gaugeMetrics, // Include system metrics
-  };
 }

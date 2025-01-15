@@ -1,5 +1,5 @@
 // src/actions/feedback_collector.js
-import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext, createSession } from '../../lib/supabaseClient.js';
 
 /**
  * ✅ Collect feedback and associate it with user and chatroom context.
@@ -15,8 +15,11 @@ export const collectFeedback = async ({ responseId, userFeedback, rating, user_i
   try {
     // ✅ Validate input
     if (!user_id || !chatroom_id) {
-      throw new Error("Missing user_id or chatroom_id for feedback submission.");
+      throw new Error("❌ Missing user_id or chatroom_id for feedback submission.");
     }
+
+    // 🔐 Ensure session exists in user_sessions table
+    await createSession(user_id, chatroom_id);
 
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
@@ -58,6 +61,9 @@ export const collectFeedback = async ({ responseId, userFeedback, rating, user_i
  */
 export const getFeedbackLog = async (user_id, chatroom_id) => {
   try {
+    // 🔐 Ensure session exists in user_sessions table
+    await createSession(user_id, chatroom_id);
+
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
 
@@ -90,6 +96,9 @@ export const getFeedbackLog = async (user_id, chatroom_id) => {
  */
 export const generateFeedbackSummary = async (user_id, chatroom_id) => {
   try {
+    // 🔐 Ensure session exists in user_sessions table
+    await createSession(user_id, chatroom_id);
+
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
 

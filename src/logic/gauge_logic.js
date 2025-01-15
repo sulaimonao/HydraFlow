@@ -15,7 +15,7 @@ export const gatherSystemMetrics = () => {
 
     return {
         memoryUsage: {
-            rss: memoryUsage.rss,
+            rss: memoryUsage.rss,          // Resident Set Size
             heapTotal: memoryUsage.heapTotal,
             heapUsed: memoryUsage.heapUsed,
             external: memoryUsage.external,
@@ -35,6 +35,11 @@ export const gatherSystemMetrics = () => {
  * @param {string} chatroom_id - Chatroom ID for context.
  */
 export const trackResponseTime = async (start, end, user_id, chatroom_id) => {
+    if (!user_id || !chatroom_id) {
+        logError("❗ Missing user_id or chatroom_id for response time tracking.");
+        return;
+    }
+
     const duration = end - start;
 
     try {
@@ -48,7 +53,7 @@ export const trackResponseTime = async (start, end, user_id, chatroom_id) => {
             }])
         );
 
-        logInfo(`📊 Tracked response time: ${duration}ms for user: ${user_id}, chatroom: ${chatroom_id}`);
+        logInfo(`📊 Tracked response time: ${duration.toFixed(2)}ms for user: ${user_id}, chatroom: ${chatroom_id}`);
     } catch (error) {
         logError(`❌ Error tracking response time: ${error.message}`);
     }
@@ -60,6 +65,10 @@ export const trackResponseTime = async (start, end, user_id, chatroom_id) => {
  * @param {string} chatroom_id - Chatroom ID for session-specific tracking.
  */
 export const collectGaugeMetrics = async (user_id, chatroom_id) => {
+    if (!user_id || !chatroom_id) {
+        throw new Error("❗ Missing user_id or chatroom_id for gauge metrics collection.");
+    }
+
     const startTime = performance.now();
 
     try {

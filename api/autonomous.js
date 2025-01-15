@@ -1,5 +1,4 @@
 // api/autonomous.js
-
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 
@@ -8,85 +7,78 @@ export default async (req, res) => {
     const { query, memory, feedback } = req.body;
 
     // ✅ Validate required input for query
-    if (!query) {
-      return res.status(400).json({ error: "Query is required." });
+    if (!query || typeof query !== "object") {
+      return res.status(400).json({ error: "Invalid or missing query object." });
     }
 
-    // 🌐 Always retrieve persistent IDs from the workflow manager
+    // 🌐 Initialize workflow and retrieve session IDs
     const workflowContext = await orchestrateContextWorkflow({ query, memory, feedback, req });
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+    const { user_id: persistentUserId, chatroom_id: persistentChatroomId } = workflowContext.generatedIdentifiers;
 
     if (!persistentUserId || !persistentChatroomId) {
       return res.status(400).json({ error: "Persistent user_id and chatroom_id are required." });
     }
 
-    // 🔒 Set the Supabase session context for RLS enforcement
+    // 🔒 Set Supabase session context for RLS
     await setSessionContext(persistentUserId, persistentChatroomId);
 
-    // Prepare additional context
+    // 🌐 Prepare session context
     const context = {
       user_id: persistentUserId,
       chatroom_id: persistentChatroomId,
       timestamp: new Date().toISOString(),
     };
 
-    // Log the start of the workflow
     console.log(`🚀 Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
-    // Dynamic action handling based on query
+    // ✅ Dynamic action handling
     let actionResult;
-    switch (query.action) {
-      case 'updateContext':
-        actionResult = await updateContext(query.data, context);
-        break;
-      case 'fetchData':
-        actionResult = await fetchData(query.data, context);
-        break;
-      default:
-        actionResult = await orchestrateContextWorkflow({
-          query,
-          memory,
-          feedback,
-          req,
-          user_id: persistentUserId,
-          chatroom_id: persistentChatroomId
-        });
+    if (query.action && typeof query.action === "string") {
+      switch (query.action) {
+        case 'updateContext':
+          actionResult = await updateContext(query.data, context);
+          break;
+        case 'fetchData':
+          actionResult = await fetchData(query.data, context);
+          break;
+        default:
+          return res.status(400).json({ error: `Invalid action: ${query.action}` });
+      }
+    } else {
+      actionResult = workflowContext;  // Reuse initial workflow result
     }
 
-    // Update context based on action result
+    // ✅ Update context if applicable
     if (actionResult.updatedContext) {
       context.updatedContext = actionResult.updatedContext;
     }
 
-    // Attach gauge metrics to the response
+    // ✅ Attach gauge metrics to response
     const responsePayload = {
       message: "Workflow executed successfully",
       ...actionResult,
       gaugeMetrics: res.locals.gaugeMetrics || {},
     };
 
-    // Log the successful completion of the workflow
-    console.log(`✅ Workflow completed successfully for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
+    console.log(`✅ Workflow completed for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
-    // Respond with the results of the workflow
+    // ✅ Send successful response
     res.status(200).json(responsePayload);
 
   } catch (error) {
-    console.error("❌ Error in autonomous:", error);
+    console.error("❌ Error in autonomous workflow:", error);
+    console.error(`Error details: query=${JSON.stringify(req.body.query)}, user_id=${req.userId}, chatroom_id=${req.chatroomId}`);
 
-    // Log the error with additional context
-    console.error(`Error details: query: ${req.body.query}`);
-
-    // Respond with a detailed error message
-    res.status(500).json({ error: "Failed to execute workflow. Please try again.", details: error.message });
+    res.status(500).json({
+      error: "Failed to execute workflow. Please try again.",
+      details: error.message,
+    });
   }
 };
 
-// Function to handle context updates
+// ✅ Handles context updates
 async function updateContext(data, context) {
   try {
-    // 🔄 Update context in the database
     const updateAction = supabase
       .from('context')
       .update({ ...data })
@@ -94,7 +86,6 @@ async function updateContext(data, context) {
       .eq('chatroom_id', context.chatroom_id);
 
     const updatedData = await supabaseRequest(updateAction, context.user_id, context.chatroom_id);
-
     return { updatedContext: { ...context, ...updatedData } };
   } catch (error) {
     console.error("⚠️ Error updating context:", error.message);
@@ -102,10 +93,9 @@ async function updateContext(data, context) {
   }
 }
 
-// Function to handle data fetching
+// ✅ Handles data fetching
 async function fetchData(data, context) {
   try {
-    // 📦 Fetch data related to user and chatroom
     const fetchAction = supabase
       .from('data')
       .select('*')
@@ -113,7 +103,6 @@ async function fetchData(data, context) {
       .eq('chatroom_id', context.chatroom_id);
 
     const fetchedData = await supabaseRequest(fetchAction, context.user_id, context.chatroom_id);
-
     return { fetchedData };
   } catch (error) {
     console.error("⚠️ Error fetching data:", error.message);

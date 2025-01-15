@@ -1,6 +1,6 @@
 // src/actions/context_recapper.js
 import { callApiWithRetry } from './action_caller.js';
-import { setSessionContext } from '../../lib/supabaseClient.js';
+import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session validation
 
 /**
  * Generates a context recap by summarizing history and updating the backend.
@@ -16,8 +16,11 @@ export async function contextRecap(history, compressedMemory, user_id, chatroom_
 
     // ✅ Validate essential identifiers
     if (!user_id || !chatroom_id) {
-      throw new Error("Missing user_id or chatroom_id for context recap.");
+      throw new Error("❌ Missing user_id or chatroom_id for context recap.");
     }
+
+    // ✅ Ensure session exists in the user_sessions table
+    await createSession(user_id, chatroom_id);
 
     // 🔒 Set Supabase session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
@@ -36,11 +39,14 @@ export async function contextRecap(history, compressedMemory, user_id, chatroom_
     // ⚠️ Validate payload before API call
     const isValid = validateContextRecap(payload);
     if (!isValid) {
-      throw new Error("Invalid context recap payload.");
+      throw new Error("❌ Invalid context recap payload.");
     }
 
     // 🚀 Make API call with retries
-    return await callApiWithRetry(endpoint, payload);
+    const response = await callApiWithRetry(endpoint, payload, user_id, chatroom_id);
+
+    console.log(`✅ Context recap completed for user_id: ${user_id}, chatroom_id: ${chatroom_id}`);
+    return response;
 
   } catch (error) {
     console.error("❌ Error in contextRecap:", error.message);

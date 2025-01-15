@@ -2,23 +2,26 @@
 import axios from 'axios';
 import { calculateMetrics } from "../util/metrics.js";
 import { generateResponse } from './response_generator_actions.js';
-import { setSessionContext } from '../../lib/supabaseClient.js';  // ✅ Ensure context is set
+import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session checks
 
 // 🔄 Retry logic for API calls with session context
 async function callApiWithRetry(endpoint, payload, user_id, chatroom_id, retries = 3, backoff = 300) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      // ✅ Set session context before making the API call
+      // ✅ Ensure the session exists before making the API call
+      await createSession(user_id, chatroom_id);
       await setSessionContext(user_id, chatroom_id);
 
       const response = await axios.post(endpoint, {
         ...payload,
         user_id,
-        chatroom_id,  // 🔒 Ensure user and chatroom IDs are included
+        chatroom_id,  // 🔒 Attach user and chatroom IDs
       });
+
       return response.data;
     } catch (error) {
       if (attempt < retries && shouldRetry(error)) {
+        console.warn(`⚠️ API call failed (Attempt ${attempt}). Retrying in ${backoff * attempt}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoff * attempt));
       } else {
         console.error(`❌ API call failed after ${attempt} attempts:`, error.message);
@@ -28,23 +31,24 @@ async function callApiWithRetry(endpoint, payload, user_id, chatroom_id, retries
   }
 }
 
-// 🔍 Retry logic for transient errors
+// 🔍 Detect if the error is recoverable
 function shouldRetry(error) {
   return !error.response || (error.response.status >= 500 && error.response.status < 600);
 }
 
 export { callApiWithRetry };
 
-// 🎯 Centralized action dispatcher with persistent context
+// 🎯 Centralized action dispatcher with persistent session context
 async function callAction(action, payload, context) {
-  const { user_id, chatroom_id } = context;  // ✅ Extract IDs from context
+  const { user_id, chatroom_id } = context;
 
-  // ✅ Validate IDs are present
+  // ✅ Validate IDs
   if (!user_id || !chatroom_id) {
     throw new Error("Missing user_id or chatroom_id in context.");
   }
 
-  // ✅ Set session context for security and data consistency
+  // ✅ Ensure session exists and set context
+  await createSession(user_id, chatroom_id);
   await setSessionContext(user_id, chatroom_id);
 
   switch (action) {
@@ -55,15 +59,15 @@ async function callAction(action, payload, context) {
       return calculateMetrics(context);
 
     case "compress_memory":
-      // Example API call for memory compression
+      // ✅ Memory compression with context enforcement
       return await callApiWithRetry('/api/compress-memory', payload, user_id, chatroom_id);
 
     case "create_subpersona":
-      // Example API call for persona creation
+      // ✅ Persona creation with context enforcement
       return await callApiWithRetry('/api/create-subpersona', payload, user_id, chatroom_id);
 
     default:
-      throw new Error(`Unknown action: ${action}`);
+      throw new Error(`❌ Unknown action: ${action}`);
   }
 }
 

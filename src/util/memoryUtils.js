@@ -3,117 +3,110 @@ import { logInfo, logError } from './logger.js';
 import zlib from 'zlib';
 
 /**
- * Compresses memory data with contextual logging.
- * @param {string} memory - Raw memory data.
- * @param {object} gaugeMetrics - System metrics for optimization.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {string} - Compressed memory string.
+ * 📦 Compresses memory data using zlib with contextual logging.
  */
-export function compressMemory(memory, gaugeMetrics = {}, user_id = null, chatroom_id = null) {
+export function compressMemory(memory, gaugeMetrics = {}, user_id = 'system', chatroom_id = 'global') {
   try {
-    logInfo('Compressing memory...', user_id, chatroom_id);
+    logInfo(`📦 Compressing memory... Size: ${formatSize(memory)}`, user_id, chatroom_id);
     const compressed = zlib.gzipSync(memory).toString('base64');
-    logInfo(`Memory compressed. Size reduced by ${calculateCompressionRate(memory, compressed)}%`, user_id, chatroom_id);
+    logInfo(`✅ Memory compressed by ${calculateCompressionRate(memory, compressed)}%`, user_id, chatroom_id);
     return compressed;
   } catch (error) {
-    logError(`Memory compression failed: ${error.message}`, user_id, chatroom_id);
-    throw new Error('Failed to compress memory.');
+    logError(`❌ Compression failed: ${error.message}`, user_id, chatroom_id);
+    throw new Error('Memory compression failed.');
   }
 }
 
 /**
- * Calculates token usage of memory data.
- * @param {string} memory - Memory data to analyze.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {object} - Token usage statistics.
+ * 🔍 Calculates token usage in the memory data.
  */
-export function calculateTokenUsage(memory, user_id = null, chatroom_id = null) {
+export function calculateTokenUsage(memory, user_id = 'system', chatroom_id = 'global') {
   try {
-    logInfo('Calculating token usage...', user_id, chatroom_id);
-
-    const tokenCount = memory.split(/\s+/).length;
-    const estimatedTokenLimit = 8000;
-    const remainingTokens = estimatedTokenLimit - tokenCount;
-
-    const usageStats = {
+    const tokenCount = memory.trim().split(/\s+/).length;
+    const estimatedLimit = 8000;
+    const usage = {
       used: tokenCount,
-      total: estimatedTokenLimit,
-      remaining: Math.max(remainingTokens, 0),
-      status: tokenCount > estimatedTokenLimit * 0.8 ? 'high' : 'normal'
+      total: estimatedLimit,
+      remaining: Math.max(estimatedLimit - tokenCount, 0),
+      status: tokenCount > estimatedLimit * 0.8 ? 'high' : 'normal',
     };
 
-    logInfo(`Token usage: ${tokenCount}/${estimatedTokenLimit}`, user_id, chatroom_id);
-    return usageStats;
+    logInfo(`🔎 Token usage: ${tokenCount}/${estimatedLimit}`, user_id, chatroom_id);
+    return usage;
   } catch (error) {
-    logError(`Token usage calculation failed: ${error.message}`, user_id, chatroom_id);
-    throw new Error('Failed to calculate token usage.');
+    logError(`❌ Token usage calculation failed: ${error.message}`, user_id, chatroom_id);
+    throw new Error('Token usage calculation failed.');
   }
 }
 
 /**
- * Decompresses memory data.
- * @param {string} compressedMemory - Compressed memory string.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {string} - Decompressed memory.
+ * 🔓 Decompresses memory data.
  */
-export function decompressMemory(compressedMemory, user_id = null, chatroom_id = null) {
+export function decompressMemory(compressedMemory, user_id = 'system', chatroom_id = 'global') {
   try {
-    logInfo('Decompressing memory...', user_id, chatroom_id);
+    logInfo('🔓 Decompressing memory...', user_id, chatroom_id);
     const decompressed = zlib.gunzipSync(Buffer.from(compressedMemory, 'base64')).toString();
-    logInfo('Memory decompressed successfully.', user_id, chatroom_id);
+    logInfo(`✅ Memory decompressed. Size: ${formatSize(decompressed)}`, user_id, chatroom_id);
     return decompressed;
   } catch (error) {
-    logError(`Memory decompression failed: ${error.message}`, user_id, chatroom_id);
-    throw new Error('Failed to decompress memory.');
+    logError(`❌ Decompression failed: ${error.message}`, user_id, chatroom_id);
+    throw new Error('Memory decompression failed.');
   }
 }
 
 /**
- * Validates memory data integrity.
- * @param {string} memory - Memory data to validate.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {boolean} - True if valid, false otherwise.
+ * 🔒 Validates memory content integrity.
  */
-export function validateMemory(memory, user_id = null, chatroom_id = null) {
-  try {
-    logInfo('Validating memory...', user_id, chatroom_id);
-    const isValid = typeof memory === 'string' && memory.trim().length > 0;
-    if (!isValid) logError('Memory validation failed: Invalid format or empty content.', user_id, chatroom_id);
-    return isValid;
-  } catch (error) {
-    logError(`Memory validation error: ${error.message}`, user_id, chatroom_id);
-    return false;
+export function validateMemory(memory, user_id = 'system', chatroom_id = 'global') {
+  const isValid = typeof memory === 'string' && memory.trim().length > 0;
+  if (isValid) {
+    logInfo('🛡️ Memory validation passed.', user_id, chatroom_id);
+  } else {
+    logError('❌ Memory validation failed.', user_id, chatroom_id);
   }
+  return isValid;
 }
 
 /**
- * Optimizes memory by cleaning up data.
- * @param {string} memory - Memory to optimize.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {string} - Optimized memory.
+ * ⚙️ Optimizes memory by trimming and condensing whitespace.
  */
-export function optimizeMemory(memory, user_id = null, chatroom_id = null) {
+export function optimizeMemory(memory, user_id = 'system', chatroom_id = 'global') {
   try {
-    logInfo('Optimizing memory...', user_id, chatroom_id);
+    logInfo('⚙️ Optimizing memory...', user_id, chatroom_id);
     const optimized = memory.replace(/\s+/g, ' ').trim();
-    logInfo('Memory optimized successfully.', user_id, chatroom_id);
+    logInfo(`✅ Memory optimized. New size: ${formatSize(optimized)}`, user_id, chatroom_id);
     return optimized;
   } catch (error) {
-    logError(`Memory optimization failed: ${error.message}`, user_id, chatroom_id);
-    throw new Error('Failed to optimize memory.');
+    logError(`❌ Memory optimization failed: ${error.message}`, user_id, chatroom_id);
+    throw new Error('Memory optimization failed.');
   }
 }
 
 /**
- * Calculates compression percentage.
- * @param {string} original - Original memory data.
- * @param {string} compressed - Compressed memory data.
- * @returns {number} - Compression rate.
+ * 🗑️ Clears in-memory data securely.
+ */
+export function clearMemory(user_id = 'system', chatroom_id = 'global') {
+  try {
+    logInfo('🗑️ Clearing memory...', user_id, chatroom_id);
+    global.memoryData = "";  // Should be replaced with a better storage solution
+    logInfo('✅ Memory cleared.', user_id, chatroom_id);
+    return 'Memory cleared successfully.';
+  } catch (error) {
+    logError(`❌ Memory clearing failed: ${error.message}`, user_id, chatroom_id);
+    throw new Error('Memory clearing failed.');
+  }
+}
+
+/**
+ * 📊 Logs the memory size for analysis.
+ */
+export function logMemoryStats(memory, user_id = 'system', chatroom_id = 'global') {
+  const memorySizeMB = formatSize(memory);
+  logInfo(`📊 Memory usage: ${memorySizeMB}`, user_id, chatroom_id);
+}
+
+/**
+ * 📏 Calculates compression percentage.
  */
 function calculateCompressionRate(original, compressed) {
   const originalSize = Buffer.byteLength(original, 'utf-8');
@@ -122,30 +115,9 @@ function calculateCompressionRate(original, compressed) {
 }
 
 /**
- * Clears memory data securely.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- * @returns {string} - Confirmation message.
+ * 📐 Formats byte size into MB for logging.
  */
-export function clearMemory(user_id = null, chatroom_id = null) {
-  try {
-    logInfo('Clearing memory...', user_id, chatroom_id);
-    global.memoryData = "";  // Simulate clearing in-memory data
-    logInfo('Memory cleared.', user_id, chatroom_id);
-    return 'Memory cleared successfully.';
-  } catch (error) {
-    logError(`Memory clearing failed: ${error.message}`, user_id, chatroom_id);
-    throw new Error('Failed to clear memory.');
-  }
-}
-
-/**
- * Logs memory size statistics.
- * @param {string} memory - Memory data.
- * @param {string} user_id - User identifier.
- * @param {string} chatroom_id - Chatroom identifier.
- */
-export function logMemoryStats(memory, user_id = null, chatroom_id = null) {
-  const memorySizeMB = (Buffer.byteLength(memory, 'utf-8') / (1024 * 1024)).toFixed(2);
-  logInfo(`Memory usage: ${memorySizeMB} MB`, user_id, chatroom_id);
+function formatSize(data) {
+  const sizeMB = (Buffer.byteLength(data, 'utf-8') / (1024 * 1024)).toFixed(2);
+  return `${sizeMB} MB`;
 }

@@ -24,11 +24,5 @@
     { "src": "/api/tasks/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
 
     { "src": "/api/session/init", "dest": "/api/session.js" }
-  ],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "SUPABASE_KEY": "@supabase_key",
-    "SESSION_SECRET": "@session_secret",
-    "API_BASE_URL": "https://hydra-flow.vercel.app/api"
-  }
+  ]
 }

@@ -13,7 +13,7 @@ import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";
 import { logIssue } from "../../api/debug.js";
-import { v4 as uuidv4 } from 'uuid';  // UUID for consistent ID handling
+import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
@@ -23,13 +23,10 @@ import { createSession, setSessionContext } from '../../lib/supabaseClient.js';
  * Orchestrates the entire context workflow.
  * Handles memory updates, task execution, and response generation.
  */
-export const orchestrateContextWorkflow = async ({
+export const orchestrateContextWorkflow = async (req, {
   query,
   memory,
   feedback,
-  user_id,
-  req,
-  chatroom_id,
   tokenCount = 0,
 }) => {
   try {
@@ -158,7 +155,6 @@ export const orchestrateContextWorkflow = async ({
       };
     }
 
-    // === Return Workflow Results ===
     return {
       status: "context_updated",
       context,
@@ -170,8 +166,8 @@ export const orchestrateContextWorkflow = async ({
     console.error("Error in orchestrateContextWorkflow:", error);
 
     await logIssue({
-      userId: user_id,
-      contextId: chatroom_id,
+      userId: req.userId,
+      contextId: req.chatroomId,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });

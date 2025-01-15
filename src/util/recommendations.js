@@ -1,10 +1,15 @@
 //src/util/recommendations.js
 import { logInfo } from './logger.js';
 
+// 🔧 Configurable system thresholds
+const TOKEN_USAGE_CRITICAL = process.env.TOKEN_USAGE_CRITICAL || 85;
+const TOKEN_USAGE_WARNING = process.env.TOKEN_USAGE_WARNING || 70;
+const LATENCY_THRESHOLD = process.env.LATENCY_THRESHOLD || 1.5;
+const MEMORY_THRESHOLD_MB = process.env.MEMORY_THRESHOLD_MB || 1024;
+const CPU_LOAD_THRESHOLD = process.env.CPU_LOAD_THRESHOLD || 1.5;
+
 /**
- * Generates context-aware system optimization recommendations.
- * @param {object} metrics - System metrics including user context.
- * @returns {Array} - List of actionable recommendations.
+ * 📊 Generates context-aware system optimization recommendations.
  */
 export function generateRecommendations(metrics) {
   const { 
@@ -19,40 +24,62 @@ export function generateRecommendations(metrics) {
 
   const recommendations = [];
 
-  // 🔒 Log the context for traceability
-  logInfo(`Generating recommendations for user: ${user_id}, chatroom: ${chatroom_id}`);
+  // 🔒 Log context for traceability
+  logInfo(`📊 Generating recommendations for user: ${user_id}, chatroom: ${chatroom_id}`);
 
   // 🚀 Token usage optimization
-  if (tokenUsagePercentage > 85) {
-    recommendations.push("🔄 **Compress memory** or **limit responses** to reduce token usage.");
-  } else if (tokenUsagePercentage > 70) {
-    recommendations.push("⚠️ Monitor token usage and consider streamlining workflows.");
+  if (tokenUsagePercentage > TOKEN_USAGE_CRITICAL) {
+    recommendations.push({
+      priority: 1,
+      suggestion: "🔄 **Compress memory** or **limit responses** to reduce token usage."
+    });
+  } else if (tokenUsagePercentage > TOKEN_USAGE_WARNING) {
+    recommendations.push({
+      priority: 2,
+      suggestion: "⚠️ Monitor token usage and consider streamlining workflows."
+    });
   }
 
   // ⏳ Response latency improvements
-  if (averageLatency > 1.5) {
-    recommendations.push("🚀 **Simplify responses** or **prioritize tasks** to improve response latency.");
+  if (averageLatency > LATENCY_THRESHOLD) {
+    recommendations.push({
+      priority: 1,
+      suggestion: "🚀 **Simplify responses** or **prioritize tasks** to improve response latency."
+    });
   }
 
   // 🧠 Subpersona utilization
   if (activeSubpersonasCount < 3) {
-    recommendations.push("🧩 Activate more subpersonas to balance workload and improve task efficiency.");
+    recommendations.push({
+      priority: 3,
+      suggestion: "🧩 Activate more subpersonas to balance workload and improve task efficiency."
+    });
   }
 
   // 💾 Memory management
-  if (memoryUsageMB > 1024) {
-    recommendations.push("🗜️ High memory usage detected. **Compress memory** to optimize performance.");
+  if (memoryUsageMB > MEMORY_THRESHOLD_MB) {
+    recommendations.push({
+      priority: 1,
+      suggestion: "🗜️ High memory usage detected. **Compress memory** to optimize performance."
+    });
   }
 
   // 🖥️ CPU load management
-  if (cpuLoad > 1.5) {
-    recommendations.push("⚙️ **Prioritize critical tasks** due to high CPU load.");
+  if (cpuLoad > CPU_LOAD_THRESHOLD) {
+    recommendations.push({
+      priority: 1,
+      suggestion: "⚙️ **Prioritize critical tasks** due to high CPU load."
+    });
   }
 
-  // ✅ If no critical issues are found
+  // ✅ If no critical issues are detected
   if (recommendations.length === 0) {
-    recommendations.push("✅ System is running optimally. No immediate actions required.");
+    recommendations.push({
+      priority: 4,
+      suggestion: "✅ System is running optimally. No immediate actions required."
+    });
   }
 
-  return recommendations;
+  // 🔢 Sort recommendations by priority
+  return recommendations.sort((a, b) => a.priority - b.priority).map(r => r.suggestion);
 }

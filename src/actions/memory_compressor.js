@@ -1,8 +1,9 @@
 // src/actions/memory_compressor.js
 import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabaseClient.js';
+import zlib from 'zlib';
 
 /**
- * ✅ Compress memory by reducing whitespace and redundant punctuation.
+ * ✅ Compress memory using zlib for efficient storage.
  * @param {string} memory - The memory data to compress.
  * @returns {Object} - Compressed memory, original length, and compression ratio.
  */
@@ -13,21 +14,28 @@ export function compressMemory(memory) {
 
   const originalLength = memory.length;
 
-  // 🔍 Compression logic: remove extra spaces and repeated punctuation
-  const compressedMemory = memory.replace(/\s+/g, ' ').replace(/([.,!?])\1+/g, '$1');
-  const compressionRatio = ((1 - (compressedMemory.length / originalLength)) * 100).toFixed(2);
+  try {
+    // 🗜️ Use zlib to compress memory efficiently
+    const compressedBuffer = zlib.gzipSync(memory);
+    const compressedMemory = compressedBuffer.toString('base64');
+    const compressionRatio = ((1 - (compressedMemory.length / originalLength)) * 100).toFixed(2);
 
-  console.log(`🗜️ Memory compressed by ${compressionRatio}%`);
+    console.log(`🗜️ Memory compressed by ${compressionRatio}%`);
 
-  return {
-    compressedMemory,
-    originalLength,
-    compressionRatio: `${compressionRatio}%`
-  };
+    return {
+      compressedMemory,
+      originalLength,
+      compressionRatio: `${compressionRatio}%`
+    };
+
+  } catch (error) {
+    console.error(`❌ Compression failed: ${error.message}`);
+    throw new Error('Failed to compress memory.');
+  }
 }
 
 /**
- * ✅ Store compressed memory in the 'memory_state' table with proper session context.
+ * ✅ Store compressed memory in the 'memories' table with proper session context.
  * @param {string} userId - UUID of the user.
  * @param {string} chatroomId - UUID of the chatroom.
  * @param {string} compressedMemory - The compressed memory data to store.
@@ -42,14 +50,16 @@ export async function storeCompressedMemory(userId, chatroomId, compressedMemory
     // 🔐 Set Supabase session context to enforce RLS policies
     await setSessionContext(userId, chatroomId);
 
-    // 📦 Insert the compressed memory into the database
+    // 📦 Insert the compressed memory into the correct 'memories' table
     const { data, error } = await supabaseRequest(() =>
-      supabase.from('memory_state').insert([{
-        user_id: userId,
-        chatroom_id: chatroomId,
-        memory: compressedMemory,
-        updated_at: new Date().toISOString()
-      }])
+      supabase.from('memories').upsert([  // ✅ Changed to 'memories' and used upsert for updates
+        {
+          user_id: userId,
+          chatroom_id: chatroomId,
+          memory: compressedMemory,
+          updated_at: new Date().toISOString()
+        }
+      ], { onConflict: ['user_id', 'chatroom_id'] })  // ✅ Prevents duplicate entries
     );
 
     if (error) {

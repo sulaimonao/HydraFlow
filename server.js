@@ -2,6 +2,8 @@
 import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
+import supabase, { supabaseRequest } from './lib/supabaseClient.js';
 import feedbackRoutes from './routes/feedback_collector.js';
 import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
@@ -11,19 +13,53 @@ import { initializeUserContext } from './middleware/authMiddleware.js';
 import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
-import supabase, { supabaseRequest } from './lib/supabaseClient.js';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// 🔒 Session Management Middleware
+// 🔒 Enhanced Session Management Middleware
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: process.env.SESSION_SECRET,  // Stored securely in .env
     resave: false,
     saveUninitialized: true,
   })
 );
+
+// 🌐 Middleware to initialize user and chatroom sessions in Supabase
+app.use(async (req, res, next) => {
+  try {
+    if (!req.session.userId || !req.session.chatroomId) {
+      const userId = uuidv4();
+      const chatroomId = uuidv4();
+
+      // Store in session
+      req.session.userId = userId;
+      req.session.chatroomId = chatroomId;
+
+      // Insert session into Supabase for tracking
+      const { error } = await supabase
+        .from('user-sessions')
+        .insert([{ user_id: userId, chatroom_id: chatroomId }]);
+
+      if (error) {
+        console.error('❌ Error creating user session in Supabase:', error);
+      } else {
+        console.log(`✅ User session created: userId=${userId}, chatroomId=${chatroomId}`);
+      }
+    }
+
+    req.userId = req.session.userId;
+    req.chatroomId = req.session.chatroomId;
+
+    next();
+  } catch (error) {
+    console.error("❌ Error initializing session:", error);
+    res.status(500).json({ error: "Failed to initialize session." });
+  }
+});
 
 // 🌐 Apply Middleware for User Context and Metrics
 app.use(initializeUserContext);

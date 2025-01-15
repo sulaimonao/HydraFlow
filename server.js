@@ -35,13 +35,11 @@ app.use(async (req, res, next) => {
       const userId = uuidv4();
       const chatroomId = uuidv4();
 
-      // Store in session
       req.session.userId = userId;
       req.session.chatroomId = chatroomId;
 
-      // Insert session into Supabase for tracking
       const { error } = await supabase
-        .from('user-sessions')
+        .from('user_sessions')
         .insert([{ user_id: userId, chatroom_id: chatroomId }]);
 
       if (error) {

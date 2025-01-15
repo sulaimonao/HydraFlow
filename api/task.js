@@ -10,7 +10,7 @@ export async function addTaskDependency(req, res) {
     const { query } = req.body;
 
     // ✅ Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -59,7 +59,7 @@ export async function getTaskDependencies(req, res) {
     const { query } = req.body;
 
     // ✅ Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -95,7 +95,7 @@ export async function getTaskCard(req, res) {
     const { query } = req.body;
 
     // ✅ Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

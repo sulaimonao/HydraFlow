@@ -11,7 +11,7 @@ export async function handleActions(actions, context) {
   const feedback = [];
 
   // Retrieve consistent user and chatroom IDs
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query: context.query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: context.query });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   // Enforce session context for Supabase

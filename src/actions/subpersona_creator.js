@@ -29,7 +29,7 @@ const validateIds = (user_id, chatroom_id) => {
 async function createSubpersonaFromTemplate(templateName, query) {
   try {
     // 🔒 Retrieve persistent IDs from the workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     validateIds(user_id, chatroom_id);
@@ -119,7 +119,7 @@ function listActiveSubpersonas() {
 // 🛠️ Creates a custom subpersona with enforced IDs
 export async function createSubpersona(query, name, capabilities, preferences) {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     validateIds(user_id, chatroom_id);

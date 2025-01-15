@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const { query, history, compressedMemory, additionalNotes } = req.body;
 
     // 🌐 Retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

@@ -11,7 +11,7 @@ const INITIAL_COMPRESSION_THRESHOLD = 10;
  * Checks if a head/subpersona should be created based on action items.
  */
 const shouldCreateHead = async (actionItems, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   return actionItems.includes("create head");
@@ -21,7 +21,7 @@ const shouldCreateHead = async (actionItems, query) => {
  * Checks if logs need to be summarized.
  */
 const shouldSummarizeLogs = async (actionItems, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   return actionItems.includes("summarize logs");
@@ -31,7 +31,7 @@ const shouldSummarizeLogs = async (actionItems, query) => {
  * Determines if memory compression is necessary.
  */
 const shouldCompress = async (actionItems, conversationLength, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   const contextPriority = currentContext.priority || "Normal";
@@ -48,7 +48,7 @@ const shouldCompress = async (actionItems, conversationLength, query) => {
  * Determines if a context recap is required based on conversation length and engagement.
  */
 const needsContextRecap = async (conversationLength, userEngagement, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   const contextGoal = currentContext.goal || "General";
@@ -67,7 +67,7 @@ const needsContextRecap = async (conversationLength, userEngagement, query) => {
  * Checks if a task has any pending dependencies.
  */
 const hasPendingDependencies = async (taskId, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   const taskCard = await getTaskCard(taskId, user_id, chatroom_id);

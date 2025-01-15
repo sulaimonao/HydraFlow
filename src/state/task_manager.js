@@ -8,7 +8,7 @@ import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 export const createTaskCard = async (query, goal, subtasks) => {
   try {
     // Retrieve consistent user_id and chatroom_id
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement
@@ -44,7 +44,7 @@ export const createTaskCard = async (query, goal, subtasks) => {
  */
 export const getTaskCard = async (query, taskId) => {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     await setSessionContext(user_id, chatroom_id);
@@ -70,7 +70,7 @@ export const getTaskCard = async (query, taskId) => {
  */
 export async function addDependency(query, taskId, dependencyId) {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     await setSessionContext(user_id, chatroom_id);
@@ -97,7 +97,7 @@ export async function addDependency(query, taskId, dependencyId) {
  */
 export const updateTaskStatus = async (query, taskId, status) => {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     await setSessionContext(user_id, chatroom_id);

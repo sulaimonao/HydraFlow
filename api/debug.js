@@ -37,7 +37,7 @@ export async function logIssue({ userId, contextId, issue, resolution }) {
 
 export async function fetchDebugLogs(contextId) {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({});  // 🌐 Retrieve persistent IDs
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({req});  // 🌐 Retrieve persistent IDs
     const persistentUserId = generatedIdentifiers.user_id;
     const persistentChatroomId = generatedIdentifiers.chatroom_id;
 
@@ -65,7 +65,7 @@ router.post('/debug/log', async (req, res) => {
     const { query, issue, resolution } = req.body;
 
     // 🌐 Retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

@@ -13,7 +13,7 @@ const handleCreateSubpersona = async (req, res) => {
     }
 
     // 🌐 Use workflow-generated IDs if not provided
-    const workflowContext = await orchestrateContextWorkflow({});
+    const workflowContext = await orchestrateContextWorkflow({req});
     const persistentUserId = user_id || workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = chatroom_id || workflowContext.generatedIdentifiers.chatroom_id;
 

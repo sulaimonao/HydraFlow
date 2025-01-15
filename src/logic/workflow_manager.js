@@ -28,6 +28,7 @@ export const orchestrateContextWorkflow = async ({
   memory,
   feedback,
   user_id,
+  req,
   chatroom_id,
   tokenCount = 0,
 }) => {

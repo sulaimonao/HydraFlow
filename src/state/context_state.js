@@ -52,7 +52,7 @@ export function logContextUpdate(newData) {
 
 // Enhanced context update with persistent IDs
 export async function updateContext(newData) {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query: 'update context' });
+  const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: 'update context' });
   const { user_id, chatroom_id } = generatedIdentifiers;
 
   if (!currentContext || currentContext.user_id !== user_id || currentContext.chatroom_id !== chatroom_id) {

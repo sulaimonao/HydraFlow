@@ -13,7 +13,7 @@ export default async (req, res) => {
     }
 
     // 🌐 Always retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query, memory, feedback });
+    const workflowContext = await orchestrateContextWorkflow({ query, memory, feedback, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -48,6 +48,7 @@ export default async (req, res) => {
           query,
           memory,
           feedback,
+          req,
           user_id: persistentUserId,
           chatroom_id: persistentChatroomId
         });

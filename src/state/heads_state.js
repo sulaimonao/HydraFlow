@@ -8,7 +8,7 @@ import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 export async function addHead(name, status, query) {
   try {
     // Retrieve consistent user_id and chatroom_id from the workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement
@@ -44,7 +44,7 @@ export async function addHead(name, status, query) {
 export async function getHeads(query) {
   try {
     // Retrieve consistent user_id and chatroom_id from the workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement

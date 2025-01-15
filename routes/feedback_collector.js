@@ -11,7 +11,7 @@ async function enforceSessionContext(req, res, next) {
   const { query } = req.body;
 
   try {
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = workflowContext.generatedIdentifiers;
 
     if (!user_id || !chatroom_id) {

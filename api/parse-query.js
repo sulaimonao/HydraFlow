@@ -51,6 +51,7 @@ export default async (req, res) => {
     // Predictive analysis and workflow orchestration
     const workflowPlan = await orchestrateContextWorkflow({
       query,
+      req,
       existingTasks: existingTaskCards,
       proposedTasks: taskCard.subtasks,
     });

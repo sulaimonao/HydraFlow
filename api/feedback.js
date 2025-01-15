@@ -27,7 +27,7 @@ export default async function handler(req, res) {
 async function submitFeedback(req, res) {
   const { query, chatroom_id, responseNumber, userFeedback, rating } = req.body;
 
-  const workflowContext = await orchestrateContextWorkflow({ query });
+  const workflowContext = await orchestrateContextWorkflow({ query, req });
   const persistentUserId = workflowContext.generatedIdentifiers.user_id;
   const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

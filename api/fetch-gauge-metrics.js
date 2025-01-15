@@ -6,7 +6,7 @@ import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 export default async function handler(req, res) {
   try {
     const { query } = req.body;
-    const workflowContext = await orchestrateContextWorkflow({ query });
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

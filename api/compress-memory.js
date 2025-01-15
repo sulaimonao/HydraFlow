@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const { query, memory, gaugeMetrics } = req.body;
 
     // 🌐 Retrieve persistent user and chatroom IDs
-    const workflowContext = await orchestrateContextWorkflow({ query, memory });
+    const workflowContext = await orchestrateContextWorkflow({ query, memory, req });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

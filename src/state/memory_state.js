@@ -10,7 +10,7 @@ let memory = "";
 export async function appendMemory(newMemory, query) {
   try {
     // Retrieve consistent user_id and chatroom_id from workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query,req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement
@@ -41,7 +41,7 @@ export async function appendMemory(newMemory, query) {
 export async function storeProjectData(query, projectData) {
   try {
     // Retrieve consistent user_id and chatroom_id from workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement
@@ -70,7 +70,7 @@ export async function storeProjectData(query, projectData) {
 export async function getMemory(query) {
   try {
     // Retrieve consistent user_id and chatroom_id from workflow manager
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     // Set session context for Supabase RLS enforcement

@@ -9,17 +9,15 @@ import { setSessionContext } from '../lib/supabaseClient.js';
 export const initializeUserContext = async (req, res, next) => {
   try {
     // 🔍 Validate existing or generate new userId
-    let userId = req.headers['x-user-id'] || req.body.user_id || req.session?.userId;
+    let userId = req.session?.userId || req.userId;
     if (!validateUUID(userId)) {
-      userId = uuidv4();
-      console.warn("⚠️ Invalid or missing user_id. Generated a new one:", userId);
-    }
+      return res.status(400).json({ error: "Invalid user_id. Session not initialized properly." });
+    }    
 
     // 🔍 Validate existing or generate new chatroomId
-    let chatroomId = req.headers['x-chatroom-id'] || req.body.chatroom_id || req.session?.chatroomId;
+    let chatroomId = req.session?.chatroomId || req.chatroomId;
     if (!validateUUID(chatroomId)) {
-      chatroomId = uuidv4();
-      console.warn("⚠️ Invalid or missing chatroom_id. Generated a new one:", chatroomId);
+      return res.status(400).json({ error: "Invalid chatroom_id. Session not initialized properly." });
     }
 
     // 📝 Persist IDs in session

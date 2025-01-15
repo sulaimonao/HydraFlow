@@ -1,14 +1,19 @@
 // test-workflow.js
+// 🚀 Test Workflow Execution with Persistent Session
+import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 
-import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
 // ✅ Replace with your deployed URL
 const BASE_URL = 'https://hydra-flow.vercel.app/api';
 
 // 🔒 Persistent session IDs for the entire test run
-const persistentUserId = uuidv4();
-const persistentChatroomId = uuidv4();
+const persistentUserId = req.userId;
+const persistentChatroomId = req.chatroomId;
+
+if (!validateUUID(persistentUserId) || !validateUUID(persistentChatroomId)) {
+  throw new Error("Invalid session IDs for user or chatroom.");
+}
 
 /**
  * Logs the result of each test case

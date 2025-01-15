@@ -13,21 +13,13 @@ export function initializeSession(req, res, next) {
   }
 
   // === 🔍 Validate or Generate User ID ===
-  let user_id = req.headers['x-user-id'] || req.body.user_id || req.session.user_id;
-  if (!user_id || !validateUUID(user_id)) {
-    user_id = uuidv4();
-    console.log(`🆕 Generated new user_id: ${user_id}`);
-  }
-  req.session.user_id = user_id;
-  req.userId = user_id;
-  res.locals.user_id = user_id;  // ✅ Attach to response for middleware access
+  let user_id = req.session?.userId || req.userId;
+  let chatroom_id = req.session?.chatroomId || req.chatroomId;
 
-  // === 🔍 Validate or Generate Chatroom ID ===
-  let chatroom_id = req.headers['x-chatroom-id'] || req.body.chatroom_id || req.session.chatroom_id;
-  if (!chatroom_id || !validateUUID(chatroom_id)) {
-    chatroom_id = uuidv4();
-    console.log(`🆕 Generated new chatroom_id: ${chatroom_id}`);
+  if (!validateUUID(user_id) || !validateUUID(chatroom_id)) {
+    return res.status(400).json({ error: "Invalid session IDs for user or chatroom." });
   }
+
   req.session.chatroom_id = chatroom_id;
   req.chatroomId = chatroom_id;
   res.locals.chatroom_id = chatroom_id;  // ✅ Attach to response for middleware access

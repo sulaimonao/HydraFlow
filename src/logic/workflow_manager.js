@@ -36,8 +36,12 @@ export const orchestrateContextWorkflow = async ({
     const updatedContext = {};
 
     // === System-Wide UUID Enforcement ===
-    const generatedUserId = user_id || uuidv4();      // Generate UUID if missing
-    const generatedChatroomId = chatroom_id || uuidv4();
+    const generatedUserId = req.userId;
+    const generatedChatroomId = req.chatroomId;
+
+    if (!validateUUID(generatedUserId) || !validateUUID(generatedChatroomId)) {
+      throw new Error("Invalid session IDs for user or chatroom.");
+    }
 
     response.generatedIdentifiers = {
       user_id: generatedUserId,

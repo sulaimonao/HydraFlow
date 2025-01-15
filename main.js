@@ -2,7 +2,6 @@
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
-import { v4 as uuidv4 } from 'uuid';
 import { createSession, setSessionContext } from './lib/supabaseClient.js';
 
 dotenv.config();
@@ -68,8 +67,12 @@ app.post("/api/autonomous", async (req, res) => {
     }
 
     // 🚀 Step 1: Initialize session with unique user_id and chatroom_id
-    const user_id = uuidv4();
-    const chatroom_id = uuidv4();
+    const user_id = req.userId;
+    const chatroom_id = req.chatroomId;
+
+    if (!validateUUID(user_id) || !validateUUID(chatroom_id)) {
+      throw new Error("Invalid session IDs for user or chatroom.");
+    }
 
     console.log(`🔎 Initializing session: user_id=${user_id}, chatroom_id=${chatroom_id}`);
 

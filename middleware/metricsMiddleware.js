@@ -12,17 +12,11 @@ import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 export const appendGaugeMetrics = async (req, res, next) => {
   try {
     // === 🔒 Validate or Generate User and Chatroom IDs ===
-    let user_id = req.body.user_id || req.headers['x-user-id'] || uuidv4();
-    let chatroom_id = req.body.chatroom_id || req.headers['x-chatroom-id'] || uuidv4();
+    let user_id = req.session?.userId || req.userId;
+    let chatroom_id = req.session?.chatroomId || req.chatroomId;
 
-    // Validate UUIDs
-    if (!validateUUID(user_id)) {
-      console.warn("⚠️ Invalid user_id detected. Generating a new one.");
-      user_id = uuidv4();
-    }
-    if (!validateUUID(chatroom_id)) {
-      console.warn("⚠️ Invalid chatroom_id detected. Generating a new one.");
-      chatroom_id = uuidv4();
+    if (!validateUUID(user_id) || !validateUUID(chatroom_id)) {
+      return res.status(400).json({ error: "Invalid session IDs for user or chatroom." });
     }
 
     // 🔐 Set Supabase session context for RLS policies

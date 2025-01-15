@@ -3,17 +3,22 @@ import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabase
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 
 /**
- * Creates a new task card with subtasks.
+ * ✅ Creates a new task card with subtasks and stores it in the database.
+ * @param {Object} req - Request object for session tracking.
+ * @param {string} query - User query.
+ * @param {string} goal - Task goal/description.
+ * @param {Array<string>} subtasks - List of subtasks.
  */
-export const createTaskCard = async (query, goal, subtasks) => {
+export const createTaskCard = async (req, query, goal, subtasks) => {
   try {
-    // Retrieve consistent user_id and chatroom_id
+    // 🌐 Retrieve persistent user and chatroom IDs
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
-    // Set session context for Supabase RLS enforcement
+    // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
 
+    // 📦 Prepare the task card
     const taskCard = {
       goal,
       priority: "High",
@@ -27,22 +32,28 @@ export const createTaskCard = async (query, goal, subtasks) => {
       createdAt: new Date().toISOString(),
     };
 
+    // 🚀 Insert the task card using upsert to avoid duplication
     const { data, error } = await supabaseRequest(
-      supabase.from('task_cards').insert([taskCard])
+      supabase.from('task_cards').upsert([taskCard], { onConflict: ['user_id', 'chatroom_id', 'goal'] })
     );
 
     if (error) throw new Error(`Error creating task card: ${error.message}`);
+    
+    console.log(`✅ Task card created for user: ${user_id}, chatroom: ${chatroom_id}`);
     return data[0];
   } catch (error) {
-    console.error('Error creating task card:', error);
+    console.error('❌ Error creating task card:', error);
     throw error;
   }
 };
 
 /**
- * Fetches a specific task card.
+ * ✅ Fetches a specific task card by ID.
+ * @param {Object} req - Request object for session tracking.
+ * @param {string} query - User query.
+ * @param {string} taskId - Task card ID.
  */
-export const getTaskCard = async (query, taskId) => {
+export const getTaskCard = async (req, query, taskId) => {
   try {
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
@@ -58,17 +69,22 @@ export const getTaskCard = async (query, taskId) => {
     );
 
     if (error) throw new Error(`Error fetching task card: ${error.message}`);
+    console.log(`📥 Task card fetched for user: ${user_id}, task ID: ${taskId}`);
     return data[0];
   } catch (error) {
-    console.error('Error in getTaskCard:', error);
+    console.error('❌ Error in getTaskCard:', error);
     throw error;
   }
 };
 
 /**
- * Adds a dependency between two tasks.
+ * ✅ Adds a dependency between two tasks.
+ * @param {Object} req - Request object for session tracking.
+ * @param {string} query - User query.
+ * @param {string} taskId - The main task ID.
+ * @param {string} dependencyId - The dependent task ID.
  */
-export async function addDependency(query, taskId, dependencyId) {
+export async function addDependency(req, query, taskId, dependencyId) {
   try {
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
@@ -85,17 +101,22 @@ export async function addDependency(query, taskId, dependencyId) {
     );
 
     if (error) throw new Error(`Error adding dependency: ${error.message}`);
+    console.log(`🔗 Dependency added: ${taskId} depends on ${dependencyId}`);
     return data;
   } catch (error) {
-    console.error("Error in addDependency:", error);
+    console.error("❌ Error in addDependency:", error);
     throw error;
   }
 }
 
 /**
- * Updates the status of a subtask.
+ * ✅ Updates the status of a subtask.
+ * @param {Object} req - Request object for session tracking.
+ * @param {string} query - User query.
+ * @param {string} taskId - Subtask ID.
+ * @param {string} status - New status (pending, in_progress, completed).
  */
-export const updateTaskStatus = async (query, taskId, status) => {
+export const updateTaskStatus = async (req, query, taskId, status) => {
   try {
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
@@ -110,29 +131,34 @@ export const updateTaskStatus = async (query, taskId, status) => {
         .eq('user_id', user_id)
         .eq('chatroom_id', chatroom_id)
     );
+
+    console.log(`🔄 Task status updated: Task ID ${taskId} → ${status}`);
   } catch (error) {
-    console.error('Error updating task status:', error);
+    console.error('❌ Error updating task status:', error);
     throw error;
   }
 };
 
 /**
- * Limits the number of responses to avoid overflow.
+ * ✅ Limits responses to avoid overload.
+ * @param {Array} responses - Array of response objects.
+ * @param {number} maxLimit - Maximum number of responses to return.
  */
 export const limitResponses = (responses, maxLimit = 5) => {
   if (!Array.isArray(responses)) {
-    console.warn("Invalid input: responses should be an array.");
+    console.warn("⚠️ Invalid input: responses should be an array.");
     return [];
   }
   return responses.slice(0, maxLimit);
 };
 
 /**
- * Prioritizes tasks based on their status and priority.
+ * ✅ Prioritizes tasks based on status and priority.
+ * @param {Array} tasks - Array of task objects.
  */
 export const prioritizeTasks = (tasks) => {
   if (!Array.isArray(tasks)) {
-    console.warn("Invalid input: tasks should be an array.");
+    console.warn("⚠️ Invalid input: tasks should be an array.");
     return [];
   }
 
@@ -148,11 +174,12 @@ export const prioritizeTasks = (tasks) => {
 };
 
 /**
- * Simplifies response objects by removing unnecessary properties.
+ * ✅ Simplifies response objects for cleaner output.
+ * @param {Array} responses - Array of responses.
  */
 export const simplifyResponses = (responses) => {
   if (!Array.isArray(responses)) {
-    console.warn("Invalid input: responses should be an array.");
+    console.warn("⚠️ Invalid input: responses should be an array.");
     return [];
   }
 

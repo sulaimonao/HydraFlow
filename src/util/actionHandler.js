@@ -5,46 +5,65 @@ import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 import { setSessionContext } from '../../lib/supabaseClient.js';
 
 /**
- * Handles dynamic actions by ensuring consistent ID usage and optimized task execution.
+ * 🚀 Handles dynamic actions with session enforcement and optimized execution.
+ * @param {Array<string>} actions - List of actions to execute.
+ * @param {Object} context - Context object containing relevant data.
+ * @param {Object} req - Request object for consistent session handling.
+ * @returns {Array<string>} - Feedback on executed actions.
  */
-export async function handleActions(actions, context) {
+export async function handleActions(actions, context, req) {
   const feedback = [];
 
-  // Retrieve consistent user and chatroom IDs
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: context.query });
-  const { user_id, chatroom_id } = generatedIdentifiers;
+  try {
+    // 🌐 Retrieve persistent user and chatroom IDs
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: context.query });
+    const { user_id, chatroom_id } = generatedIdentifiers;
 
-  // Enforce session context for Supabase
-  await setSessionContext(user_id, chatroom_id);
+    // 🔒 Set session context for RLS enforcement
+    await setSessionContext(user_id, chatroom_id);
 
-  for (const action of actions) {
-    switch (action) {
-      case 'compressMemory':
-        const compressedMemory = compressMemory(context.memory);
-        await storeCompressedMemory(user_id, chatroom_id, compressedMemory.compressedMemory);
-        feedback.push("Memory usage is high. Optimizing memory for better performance.");
-        break;
+    for (const action of actions) {
+      try {
+        switch (action) {
+          case 'compressMemory':
+            const compressedMemory = compressMemory(context.memory);
+            await storeCompressedMemory(user_id, chatroom_id, compressedMemory.compressedMemory);
+            console.log("🗜️ Memory compressed and stored.");
+            feedback.push("Memory usage is high. Optimizing memory for better performance.");
+            break;
 
-      case 'prioritizeTasks':
-        await prioritizeTasks(context.tasks);  // Assuming tasks are passed in context
-        feedback.push("System load is high. Prioritizing high-importance tasks.");
-        break;
+          case 'prioritizeTasks':
+            prioritizeTasks(context.tasks);  // No need for await as it's synchronous
+            console.log("📋 Tasks prioritized.");
+            feedback.push("System load is high. Prioritizing high-importance tasks.");
+            break;
 
-      case 'limitResponses':
-        await limitResponses(context.responses);  // Assuming responses are passed in context
-        feedback.push("Token usage is high. Limiting responses to manage resources efficiently.");
-        break;
+          case 'limitResponses':
+            limitResponses(context.responses);
+            console.log("📉 Responses limited to manage resources.");
+            feedback.push("Token usage is high. Limiting responses to manage resources efficiently.");
+            break;
 
-      case 'simplifyResponses':
-        await simplifyResponses(context.responses);  // Assuming responses are passed in context
-        feedback.push("Performance issues detected. Streamlining responses for faster processing.");
-        break;
+          case 'simplifyResponses':
+            simplifyResponses(context.responses);
+            console.log("🔎 Responses simplified for faster processing.");
+            feedback.push("Performance issues detected. Streamlining responses for faster processing.");
+            break;
 
-      default:
-        console.warn(`⚠️ Unrecognized action: ${action}`);
-        feedback.push(`Unrecognized action: ${action}`);
-        break;
+          default:
+            console.warn(`⚠️ Unrecognized action: ${action}`);
+            feedback.push(`Unrecognized action: ${action}`);
+            break;
+        }
+      } catch (actionError) {
+        console.error(`❌ Error executing action '${action}':`, actionError.message);
+        feedback.push(`Error executing action '${action}': ${actionError.message}`);
+      }
     }
+
+  } catch (workflowError) {
+    console.error("❌ Error in handleActions workflow:", workflowError.message);
+    feedback.push(`Error in handling actions: ${workflowError.message}`);
   }
 
   return feedback;

@@ -2,20 +2,33 @@
 
 import { calculateMetrics } from "../src/util/metrics.js";
 import { generateRecommendations } from "../src/util/recommendations.js";
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
-import { v4 as uuidv4 } from 'uuid';  // Import UUID for consistent ID generation
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
+import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 
 /**
  * Middleware to append gauge metrics to responses.
- * Calculates and attaches performance metrics, token usage, and recommendations.
+ * Calculates token usage, performance metrics, and provides recommendations.
  */
 export const appendGaugeMetrics = async (req, res, next) => {
   try {
-    /**
-     * === Token Usage Retrieval ===
-     * Dynamically fetch token usage from the latest gauge_metrics record
-     * or fallback to default values if not available.
-     */
+    // === 🔒 Validate or Generate User and Chatroom IDs ===
+    let user_id = req.body.user_id || req.headers['x-user-id'] || uuidv4();
+    let chatroom_id = req.body.chatroom_id || req.headers['x-chatroom-id'] || uuidv4();
+
+    // Validate UUIDs
+    if (!validateUUID(user_id)) {
+      console.warn("⚠️ Invalid user_id detected. Generating a new one.");
+      user_id = uuidv4();
+    }
+    if (!validateUUID(chatroom_id)) {
+      console.warn("⚠️ Invalid chatroom_id detected. Generating a new one.");
+      chatroom_id = uuidv4();
+    }
+
+    // 🔐 Set Supabase session context for RLS policies
+    await setSessionContext(user_id, chatroom_id);
+
+    // === 📊 Retrieve Token Usage ===
     let tokenUsage = res.locals.tokenUsage;
 
     if (!tokenUsage) {
@@ -27,30 +40,17 @@ export const appendGaugeMetrics = async (req, res, next) => {
         .single();
 
       if (error || !data) {
-        console.warn("Token usage not found. Using default values.");
-        tokenUsage = { used: 0, total: 10000 };  // Fallback to default values
+        console.warn("⚠️ Token usage not found. Using default values.");
+        tokenUsage = { used: 0, total: 10000 };
       } else {
         tokenUsage = { used: data.token_used, total: data.token_total };
       }
     }
 
-    /**
-     * === Response Latency Handling ===
-     * Use the provided response latency or default to 0.5 seconds.
-     */
-    let responseLatency = res.locals.responseLatency || 0.5;
+    // === ⏱️ Retrieve Response Latency ===
+    const responseLatency = res.locals.responseLatency || 0.5;
 
-    /**
-     * === Ensure User and Chatroom IDs ===
-     * Validate or generate UUIDs for user_id and chatroom_id to ensure proper tracking.
-     */
-    const user_id = req.body.user_id || uuidv4();
-    const chatroom_id = req.body.chatroom_id || uuidv4();
-
-    /**
-     * === Metrics Context Construction ===
-     * Collect relevant metrics context, including token usage and active subpersonas.
-     */
+    // === 📦 Construct Metrics Context ===
     const context = {
       user_id,
       chatroom_id,
@@ -59,16 +59,10 @@ export const appendGaugeMetrics = async (req, res, next) => {
       activeSubpersonas: req.activeSubpersonas || [],
     };
 
-    /**
-     * === Metrics Calculation ===
-     * Compute performance metrics based on the current context.
-     */
+    // === 📈 Calculate Metrics ===
     const metrics = calculateMetrics(context);
 
-    /**
-     * === Attach Metrics to Response ===
-     * Embed calculated metrics and recommendations into the response.
-     */
+    // === 📝 Attach Metrics and Recommendations ===
     res.locals.gaugeMetrics = {
       ...metrics,
       totalSubpersonas: context.activeSubpersonas.length,
@@ -77,29 +71,35 @@ export const appendGaugeMetrics = async (req, res, next) => {
       chatroom_id: context.chatroom_id,
     };
 
-    /**
-     * === Override Response Send ===
-     * Ensure gauge metrics are always included in the final response.
-     */
-    const originalSend = res.send;
-    res.send = function (body) {
-      if (typeof body === 'string') {
-        body = JSON.parse(body);
+    // === 🛠️ Non-intrusive Response Augmentation ===
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+      if (typeof body === 'object') {
+        body.gaugeMetrics = res.locals.gaugeMetrics;
       }
-      body.gaugeMetrics = res.locals.gaugeMetrics;
-      originalSend.call(this, JSON.stringify(body));
+      originalJson(body);
     };
 
-    // Proceed to the next middleware or route handler
     next();
 
   } catch (error) {
-    /**
-     * === Error Handling ===
-     * Log errors and attach an empty gaugeMetrics object to avoid breaking the workflow.
-     */
-    console.error("Error appending gauge metrics:", error);
-    res.locals.gaugeMetrics = {};  // Fallback to empty metrics on failure
+    // === 🚨 Error Handling ===
+    console.error("❌ Error appending gauge metrics:", error);
+
+    // Optional: Log error to Supabase for tracking
+    await supabaseRequest(() =>
+      supabase.from('debug_logs').insert([
+        {
+          user_id: req.userId || "system",
+          context_id: "metricsMiddleware",
+          issue: "Gauge Metrics Error",
+          resolution: error.message,
+          timestamp: new Date().toISOString(),
+        }
+      ])
+    );
+
+    res.locals.gaugeMetrics = {};
     next();
   }
 };

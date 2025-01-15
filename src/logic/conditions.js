@@ -3,36 +3,53 @@ import { currentContext } from "../state/context_state.js";
 import { getTaskCard } from "../state/task_manager.js";
 import { orchestrateContextWorkflow } from "./workflow_manager.js";
 
-// Dynamic thresholds based on context
+// 📊 Dynamic thresholds based on context priority
 const COMPRESSION_THRESHOLD = 20;
 const INITIAL_COMPRESSION_THRESHOLD = 10;
 
 /**
- * Checks if a head/subpersona should be created based on action items.
+ * 🔍 Retrieves session identifiers securely.
+ * @param {string} query - User query for context workflow.
+ * @param {Object} req - HTTP request for session context.
+ * @returns {Object} - Extracted user and chatroom IDs.
  */
-const shouldCreateHead = async (actionItems, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-  const { user_id, chatroom_id } = generatedIdentifiers;
+const getSessionIdentifiers = async (query, req) => {
+  try {
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
+    const { user_id, chatroom_id } = generatedIdentifiers;
 
+    if (!user_id || !chatroom_id) {
+      throw new Error("❗ Missing user_id or chatroom_id.");
+    }
+
+    return { user_id, chatroom_id };
+  } catch (error) {
+    console.error("❌ Error retrieving session identifiers:", error.message);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Checks if a head/subpersona should be created based on action items.
+ */
+const shouldCreateHead = async (actionItems, query, req) => {
+  await getSessionIdentifiers(query, req);
   return actionItems.includes("create head");
 };
 
 /**
- * Checks if logs need to be summarized.
+ * ✅ Checks if logs need to be summarized.
  */
-const shouldSummarizeLogs = async (actionItems, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-  const { user_id, chatroom_id } = generatedIdentifiers;
-
+const shouldSummarizeLogs = async (actionItems, query, req) => {
+  await getSessionIdentifiers(query, req);
   return actionItems.includes("summarize logs");
 };
 
 /**
- * Determines if memory compression is necessary.
+ * ✅ Determines if memory compression is necessary.
  */
-const shouldCompress = async (actionItems, conversationLength, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-  const { user_id, chatroom_id } = generatedIdentifiers;
+const shouldCompress = async (actionItems, conversationLength, query, req) => {
+  await getSessionIdentifiers(query, req);
 
   const contextPriority = currentContext.priority || "Normal";
   const adjustedThreshold =
@@ -45,11 +62,10 @@ const shouldCompress = async (actionItems, conversationLength, query) => {
 };
 
 /**
- * Determines if a context recap is required based on conversation length and engagement.
+ * ✅ Determines if a context recap is required.
  */
-const needsContextRecap = async (conversationLength, userEngagement, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-  const { user_id, chatroom_id } = generatedIdentifiers;
+const needsContextRecap = async (conversationLength, userEngagement, query, req) => {
+  await getSessionIdentifiers(query, req);
 
   const contextGoal = currentContext.goal || "General";
 
@@ -64,11 +80,10 @@ const needsContextRecap = async (conversationLength, userEngagement, query) => {
 };
 
 /**
- * Checks if a task has any pending dependencies.
+ * ✅ Checks if a task has any pending dependencies.
  */
-const hasPendingDependencies = async (taskId, query) => {
-  const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-  const { user_id, chatroom_id } = generatedIdentifiers;
+const hasPendingDependencies = async (taskId, query, req) => {
+  const { user_id, chatroom_id } = await getSessionIdentifiers(query, req);
 
   const taskCard = await getTaskCard(taskId, user_id, chatroom_id);
 

@@ -1,11 +1,14 @@
 {
   "version": 2,
   "builds": [
+    { "src": "server.js", "use": "@vercel/node" },
     { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "main.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/", "dest": "/main.js" },
+    { "src": "/", "dest": "/server.js" },
+
+
     { "src": "/api/parse-query", "dest": "/api/parse-query.js" },
     { "src": "/api/create-subpersona", "dest": "/api/create-subpersona.js" },
     { "src": "/api/compress-memory", "dest": "/api/compress-memory.js" },
@@ -14,8 +17,18 @@
     { "src": "/api/feedback", "dest": "/api/feedback.js" },
     { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics.js" },
     { "src": "/api/recommendations", "dest": "/api/recommendations.js" },
+
+
     { "src": "/api/tasks/dependency", "dest": "/api/task.js", "methods": ["POST"] },
     { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
-    { "src": "/api/tasks/(.*)", "dest": "/api/task.js", "methods": ["GET"] }
-  ]
+    { "src": "/api/tasks/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
+
+    { "src": "/api/session/init", "dest": "/api/session.js" }
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "SUPABASE_KEY": "@supabase_key",
+    "SESSION_SECRET": "@session_secret",
+    "API_BASE_URL": "https://hydra-flow.vercel.app/api"
+  }
 }

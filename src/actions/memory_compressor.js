@@ -1,5 +1,5 @@
 // src/actions/memory_compressor.js
-import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext, createSession } from '../../lib/supabaseClient.js';
 import zlib from 'zlib';
 
 /**
@@ -9,7 +9,7 @@ import zlib from 'zlib';
  */
 export function compressMemory(memory) {
   if (!memory || typeof memory !== 'string') {
-    return { error: 'Invalid memory input. Must be a non-empty string.' };
+    return { error: '❌ Invalid memory input. Must be a non-empty string.' };
   }
 
   const originalLength = memory.length;
@@ -42,24 +42,28 @@ export function compressMemory(memory) {
  */
 export async function storeCompressedMemory(userId, chatroomId, compressedMemory) {
   try {
-    // 🔒 Validate context before proceeding
+    // 🔒 Validate input before proceeding
     if (!userId || !chatroomId) {
-      throw new Error("Missing userId or chatroomId for storing compressed memory.");
+      throw new Error("❌ Missing userId or chatroomId for storing compressed memory.");
     }
+
+    // 🔐 Ensure session exists in the user_sessions table
+    await createSession(userId, chatroomId);
 
     // 🔐 Set Supabase session context to enforce RLS policies
     await setSessionContext(userId, chatroomId);
 
-    // 📦 Insert the compressed memory into the correct 'memories' table
+    // 📦 Insert or update the compressed memory in the 'memories' table
     const { data, error } = await supabaseRequest(() =>
-      supabase.from('memories').upsert([  // ✅ Changed to 'memories' and used upsert for updates
-        {
+      supabase.from('memories').upsert(
+        [{
           user_id: userId,
           chatroom_id: chatroomId,
           memory: compressedMemory,
           updated_at: new Date().toISOString()
-        }
-      ], { onConflict: ['user_id', 'chatroom_id'] })  // ✅ Prevents duplicate entries
+        }],
+        { onConflict: ['user_id', 'chatroom_id'] }  // ✅ Avoid duplicate entries
+      )
     );
 
     if (error) {

@@ -3,7 +3,7 @@ import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
-import supabase, { supabaseRequest } from './lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext, createSession } from './lib/supabaseClient.js';
 import feedbackRoutes from './routes/feedback_collector.js';
 import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
@@ -19,16 +19,16 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// 🔒 Enhanced Session Management Middleware
+// 🔒 Secure Session Management Middleware
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,  // Stored securely in .env
+    secret: process.env.SESSION_SECRET,  // ✅ Securely stored in .env
     resave: false,
     saveUninitialized: true,
   })
 );
 
-// 🌐 Middleware to initialize user and chatroom sessions in Supabase
+// 🌐 Initialize User and Chatroom Sessions in Supabase
 app.use(async (req, res, next) => {
   try {
     if (!req.session.userId || !req.session.chatroomId) {
@@ -38,28 +38,26 @@ app.use(async (req, res, next) => {
       req.session.userId = userId;
       req.session.chatroomId = chatroomId;
 
-      const { error } = await supabase
-        .from('user_sessions')
-        .insert([{ user_id: userId, chatroom_id: chatroomId }]);
+      // ✅ Insert session into user_sessions
+      await createSession(userId, chatroomId);
 
-      if (error) {
-        console.error('❌ Error creating user session in Supabase:', error);
-      } else {
-        console.log(`✅ User session created: userId=${userId}, chatroomId=${chatroomId}`);
-      }
+      console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
     req.userId = req.session.userId;
     req.chatroomId = req.session.chatroomId;
 
+    // 🔒 Set session context for Supabase RLS
+    await setSessionContext(req.userId, req.chatroomId);
+
     next();
   } catch (error) {
-    console.error("❌ Error initializing session:", error);
+    console.error("❌ Session Initialization Error:", error);
     res.status(500).json({ error: "Failed to initialize session." });
   }
 });
 
-// 🌐 Apply Middleware for User Context and Metrics
+// 🌐 Middleware for Context and Metrics
 app.use(initializeUserContext);
 app.use(appendGaugeMetrics);
 
@@ -94,18 +92,13 @@ app.post(
   validateRequest(createSubpersonaSchema),
   async (req, res) => {
     try {
-      const user_id = req.userId || uuidv4();  // Ensure user context
-      const chatroom_id = req.chatroomId || uuidv4();
       const { name, capabilities, preferences } = req.body;
 
-      await createSubpersona(name, user_id, chatroom_id, capabilities, preferences);
+      await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences);
 
       res.status(201).json({ message: "Subpersona created successfully." });
     } catch (error) {
-      if (error.message.includes("RLS")) {
-        return res.status(403).json({ error: "Access denied due to RLS policy. Please check your permissions." });
-      }
-      console.error("Error creating subpersona:", error);
+      console.error("❌ Error creating subpersona:", error);
       res.status(500).json({ error: error.message });
     }
   }
@@ -135,14 +128,14 @@ app.get("/api/recommendations", (req, res) => {
     const recommendations = generateRecommendations(gaugeMetrics);
     res.status(200).json({ recommendations, gaugeMetrics });
   } catch (error) {
-    console.error("Error generating recommendations:", error);
+    console.error("❌ Error generating recommendations:", error);
     res.status(500).json({ error: "Failed to generate recommendations." });
   }
 });
 
 // 🚨 Global Error Handler
 const errorHandler = (err, req, res, next) => {
-  console.error("Unhandled error:", err.stack);
+  console.error("❌ Unhandled Error:", err.stack);
   res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
 };
 

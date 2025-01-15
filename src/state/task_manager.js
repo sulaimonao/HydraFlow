@@ -1,21 +1,37 @@
 // src/state/task_manager.js
-import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabaseClient.js';
+import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 
-export const createTaskCard = async (goal, subtasks) => {
-  const taskCard = {
-    goal,
-    priority: "High",
-    subtasks: subtasks.map((task) => ({
-      description: task,
-      status: "pending",
-      dependencies: [],
-    })),
-    createdAt: new Date().toISOString(),
-  };
-
+/**
+ * Creates a new task card with subtasks.
+ */
+export const createTaskCard = async (query, goal, subtasks) => {
   try {
-    const data = await supabaseRequest(() => supabase.from('task_cards').insert([taskCard])
+    // Retrieve consistent user_id and chatroom_id
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { user_id, chatroom_id } = generatedIdentifiers;
+
+    // Set session context for Supabase RLS enforcement
+    await setSessionContext(user_id, chatroom_id);
+
+    const taskCard = {
+      goal,
+      priority: "High",
+      user_id,
+      chatroom_id,
+      subtasks: subtasks.map((task) => ({
+        description: task,
+        status: "pending",
+        dependencies: [],
+      })),
+      createdAt: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabaseRequest(
+      supabase.from('task_cards').insert([taskCard])
     );
+
+    if (error) throw new Error(`Error creating task card: ${error.message}`);
     return data[0];
   } catch (error) {
     console.error('Error creating task card:', error);
@@ -23,14 +39,25 @@ export const createTaskCard = async (goal, subtasks) => {
   }
 };
 
-export const getTaskCard = async (taskId) => {
+/**
+ * Fetches a specific task card.
+ */
+export const getTaskCard = async (query, taskId) => {
   try {
-    const { data, error } = await supabaseRequest(() => supabase.from('task_cards').select('*').eq('id', taskId));
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { user_id, chatroom_id } = generatedIdentifiers;
 
-    if (error) {
-      throw new Error(`Error fetching task card: ${error.message}`);
-    }
+    await setSessionContext(user_id, chatroom_id);
 
+    const { data, error } = await supabaseRequest(() =>
+      supabase.from('task_cards')
+        .select('*')
+        .eq('id', taskId)
+        .eq('user_id', user_id)
+        .eq('chatroom_id', chatroom_id)
+    );
+
+    if (error) throw new Error(`Error fetching task card: ${error.message}`);
     return data[0];
   } catch (error) {
     console.error('Error in getTaskCard:', error);
@@ -40,20 +67,24 @@ export const getTaskCard = async (taskId) => {
 
 /**
  * Adds a dependency between two tasks.
- * @param {string} taskId - The ID of the task that depends on another task.
- * @param {string} dependencyId - The ID of the task that is a dependency.
- * @returns {Promise<object>} - The result of the dependency addition.
  */
-export async function addDependency(taskId, dependencyId) {
+export async function addDependency(query, taskId, dependencyId) {
   try {
-    const { data, error } = await supabase
-      .from('task_dependencies')
-      .insert([{ task_id: taskId, dependency_id: dependencyId }]);
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { user_id, chatroom_id } = generatedIdentifiers;
 
-    if (error) {
-      throw new Error(`Error adding dependency: ${error.message}`);
-    }
+    await setSessionContext(user_id, chatroom_id);
 
+    const { data, error } = await supabaseRequest(() =>
+      supabase.from('task_dependencies').insert([{
+        task_id: taskId,
+        dependency_id: dependencyId,
+        user_id,
+        chatroom_id
+      }])
+    );
+
+    if (error) throw new Error(`Error adding dependency: ${error.message}`);
     return data;
   } catch (error) {
     console.error("Error in addDependency:", error);
@@ -61,9 +92,24 @@ export async function addDependency(taskId, dependencyId) {
   }
 }
 
-export const updateTaskStatus = async (taskId, status) => {
+/**
+ * Updates the status of a subtask.
+ */
+export const updateTaskStatus = async (query, taskId, status) => {
   try {
-    await supabaseRequest(() => supabase.from('subtasks').update({ status }).eq('id', taskId));
+    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query });
+    const { user_id, chatroom_id } = generatedIdentifiers;
+
+    await setSessionContext(user_id, chatroom_id);
+
+    await supabaseRequest(() =>
+      supabase
+        .from('subtasks')
+        .update({ status })
+        .eq('id', taskId)
+        .eq('user_id', user_id)
+        .eq('chatroom_id', chatroom_id)
+    );
   } catch (error) {
     console.error('Error updating task status:', error);
     throw error;
@@ -72,9 +118,6 @@ export const updateTaskStatus = async (taskId, status) => {
 
 /**
  * Limits the number of responses to avoid overflow.
- * @param {Array} responses - The array of responses.
- * @param {number} maxLimit - Maximum number of responses to return.
- * @returns {Array} - Limited array of responses.
  */
 export const limitResponses = (responses, maxLimit = 5) => {
   if (!Array.isArray(responses)) {
@@ -86,8 +129,6 @@ export const limitResponses = (responses, maxLimit = 5) => {
 
 /**
  * Prioritizes tasks based on their status and priority.
- * @param {Array} tasks - The array of tasks to prioritize.
- * @returns {Array} - Sorted tasks with high-priority and pending tasks first.
  */
 export const prioritizeTasks = (tasks) => {
   if (!Array.isArray(tasks)) {
@@ -108,8 +149,6 @@ export const prioritizeTasks = (tasks) => {
 
 /**
  * Simplifies response objects by removing unnecessary properties.
- * @param {Array} responses - The array of response objects.
- * @returns {Array} - Simplified response objects.
  */
 export const simplifyResponses = (responses) => {
   if (!Array.isArray(responses)) {

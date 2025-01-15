@@ -1,5 +1,4 @@
 // main.js
-
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
@@ -13,13 +12,19 @@ app.use(express.json());
 
 const API_BASE_URL = process.env.API_BASE_URL;
 
-// Helper function for API calls
-async function callApi(endpoint, payload) {
+// Helper function for API calls with user context
+async function callApi(endpoint, payload, user_id, chatroom_id) {
   try {
+    const enrichedPayload = {
+      ...payload,
+      user_id,
+      chatroom_id,
+    };
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(enrichedPayload),
     });
 
     if (!response.ok) {
@@ -28,29 +33,29 @@ async function callApi(endpoint, payload) {
 
     return await response.json();
   } catch (error) {
-    console.error(`Error calling ${endpoint}:`, error);
+    console.error(`❌ Error calling ${endpoint}:`, error);
     throw error;
   }
 }
 
-// Action handlers for each actionItem
+// Action handlers with persistent user and chatroom context
 const actionHandlers = {
-  "create-subpersona": async () => {
+  "create-subpersona": async (user_id, chatroom_id) => {
     return await callApi("/create-subpersona", {
       task: "analyze logs",
       description: "This sub-persona specializes in log analysis.",
       triggerCondition: "new log uploaded",
-    });
+    }, user_id, chatroom_id);
   },
-  "compress-memory": async () => {
+  "compress-memory": async (user_id, chatroom_id) => {
     return await callApi("/compress-memory", {
       memory: "A long conversation history.",
-    });
+    }, user_id, chatroom_id);
   },
-  "summarize-logs": async () => {
+  "summarize-logs": async (user_id, chatroom_id) => {
     return await callApi("/summarize-logs", {
       logs: "Error and access logs from the server.",
-    });
+    }, user_id, chatroom_id);
   },
 };
 
@@ -73,30 +78,37 @@ app.post("/api/autonomous", async (req, res) => {
 
     console.log("✅ Session initialized successfully.");
 
-    // Step 2: Parse query
-    const parseResponse = await callApi("/parse-query", { query });
+    // 📝 Step 2: Parse query
+    const parseResponse = await callApi("/parse-query", { query }, user_id, chatroom_id);
     const { actionItems } = parseResponse;
+
+    if (!actionItems || actionItems.length === 0) {
+      return res.status(200).json({ message: "No actionable items found in the query." });
+    }
 
     let results = {};
 
-    // Step 3: Execute actions dynamically
+    // ⚙️ Step 3: Execute actions dynamically with user context
     for (const action of actionItems) {
       if (actionHandlers[action]) {
-        results[action] = await actionHandlers[action]();
+        console.log(`🔄 Executing action: ${action}`);
+        results[action] = await actionHandlers[action](user_id, chatroom_id);
       } else {
-        console.warn(`Unknown action: ${action}`);
+        console.warn(`⚠️ Unknown action: ${action}`);
+        results[action] = { error: `No handler for action: ${action}` };
       }
     }
 
+    // 📊 Response with action results
     res.status(200).json({ message: "Workflow executed successfully", results });
   } catch (error) {
-    console.error("Error in autonomous workflow:", error);
-    res.status(500).json({ error: "Failed to execute workflow." });
+    console.error("❌ Error in autonomous workflow:", error);
+    res.status(500).json({ error: "Failed to execute workflow.", details: error.message });
   }
 });
 
 app.listen(3000, () => {
-  console.log("Server running on port 3000");
+  console.log("🚀 Server running on port 3000");
 });
 
 export default app;

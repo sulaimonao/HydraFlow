@@ -16,7 +16,7 @@ import supabase, { supabaseRequest } from './lib/supabaseClient.js';
 const app = express();
 app.use(express.json());
 
-// Use session middleware
+// 🔒 Session Management Middleware
 app.use(
   session({
     secret: "your-secret-key",
@@ -25,13 +25,11 @@ app.use(
   })
 );
 
-// Apply the user context middleware globally
+// 🌐 Apply Middleware for User Context and Metrics
 app.use(initializeUserContext);
-
-// Middleware to append gauge metrics to all responses
 app.use(appendGaugeMetrics);
 
-// Define validation schemas
+// 📋 Validation Schemas
 const createSubpersonaSchema = Joi.object({
   name: Joi.string().required(),
   capabilities: Joi.object().required(),
@@ -45,7 +43,7 @@ const compressMemorySchema = Joi.object({
   gaugeMetrics: Joi.object().required(),
 });
 
-// Input validation middleware
+// 🛡️ Input Validation Middleware
 const validateInput = (requiredFields) => (req, res, next) => {
   for (let field of requiredFields) {
     if (!req.body[field]) {
@@ -55,24 +53,23 @@ const validateInput = (requiredFields) => (req, res, next) => {
   next();
 };
 
-// Use validation middleware for creating subpersona
+// 🔧 Create Subpersona API
 app.post(
   "/api/create-subpersona",
   validateInput(['name']),
   validateRequest(createSubpersonaSchema),
   async (req, res) => {
     try {
-      const user_id = req.userId;  // Using the initialized user_id
-      const chatroom_id = req.chatroomId;  // Using the initialized chatroom_id
+      const user_id = req.userId || uuidv4();  // Ensure user context
+      const chatroom_id = req.chatroomId || uuidv4();
       const { name, capabilities, preferences } = req.body;
 
-      // Pass user and chatroom IDs explicitly
       await createSubpersona(name, user_id, chatroom_id, capabilities, preferences);
 
       res.status(201).json({ message: "Subpersona created successfully." });
     } catch (error) {
       if (error.message.includes("RLS")) {
-        return res.status(403).json({ error: "Access denied due to RLS policy. Check your permissions." });
+        return res.status(403).json({ error: "Access denied due to RLS policy. Please check your permissions." });
       }
       console.error("Error creating subpersona:", error);
       res.status(500).json({ error: error.message });
@@ -80,13 +77,13 @@ app.post(
   }
 );
 
-// Use validation middleware for compressing memory
+// 🔧 Compress Memory API
 app.post("/api/compress-memory", validateRequest(compressMemorySchema), compressMemory);
 
-// Feedback routes
+// 📝 Feedback Routes
 app.use("/api/feedback", feedbackRoutes);
 
-// Fetch gauge metrics
+// 📊 Fetch Gauge Metrics API
 app.get("/api/fetch-gauge-metrics", (req, res) => {
   const context = req.context || {
     tokenUsage: { used: 0, total: 10000 },
@@ -97,7 +94,7 @@ app.get("/api/fetch-gauge-metrics", (req, res) => {
   res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
-// Recommendations API
+// 💡 Recommendations API
 app.get("/api/recommendations", (req, res) => {
   try {
     const gaugeMetrics = res.locals.gaugeMetrics || {};
@@ -109,18 +106,18 @@ app.get("/api/recommendations", (req, res) => {
   }
 });
 
-// Error handling middleware
+// 🚨 Global Error Handler
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Unhandled error:", err.stack);
   res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
 };
 
 app.use(errorHandler);
 
-// Start server
+// 🚀 Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
 export default app;

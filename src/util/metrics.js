@@ -2,62 +2,92 @@
 import os from 'os';
 import { logInfo, logError } from './logger.js';
 
+// 🔧 Configurable thresholds for system health
+const MEMORY_THRESHOLD_MB = process.env.MEMORY_THRESHOLD_MB || 1024;
+const CPU_LOAD_THRESHOLD = process.env.CPU_LOAD_THRESHOLD || 1.5;
+const TOKEN_USAGE_THRESHOLD = process.env.TOKEN_USAGE_THRESHOLD || 85;
+const LATENCY_THRESHOLD = process.env.LATENCY_THRESHOLD || 1;
+
 /**
- * Calculates system and operational metrics with user context.
- * @param {object} context - Contains tokenUsage, responseLatency, activeSubpersonas, user_id, chatroom_id.
- * @returns {object} - Computed metrics and recommended actions.
+ * 📊 Calculates system and operational metrics with user context.
  */
 export function calculateMetrics(context) {
-  if (!context) throw new Error("Context data is missing");
-  
-  const { tokenUsage, responseLatency, activeSubpersonas, user_id = null, chatroom_id = null } = context;
+  if (!context) throw new Error("❗ Context data is missing");
 
-  // Validation of essential data
-  if (!tokenUsage) throw new Error("Token usage data is missing");
-  if (!responseLatency) throw new Error("Response latency data is missing");
-  if (!activeSubpersonas) throw new Error("Active subpersonas data is missing");
+  const { tokenUsage, responseLatency, activeSubpersonas = [], user_id = 'system', chatroom_id = 'global' } = context;
 
-  // Token usage metrics
-  const tokenUsagePercentage = (tokenUsage.used / tokenUsage.total) * 100;
+  // 🔍 Validate essential data
+  validateTokenUsage(tokenUsage);
+  if (responseLatency === undefined || responseLatency === null) throw new Error("❗ Response latency data is missing");
+
+  // 📈 Compute system metrics
+  const tokenUsagePercentage = ((tokenUsage.used || 0) / (tokenUsage.total || 1)) * 100;
   const inputTokenUsage = tokenUsage.input || 0;
   const outputTokenUsage = tokenUsage.output || 0;
-
-  // System performance metrics
   const memoryUsageMB = process.memoryUsage().rss / (1024 * 1024); // Memory in MB
   const cpuLoad = os.loadavg ? os.loadavg()[0] : 0; // CPU load (fallback for non-Unix)
-  const uptimeSeconds = process.uptime(); // Server uptime
+  const uptimeSeconds = process.uptime();
 
-  // Health status analysis
+  // 🩺 Health analysis
   const healthStatus = {
-    memory: memoryUsageMB > 1024 ? 'High' : 'Normal',
-    cpu: cpuLoad > 1.5 ? 'High' : 'Normal',
-    tokens: tokenUsagePercentage > 85 ? 'Critical' : 'Optimal',
-    latency: responseLatency > 1 ? 'High' : 'Normal',
+    memory: memoryUsageMB > MEMORY_THRESHOLD_MB ? 'High' : 'Normal',
+    cpu: cpuLoad > CPU_LOAD_THRESHOLD ? 'High' : 'Normal',
+    tokens: tokenUsagePercentage > TOKEN_USAGE_THRESHOLD ? 'Critical' : 'Optimal',
+    latency: responseLatency > LATENCY_THRESHOLD ? 'High' : 'Normal',
   };
 
-  // Proactive action recommendations based on metrics
-  const actions = [];
-  if (memoryUsageMB > 1024) actions.push('compressMemory');
-  if (cpuLoad > 1.5) actions.push('prioritizeTasks');
-  if (tokenUsagePercentage > 85) actions.push('limitResponses');
-  if (responseLatency > 1) actions.push('simplifyResponses');
+  // ⚡ Proactive action recommendations
+  const actions = prioritizeActions([
+    { condition: memoryUsageMB > MEMORY_THRESHOLD_MB, action: 'compressMemory' },
+    { condition: cpuLoad > CPU_LOAD_THRESHOLD, action: 'prioritizeTasks' },
+    { condition: tokenUsagePercentage > TOKEN_USAGE_THRESHOLD, action: 'limitResponses' },
+    { condition: responseLatency > LATENCY_THRESHOLD, action: 'simplifyResponses' },
+  ]);
 
-  // Logging system health with user context
-  logInfo(`Metrics calculated for user: ${user_id}, chatroom: ${chatroom_id}`);
-  logInfo(`Memory Usage: ${memoryUsageMB.toFixed(2)} MB, CPU Load: ${cpuLoad.toFixed(2)}, Token Usage: ${tokenUsagePercentage.toFixed(2)}%`);
+  // 📝 Detailed logging
+  logInfo(`📊 Metrics calculated for user: ${user_id}, chatroom: ${chatroom_id}`);
+  logInfo(`🔍 Health Status: ${JSON.stringify(healthStatus)}`);
+  logInfo(`⚙️ Recommended Actions: ${actions.join(', ')}`);
 
   return {
     user_id,
     chatroom_id,
-    tokenUsagePercentage,
+    tokenUsagePercentage: tokenUsagePercentage.toFixed(2),
     inputTokenUsage,
     outputTokenUsage,
     averageLatency: responseLatency,
     activeSubpersonasCount: activeSubpersonas.length,
-    memoryUsageMB,
-    cpuLoad,
+    memoryUsageMB: memoryUsageMB.toFixed(2),
+    cpuLoad: cpuLoad.toFixed(2),
     uptimeSeconds,
     healthStatus,
-    actions, // Context-aware actions for workflow manager
+    actions,
   };
+}
+
+/**
+ * ✅ Validates token usage structure to prevent runtime errors.
+ */
+function validateTokenUsage(tokenUsage) {
+  if (!tokenUsage || typeof tokenUsage.used !== 'number' || typeof tokenUsage.total !== 'number') {
+    throw new Error("❗ Invalid token usage data. 'used' and 'total' must be numbers.");
+  }
+}
+
+/**
+ * ⚡ Prioritizes actions by severity.
+ */
+function prioritizeActions(actionChecks) {
+  return actionChecks
+    .filter(item => item.condition)
+    .map(item => item.action)
+    .sort((a, b) => {
+      const priorityOrder = {
+        'limitResponses': 1,
+        'compressMemory': 2,
+        'prioritizeTasks': 3,
+        'simplifyResponses': 4,
+      };
+      return priorityOrder[a] - priorityOrder[b];
+    });
 }

@@ -1,33 +1,47 @@
 // api/context-recap.js
-
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 import { validateUserAndChatroom } from '../middleware/authMiddleware.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';  // ✅ Import workflow manager for persistent IDs
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  try {
     const { query, history, compressedMemory, additionalNotes } = req.body;
 
-    // 🌐 Retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
-    // 🔒 Set session context for RLS enforcement
-    await setSessionContext(persistentUserId, persistentChatroomId);
-
-    // ✅ Validate User and Chatroom IDs
-    if (!validateUserAndChatroom(persistentUserId, persistentChatroomId)) {
-      return res.status(403).json({ error: "Invalid user_id or chatroom_id." });
-    }
-
     // ✅ Validate required inputs
-    if (!compressedMemory || !history) {
-      return res.status(400).json({ error: "Both 'history' and 'compressedMemory' are required." });
+    if (!query || !compressedMemory || !history) {
+      return res.status(400).json({ error: "Query, 'history', and 'compressedMemory' are required." });
     }
 
     if (additionalNotes && typeof additionalNotes !== 'string') {
       return res.status(400).json({ error: "'additionalNotes' must be a string if provided." });
+    }
+
+    // 🌐 Retrieve persistent IDs from the workflow manager
+    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const persistentUserId = workflowContext?.generatedIdentifiers?.user_id;
+    const persistentChatroomId = workflowContext?.generatedIdentifiers?.chatroom_id;
+
+    // 🔍 Validate persistent IDs
+    if (!persistentUserId || !persistentChatroomId) {
+      console.error("❌ Missing persistent user_id or chatroom_id.");
+      return res.status(400).json({ error: "Failed to retrieve valid user_id and chatroom_id." });
+    }
+
+    // 🔒 Set session context for RLS enforcement with error handling
+    try {
+      await setSessionContext(persistentUserId, persistentChatroomId);
+    } catch (error) {
+      console.error("❌ Failed to set session context:", error);
+      return res.status(500).json({ error: "Failed to initialize session context." });
+    }
+
+    // ✅ Validate User and Chatroom IDs
+    if (!validateUserAndChatroom(persistentUserId, persistentChatroomId)) {
+      return res.status(403).json({ error: "Invalid user_id or chatroom_id." });
     }
 
     // 📖 Construct the Context Recap
@@ -48,7 +62,7 @@ export default async function handler(req, res) {
     // 📊 Handle Gauge Metrics
     const gaugeMetrics = res.locals?.gaugeMetrics || {};
     if (!res.locals?.gaugeMetrics) {
-      console.warn("Warning: gaugeMetrics is missing. Using default values.");
+      console.warn("⚠️ Warning: gaugeMetrics is missing. Using default values.");
     }
 
     // 📤 Respond with Recap and Gauge Metrics
@@ -59,7 +73,11 @@ export default async function handler(req, res) {
       chatroom_id: persistentChatroomId
     });
 
-  } else {
-    res.status(405).json({ error: 'Method Not Allowed' });
+  } catch (error) {
+    console.error("❌ Error in context-recap:", error);
+    res.status(500).json({
+      error: "Failed to generate context recap.",
+      details: error.message
+    });
   }
 }

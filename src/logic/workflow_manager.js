@@ -1,5 +1,4 @@
 // src/logic/workflow_manager.js
-
 // Import necessary modules and utilities for workflow management
 import { gatherGaugeData } from "../logic/gauge_logic.js";
 import { parseQuery } from "../actions/query_parser.js";
@@ -8,7 +7,7 @@ import { updateContext, logContextUpdate } from "../state/context_state.js";
 import { createSubpersonaFromTemplate, pruneHead } from "../actions/subpersona_creator.js";
 import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
 import { generateContextDigest } from "../actions/context_digest.js";
-import { generateFinalResponse } from "../actions/response_generator_actions.js";
+import { generateFinalResponse } from "../actions/response_generator.js";
 import { collectFeedback } from "../actions/feedback_collector.js";
 import { getHeads } from "../state/heads_state.js";
 import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";
@@ -20,8 +19,10 @@ import { shouldCompress, needsContextRecap, shouldCreateHead } from "./condition
 import { createSession, setSessionContext } from '../../lib/supabaseClient.js';
 
 /**
- * Orchestrates the entire context workflow.
- * Handles memory updates, task execution, and response generation.
+ * 🚀 Orchestrates the entire context workflow:
+ * - Handles memory updates
+ * - Executes dynamic actions
+ * - Generates final user response
  */
 export const orchestrateContextWorkflow = async (req, {
   query,
@@ -33,7 +34,7 @@ export const orchestrateContextWorkflow = async (req, {
     const response = {};
     const updatedContext = {};
 
-    // === System-Wide UUID Enforcement ===
+    // === 🛡️ Session Validation ===
     const generatedUserId = req.userId;
     const generatedChatroomId = req.chatroomId;
 
@@ -46,15 +47,15 @@ export const orchestrateContextWorkflow = async (req, {
       chatroom_id: generatedChatroomId,
     };
 
-    // ✅ Ensure session context is initialized
+    // ✅ Initialize Session Context
     await createSession(generatedUserId, generatedChatroomId);
     await setSessionContext(generatedUserId, generatedChatroomId);
 
-    // === Retrieve Existing Memory and Heads ===
+    // === 🔍 Retrieve Memory and Active Subpersonas ===
     const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
     const heads = await getHeads(generatedUserId, generatedChatroomId);
 
-    // === Log Workflow Start ===
+    // === 📝 Log Workflow Start ===
     await logIssue({
       userId: generatedUserId,
       contextId: generatedChatroomId,
@@ -62,20 +63,20 @@ export const orchestrateContextWorkflow = async (req, {
       resolution: `Query: ${query}`,
     });
 
-    // === Parse Query for Actionable Items ===
+    // === 🧠 Query Parsing ===
     const { keywords, actionItems } = parseQuery(query);
     updatedContext.keywords = keywords || [];
     updatedContext.actionItems = actionItems || [];
 
-    // === Update Memory with New Query ===
+    // === 🗃️ Memory Update ===
     const updatedMemory = await appendMemory(query, generatedUserId, generatedChatroomId);
     updatedContext.memory = updatedMemory;
 
-    // === Create and Resolve Task Dependencies ===
+    // === 📋 Task Card Creation ===
     const taskCard = createTaskCard(query, actionItems);
     await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
-    // === Conditional Memory Compression ===
+    // === 🗜️ Conditional Memory Compression ===
     if (shouldCompress(actionItems, existingMemory.length)) {
       const compressed = compressMemory(existingMemory);
       await storeCompressedMemory(generatedUserId, generatedChatroomId, compressed);
@@ -83,51 +84,50 @@ export const orchestrateContextWorkflow = async (req, {
       response.compressedMemory = compressed;
     }
 
-    // === Subpersona Creation if Needed ===
+    // === 🧩 Dynamic Subpersona Creation ===
     if (shouldCreateHead(actionItems)) {
       const newHead = await createSubpersonaFromTemplate("workflow_optimizer", generatedUserId, generatedChatroomId);
       updatedContext.newHead = newHead;
       response.newHead = newHead;
     }
 
-    // === Store Workflow Data ===
+    // === 🗄️ Store Workflow Data ===
     await storeProjectData(generatedUserId, generatedChatroomId, query);
 
-    // === Prune Inactive Heads ===
+    // === 🗑️ Prune Inactive Subpersonas ===
     for (const head of heads) {
       await pruneHead(head.id);
     }
 
-    // === Log Context Updates ===
+    // === 🔄 Context Update ===
     logContextUpdate(updatedContext);
     const context = await updateContext(updatedContext);
 
-    // === Generate Context Digest ===
+    // === 📝 Generate Context Digest ===
     response.contextDigest = generateContextDigest(updatedContext.memory);
 
-    // === Gather Gauge Metrics ===
+    // === 📊 Gauge Metrics Collection ===
     response.gaugeData = await gatherGaugeData({
       user_id: generatedUserId,
       chatroom_id: generatedChatroomId,
     });
 
-    // === Metrics Calculation for Action Decision ===
+    // === 📈 Metrics Evaluation ===
     const metrics = calculateMetrics(context);
     const actions = metrics.actions;
 
-    // === Dynamic Action Injection Based on Metrics ===
+    // === ⚡ Dynamic Action Injection ===
     if (shouldCompress(actions, memory.length)) {
       actions.push('compressMemory');
     }
-
     if (needsContextRecap(memory.length, feedback?.engagement)) {
       actions.push('contextRecap');
     }
 
-    // === Execute Dynamic Actions ===
+    // === 🔄 Execute Dynamic Actions ===
     const actionFeedback = await handleActions(actions, context);
 
-    // === Collect Feedback if Provided ===
+    // === 📬 Collect Feedback ===
     if (feedback) {
       await collectFeedback({
         user_id: generatedUserId,
@@ -137,7 +137,7 @@ export const orchestrateContextWorkflow = async (req, {
       });
     }
 
-    // === Final Response Generation ===
+    // === 📢 Generate Final User Response ===
     response.finalResponse = await generateFinalResponse({
       userInput: query,
       compressedMemory: response.compressedMemory,
@@ -148,7 +148,7 @@ export const orchestrateContextWorkflow = async (req, {
       actionFeedback,
     });
 
-    // === Trigger Feedback Prompt if Task is Completed ===
+    // === 💬 Prompt for Feedback if Task is Completed ===
     if (taskCard.status === "completed") {
       response.feedbackPrompt = {
         message: "How was the workflow? Please provide your feedback.",
@@ -163,7 +163,7 @@ export const orchestrateContextWorkflow = async (req, {
       generatedIdentifiers: response.generatedIdentifiers,
     };
   } catch (error) {
-    console.error("Error in orchestrateContextWorkflow:", error);
+    console.error("❌ Error in orchestrateContextWorkflow:", error);
 
     await logIssue({
       userId: req.userId,

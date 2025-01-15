@@ -1,21 +1,20 @@
 // api/compress-memory.js
-
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
-import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';  // ✅ Added setSessionContext for RLS
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';  // ✅ Import workflow manager for persistent IDs
+import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
-const TOKEN_THRESHOLD = 3000;  // 🔥 Adjust as needed
+const TOKEN_THRESHOLD = 3000;
 
 export default async function handler(req, res) {
   try {
     const { query, memory, gaugeMetrics } = req.body;
 
-    // 🌐 Retrieve persistent IDs from the workflow manager
+    // 🌐 Retrieve persistent user and chatroom IDs
     const workflowContext = await orchestrateContextWorkflow({ query, memory });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
-    // ⚠️ Validate memory
+    // ⚠️ Validate memory input
     if (!memory) {
       return res.status(400).json({ error: 'Memory data is required for compression.' });
     }
@@ -23,19 +22,19 @@ export default async function handler(req, res) {
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(persistentUserId, persistentChatroomId);
 
-    // 🔍 Calculate gauge metrics if missing
+    // 🔍 Calculate gauge metrics if not provided
     const calculatedGaugeMetrics = gaugeMetrics || calculateTokenUsage(memory);
 
-    // 🚀 Auto-trigger compression if token load is too high
+    // 🚀 Skip compression if below the token threshold
     if (calculatedGaugeMetrics.tokenCount < TOKEN_THRESHOLD) {
       return res.status(200).json({ message: 'Compression not required. Token load is acceptable.' });
     }
 
-    // 🔐 Verify ownership of memory
+    // 🔐 Verify memory ownership
     const { data: existingMemory, error: memoryError } = await supabaseRequest(
       supabase
         .from('memories')
-        .select('id, content')
+        .select('id, memory')  // ✅ Fixed: Changed 'content' to 'memory'
         .eq('user_id', persistentUserId)
         .eq('chatroom_id', persistentChatroomId)
         .limit(1)
@@ -50,18 +49,18 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Unauthorized: Memory does not belong to the provided user or chatroom.' });
     }
 
-    // 🧠 Execute memory compression
+    // 🧠 Compress memory efficiently
     const compressedMemory = compressMemory(memory, calculatedGaugeMetrics);
 
     // 📦 Update the compressed memory in the database
     await supabaseRequest(
       supabase
         .from('memories')
-        .update({ content: compressedMemory })
+        .update({ memory: compressedMemory })  // ✅ Fixed: Changed 'content' to 'memory'
         .eq('id', existingMemory[0].id)
     );
 
-    // 📝 Log compression in debug_logs
+    // 📝 Log the compression process in debug_logs
     await supabaseRequest(
       supabase.from('debug_logs').insert([
         {

@@ -5,7 +5,9 @@
     { "src": "api/**/*", "use": "@vercel/node", "config": { "maxLambdaSize": "100mb" } }
   ],
   "routes": [
-    { "src": "/", "dest": "/server.js" },
+    { "src": "/api/session/auto-init", "dest": "/api/session/init", "methods": ["GET"] },
+    { "src": "/api/session/init", "dest": "/api/session" },
+    { "src": "/api/session/(.*)", "dest": "/api/session", "methods": ["GET", "POST", "DELETE"] },
     { "src": "/api/parse-query", "dest": "/api/parse-query" },
     { "src": "/api/create-subpersona", "dest": "/api/create-subpersona" },
     { "src": "/api/compress-memory", "dest": "/api/compress-memory" },
@@ -17,7 +19,8 @@
     { "src": "/api/tasks/dependency", "dest": "/api/tasks", "methods": ["POST"] },
     { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
     { "src": "/api/tasks/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
-    { "src": "/api/session/init", "dest": "/api/session" },
-    { "src": "/api/session/(.*)", "dest": "/api/session", "methods": ["GET", "POST", "DELETE"] }
+    { "src": "/api/(.*)", "dest": "/api/404.js" },
+    { "src": "/", "dest": "/server.js" },
+    { "src": "/(.*)", "headers": { "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload" } }
   ]
 }

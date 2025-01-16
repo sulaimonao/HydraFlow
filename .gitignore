@@ -39,3 +39,4 @@ diagnostic-check.js
 lib/test_db.js
 dump-codebase.js
 *.txt
+checker.cjs

@@ -8,8 +8,8 @@ import axios from 'axios';
 const BASE_URL = 'https://hydra-flow.vercel.app/api';
 
 // 🔒 Persistent session IDs for the entire test run
-const persistentUserId = req.userId;
-const persistentChatroomId = req.chatroomId;
+const persistentUserId = uuidv4();
+const persistentChatroomId = uuidv4();
 
 if (!validateUUID(persistentUserId) || !validateUUID(persistentChatroomId)) {
   throw new Error("Invalid session IDs for user or chatroom.");

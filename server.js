@@ -39,7 +39,9 @@ app.use(async (req, res, next) => {
     req.session.chatroomId = chatroomId;
 
     await createSession(userId, chatroomId);
-
+    if (!req.session.userId || !req.session.chatroomId) {
+      throw new Error("Failed to create session in Supabase");
+    }
     console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
   }
 

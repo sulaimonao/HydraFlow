@@ -15,7 +15,14 @@ export default async function handler(req, res) {
     // 🌐 Safely retrieve persistent IDs
     let workflowContext;
     try {
-      workflowContext = await orchestrateContextWorkflow({ query, req });
+      workflowContext = await orchestrateContextWorkflow(req, {
+        query: query,
+        memory: req.body.memory || '',
+        feedback: req.body.feedback || null,
+        tokenCount: req.body.tokenCount || 0,
+      });
+      //workflowContext = await orchestrateContextWorkflow({ query, req });
+
     } catch (workflowError) {
       console.error("❌ Workflow context retrieval failed:", workflowError);
       return res.status(500).json({ error: "Failed to retrieve workflow context." });
@@ -40,15 +47,15 @@ export default async function handler(req, res) {
     // 🔄 Retrieve token usage if not provided
     if (!tokenUsage) {
       const { data, error } = await supabaseRequest(
-        () => supabase
+        supabase
           .from('gauge_metrics')
           .select('token_used, token_total')
           .eq('user_id', persistentUserId)
           .eq('chatroom_id', persistentChatroomId)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single()
-      );
+          .single(), persistentUserId, persistentChatroomId
+      )
 
       if (error) {
         console.warn("⚠️ Token usage fetch failed. Defaulting values.");

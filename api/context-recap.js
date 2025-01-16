@@ -1,7 +1,8 @@
 // api/context-recap.js
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 import { validateUserAndChatroom } from '../middleware/authMiddleware.js';
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';  // ✅ Import workflow manager for persistent IDs
+import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
+import { updateMemory } from '../src/logic/memory_manager.js'; //Import memory update function
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,7 +22,13 @@ export default async function handler(req, res) {
     }
 
     // 🌐 Retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query,
+      history: history,
+      compressedMemory: compressedMemory,
+      additionalNotes: additionalNotes,
+      tokenCount: req.body.tokenCount || 0, // Add tokenCount
+    });
     const persistentUserId = workflowContext?.generatedIdentifiers?.user_id;
     const persistentChatroomId = workflowContext?.generatedIdentifiers?.chatroom_id;
 
@@ -38,6 +45,16 @@ export default async function handler(req, res) {
       console.error("❌ Failed to set session context:", error);
       return res.status(500).json({ error: "Failed to initialize session context." });
     }
+
+    // 💾 Update Supabase with compressed memory.  Error handling included.
+    try {
+      await updateMemory(persistentUserId, persistentChatroomId, compressedMemory);
+    } catch (updateError) {
+      console.error("❌ Failed to update memory in Supabase:", updateError);
+      // Consider a more nuanced error response, perhaps retry logic.
+      return res.status(500).json({ error: "Failed to update memory." });
+    }
+
 
     // ✅ Validate User and Chatroom IDs
     if (!validateUserAndChatroom(persistentUserId, persistentChatroomId)) {

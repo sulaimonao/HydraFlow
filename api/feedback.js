@@ -52,7 +52,13 @@ async function submitFeedback(req, res) {
   }
 
   try {
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: userFeedback,
+      tokenCount: req.body.tokenCount || 0,
+    });
+
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

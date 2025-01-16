@@ -8,10 +8,15 @@ const router = express.Router();
 
 // ✅ Middleware to enforce session context using user_sessions table
 async function enforceSessionContext(req, res, next) {
-  const { query } = req.body;
+  const { query, memory, feedback, tokenCount } = req.body;
 
   try {
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: memory || '',
+      feedback: feedback || null,
+      tokenCount: tokenCount || 0,
+    });
     const { user_id, chatroom_id } = workflowContext.generatedIdentifiers;
 
     if (!user_id || !chatroom_id) {

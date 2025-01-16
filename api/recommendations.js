@@ -15,7 +15,13 @@ export default async (req, res) => {
     // 🚀 Retrieve persistent IDs from workflow manager
     let workflowContext;
     try {
-      workflowContext = await orchestrateContextWorkflow({ query, req });
+      workflowContext = await orchestrateContextWorkflow(req, {
+        query: req.body.query || '',
+        memory: req.body.memory || '',
+        feedback: req.body.feedback || null,
+        tokenCount: req.body.tokenCount || 0,
+      });
+
     } catch (workflowError) {
       console.error("❌ Workflow orchestration failed:", workflowError);
       return res.status(500).json({ error: "Workflow orchestration failed." });

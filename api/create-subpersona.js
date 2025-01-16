@@ -12,7 +12,13 @@ const handleCreateSubpersona = async (req, res) => {
     }
 
     // 🌐 Use workflow-generated IDs if not provided
-    const workflowContext = await orchestrateContextWorkflow({ req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: req.body.query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
+
     const persistentUserId = user_id || workflowContext?.generatedIdentifiers?.user_id;
     const persistentChatroomId = chatroom_id || workflowContext?.generatedIdentifiers?.chatroom_id;
 
@@ -53,11 +59,11 @@ const handleCreateSubpersona = async (req, res) => {
     }
 
     // ✅ Success Response
-    res.status(200).json({
-      message: 'Subpersona created successfully.',
-      subpersona: data[0],
-      user_id: persistentUserId,
-      chatroom_id: persistentChatroomId
+    return res.status(200).json({
+      message: 'Subpersona created successfully.', 
+      data: data[0],
+      user_id: persistentUserId, 
+      chatroom_id: persistentChatroomId 
     });
 
   } catch (error) {

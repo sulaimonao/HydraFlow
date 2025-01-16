@@ -1,6 +1,6 @@
 // api/task.js
 import { insertTaskDependency, fetchTaskDependencies, fetchTaskCards } from '../lib/db.js';
-import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
+import { setSessionContext } from '../lib/supabaseClient.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 // ✅ Enhanced Circular Dependency Checker
@@ -15,7 +15,12 @@ export async function addTaskDependency(req, res) {
     const { query, subtaskId, dependsOn } = req.body;
 
     // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -66,7 +71,12 @@ export async function getTaskDependencies(req, res) {
     const { subtaskId } = req.params;
 
     // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -106,7 +116,12 @@ export async function getTaskCard(req, res) {
     const { taskCardId } = req.params;
 
     // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

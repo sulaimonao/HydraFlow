@@ -12,7 +12,12 @@ export default async (req, res) => {
     }
 
     // 🌐 Initialize workflow and retrieve session IDs
-    const workflowContext = await orchestrateContextWorkflow({ query, memory, feedback, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: memory || '',
+      feedback: feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
     const { user_id: persistentUserId, chatroom_id: persistentChatroomId } = workflowContext.generatedIdentifiers;
 
     if (!persistentUserId || !persistentChatroomId) {
@@ -80,12 +85,12 @@ export default async (req, res) => {
 async function updateContext(data, context) {
   try {
     const updateAction = supabase
-      .from('context')
+      .from('chatrooms')
       .update({ ...data })
       .eq('user_id', context.user_id)
       .eq('chatroom_id', context.chatroom_id);
 
-    const updatedData = await supabaseRequest(updateAction, context.user_id, context.chatroom_id);
+    const { data: updatedData } = await supabaseRequest(updateAction, context.user_id, context.chatroom_id);
     return { updatedContext: { ...context, ...updatedData } };
   } catch (error) {
     console.error("⚠️ Error updating context:", error.message);
@@ -97,13 +102,13 @@ async function updateContext(data, context) {
 async function fetchData(data, context) {
   try {
     const fetchAction = supabase
-      .from('data')
+      .from('chatrooms')
       .select('*')
       .eq('user_id', context.user_id)
       .eq('chatroom_id', context.chatroom_id);
 
-    const fetchedData = await supabaseRequest(fetchAction, context.user_id, context.chatroom_id);
-    return { fetchedData };
+    const { data: fetchedData } = await supabaseRequest(fetchAction, context.user_id, context.chatroom_id);
+    return { data: fetchedData };
   } catch (error) {
     console.error("⚠️ Error fetching data:", error.message);
     throw new Error("Failed to fetch data.");

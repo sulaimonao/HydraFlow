@@ -31,6 +31,7 @@ app.use(
 // 🌐 Initialize User and Chatroom Sessions in Supabase
 app.use(async (req, res, next) => {
   try {
+    // Check if userId and chatroomId exist in the session
     if (!req.session.userId || !req.session.chatroomId) {
       const userId = uuidv4();
       const chatroomId = uuidv4();
@@ -38,7 +39,6 @@ app.use(async (req, res, next) => {
       req.session.userId = userId;
       req.session.chatroomId = chatroomId;
 
-      // ✅ Insert session into user_sessions
       await createSession(userId, chatroomId);
 
       console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
@@ -47,7 +47,6 @@ app.use(async (req, res, next) => {
     req.userId = req.session.userId;
     req.chatroomId = req.session.chatroomId;
 
-    // 🔒 Set session context for Supabase RLS
     await setSessionContext(req.userId, req.chatroomId);
 
     next();

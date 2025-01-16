@@ -15,7 +15,13 @@ export default async function handler(req, res) {
     }
 
     // 🌐 Initialize session context via workflow manager
-    const workflowContext = await orchestrateContextWorkflow({ query, memory, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: memory || '',
+      feedback: null,
+      tokenCount: gaugeMetrics?.tokenCount || 0,
+    });
+
     const persistentUserId = workflowContext.generatedIdentifiers?.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers?.chatroom_id;
 
@@ -29,10 +35,9 @@ export default async function handler(req, res) {
     await setSessionContext(persistentUserId, persistentChatroomId);
 
     // 🔍 Calculate gauge metrics if not provided
-    const calculatedGaugeMetrics = gaugeMetrics || calculateTokenUsage(memory);
-
+    const calculatedGaugeMetrics = gaugeMetrics ? gaugeMetrics : calculateTokenUsage(memory);
     // 🚀 Skip compression if below token threshold
-    if (calculatedGaugeMetrics.tokenCount < TOKEN_THRESHOLD) {
+    if (calculatedGaugeMetrics.tokenCount < TOKEN_THRESHOLD ) {
       return res.status(200).json({ message: 'Compression not required. Token load is acceptable.' });
     }
 
@@ -60,11 +65,12 @@ export default async function handler(req, res) {
     const compressedMemory = compressMemory(memory, calculatedGaugeMetrics);
 
     // 📦 Update compressed memory in Supabase
-    await supabaseRequest(
-      supabase
-        .from('memories')
+    const updateResult = await supabaseRequest(
+      supabase.from('memories')
         .update({ memory: compressedMemory })
-        .eq('id', existingMemory[0].id)
+        .eq('id', existingMemory[0].id),
+      persistentUserId,
+      persistentChatroomId
     );
 
     // 📝 Log compression in debug_logs

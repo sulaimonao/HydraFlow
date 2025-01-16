@@ -16,7 +16,6 @@ import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 import { calculateMetrics } from '../util/metrics.js';
 import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from './conditions.js';
-import { createSession, setSessionContext } from '../../lib/supabaseClient.js';
 
 /**
  * 🚀 Orchestrates the entire context workflow:
@@ -36,20 +35,12 @@ export const orchestrateContextWorkflow = async (req, {
 
     // === 🛡️ Session Validation ===
     const generatedUserId = req.userId;
-    const generatedChatroomId = req.chatroomId;
+    const generatedChatroomId = req.body.chatroomId;
 
     if (!validateUUID(generatedUserId) || !validateUUID(generatedChatroomId)) {
       throw new Error("Invalid session IDs for user or chatroom.");
     }
-
-    response.generatedIdentifiers = {
-      user_id: generatedUserId,
-      chatroom_id: generatedChatroomId,
-    };
-
-    // ✅ Initialize Session Context
-    await createSession(generatedUserId, generatedChatroomId);
-    await setSessionContext(generatedUserId, generatedChatroomId);
+    response.generatedIdentifiers = { user_id: generatedUserId, chatroom_id: generatedChatroomId };
 
     // === 🔍 Retrieve Memory and Active Subpersonas ===
     const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
@@ -160,7 +151,6 @@ export const orchestrateContextWorkflow = async (req, {
       context,
       finalResponse: response.finalResponse,
       feedbackPrompt: response.feedbackPrompt || null,
-      generatedIdentifiers: response.generatedIdentifiers,
     };
   } catch (error) {
     console.error("❌ Error in orchestrateContextWorkflow:", error);

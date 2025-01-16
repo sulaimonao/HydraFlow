@@ -49,7 +49,13 @@ export async function logIssue({ userId, contextId, issue, resolution }) {
 export async function fetchDebugLogs(req, contextId) {
   try {
     // 🌐 Retrieve persistent IDs safely
-    const workflowContext = await orchestrateContextWorkflow({ req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: req.body.query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
+
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 
@@ -62,10 +68,9 @@ export async function fetchDebugLogs(req, contextId) {
 
     const { data, error } = await supabase
       .from('debug_logs')
-      .select('*')
-      .eq('context_id', contextId)
+      .select('*').eq('context_id', contextId)
       .eq('user_id', persistentUserId)
-      .eq('chatroom_id', persistentChatroomId);
+      .eq('chatroom_id', persistentChatroomId)
 
     if (error) {
       console.error(`❌ Error fetching debug logs: ${error.message}`);
@@ -91,7 +96,13 @@ router.post('/debug/log', async (req, res) => {
     }
 
     // 🌐 Retrieve persistent IDs from workflow
-    const workflowContext = await orchestrateContextWorkflow({ query, req });
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
+
     const persistentUserId = workflowContext.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
 

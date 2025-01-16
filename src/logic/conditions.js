@@ -15,7 +15,12 @@ const INITIAL_COMPRESSION_THRESHOLD = 10;
  */
 const getSessionIdentifiers = async (query, req) => {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
+    const { generatedIdentifiers } = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: req.body.memory || '',
+      feedback: req.body.feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
     const { user_id, chatroom_id } = generatedIdentifiers;
 
     if (!user_id || !chatroom_id) {

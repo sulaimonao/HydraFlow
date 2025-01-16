@@ -1,6 +1,7 @@
 // api/parse-query.js
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
+import { supabase } from '../lib/supabase.js';
 
 export default async (req, res) => {
   try {
@@ -57,15 +58,35 @@ export default async (req, res) => {
     let workflowPlan;
     try {
       workflowPlan = await orchestrateContextWorkflow({
-        query,
-        req,
+        query: query,
+        memory: req.body.memory || '',
+        feedback: req.body.feedback || null,
+        tokenCount: req.body.tokenCount || 0,
         existingTasks: existingTaskCards,
         proposedTasks: taskCard.subtasks,
+        req: req,
       });
+      console.log("🚀 Workflow plan:", workflowPlan);
+
     } catch (workflowError) {
       console.error("❌ Workflow orchestration failed:", workflowError);
       return res.status(500).json({ error: "Workflow orchestration failed." });
     }
+
+    //Update Supabase with the workflowPlan
+    try {
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert([workflowPlan])
+      if (error) {
+        console.error("❌ Failed to insert workflow plan into Supabase:", error);
+        return res.status(500).json({ error: "Failed to save workflow plan." });
+      }
+    } catch (supabaseError) {
+      console.error("❌ Supabase error:", supabaseError);
+      return res.status(500).json({ error: "Supabase error." });
+    }
+
 
     const persistentUserId = workflowPlan.generatedIdentifiers.user_id;
     const persistentChatroomId = workflowPlan.generatedIdentifiers.chatroom_id;

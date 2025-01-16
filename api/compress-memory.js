@@ -7,11 +7,16 @@ const TOKEN_THRESHOLD = 3000;
 
 export default async function handler(req, res) {
   try {
-    const { query, memory, gaugeMetrics } = req.body;
+    const { query, memory, gaugeMetrics, user_id, chatroom_id } = req.body;
 
     // ✅ Validate input memory
     if (!memory || typeof memory !== "string") {
       return res.status(400).json({ error: 'Memory data is required and must be a string.' });
+    }
+
+    // Validate user_id and chatroom_id if provided directly
+    if (user_id && chatroom_id) {
+      await setSessionContext(user_id, chatroom_id);
     }
 
     // 🌐 Initialize session context via workflow manager
@@ -31,10 +36,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Persistent user_id and chatroom_id are required.' });
     }
 
-    // 🔒 Set session context for Supabase RLS
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    
 
-    // 🔍 Calculate gauge metrics if not provided
+    // 🧮 Calculate gauge metrics if not provided
     const calculatedGaugeMetrics = gaugeMetrics ? gaugeMetrics : calculateTokenUsage(memory);
     // 🚀 Skip compression if below token threshold
     if (calculatedGaugeMetrics.tokenCount < TOKEN_THRESHOLD ) {
@@ -61,7 +65,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Unauthorized: Memory does not belong to the provided user or chatroom.' });
     }
 
-    // 🧠 Compress memory efficiently
+    // 🗜️ Compress memory efficiently
     const compressedMemory = compressMemory(memory, calculatedGaugeMetrics);
 
     // 📦 Update compressed memory in Supabase

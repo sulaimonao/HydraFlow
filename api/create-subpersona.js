@@ -10,20 +10,19 @@ const handleCreateSubpersona = async (req, res) => {
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'Valid subpersona name is required.' });
     }
-
     // 🌐 Use workflow-generated IDs if not provided
     const workflowContext = await orchestrateContextWorkflow(req, {
       query: req.body.query || '',
       memory: req.body.memory || '',
       feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
+      tokenCount: req.body.tokenCount || 0
     });
 
     const persistentUserId = user_id || workflowContext?.generatedIdentifiers?.user_id;
     const persistentChatroomId = chatroom_id || workflowContext?.generatedIdentifiers?.chatroom_id;
 
     // 🔍 Validate persistent IDs
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!persistentUserId || !persistentChatroomId ) {
       console.error("❌ Missing persistent user_id or chatroom_id.");
       return res.status(400).json({ error: 'Persistent user_id and chatroom_id are required.' });
     }
@@ -47,7 +46,7 @@ const handleCreateSubpersona = async (req, res) => {
           capabilities: capabilities || null,
           preferences: preferences || null,
           status: 'active',
-          createdat: new Date().toISOString(),
+          created_at: new Date().toISOString()
         }
       ])
       .select();
@@ -60,10 +59,10 @@ const handleCreateSubpersona = async (req, res) => {
 
     // ✅ Success Response
     return res.status(200).json({
-      message: 'Subpersona created successfully.', 
+      message: 'Subpersona created successfully.',
       data: data[0],
-      user_id: persistentUserId, 
-      chatroom_id: persistentChatroomId 
+      user_id: persistentUserId,
+      chatroom_id: persistentChatroomId
     });
 
   } catch (error) {

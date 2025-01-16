@@ -30,30 +30,25 @@ app.use(
 
 // 🌐 Initialize User and Chatroom Sessions in Supabase
 app.use(async (req, res, next) => {
-  try {
-    // Check if userId and chatroomId exist in the session
-    if (!req.session.userId || !req.session.chatroomId) {
-      const userId = uuidv4();
-      const chatroomId = uuidv4();
+  // Check if userId and chatroomId exist in the session
+  if (!req.session.userId || !req.session.chatroomId) {
+    const userId = uuidv4();
+    const chatroomId = uuidv4();
 
-      req.session.userId = userId;
-      req.session.chatroomId = chatroomId;
+    req.session.userId = userId;
+    req.session.chatroomId = chatroomId;
 
-      await createSession(userId, chatroomId);
+    await createSession(userId, chatroomId);
 
-      console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
-    }
-
-    req.userId = req.session.userId;
-    req.chatroomId = req.session.chatroomId;
-
-    await setSessionContext(req.userId, req.chatroomId);
-
-    next();
-  } catch (error) {
-    console.error("❌ Session Initialization Error:", error);
-    res.status(500).json({ error: "Failed to initialize session." });
+    console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
   }
+
+  req.userId = req.session.userId;
+  req.chatroomId = req.session.chatroomId;
+  req.context = { userId: req.userId, chatroomId: req.chatroomId }; // Improved context
+
+  await setSessionContext(req.userId, req.chatroomId);
+  next();
 });
 
 // 🌐 Middleware for Context and Metrics

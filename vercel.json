@@ -1,28 +1,22 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server.js", "use": "@vercel/node" },
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "main.js", "use": "@vercel/node" }
+    { "src": "server.js", "use": "@vercel/node", "config": { "maxLambdaSize": "100mb" } },
+    { "src": "api/**/*", "use": "@vercel/node", "config": { "maxLambdaSize": "100mb" } }
   ],
   "routes": [
     { "src": "/", "dest": "/server.js" },
-
-
-    { "src": "/api/parse-query", "dest": "/api/parse-query.js" },
-    { "src": "/api/create-subpersona", "dest": "/api/create-subpersona.js" },
-    { "src": "/api/compress-memory", "dest": "/api/compress-memory.js" },
-    { "src": "/api/context-recap", "dest": "/api/context-recap.js" },
-    { "src": "/api/autonomous", "dest": "/api/autonomous.js" },
-    { "src": "/api/feedback", "dest": "/api/feedback.js" },
-    { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics.js" },
-    { "src": "/api/recommendations", "dest": "/api/recommendations.js" },
-
-
-    { "src": "/api/tasks/dependency", "dest": "/api/task.js", "methods": ["POST"] },
-    { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
-    { "src": "/api/tasks/(.*)", "dest": "/api/task.js", "methods": ["GET"] },
-
-    { "src": "/api/session/init", "dest": "/api/session.js" }
+    { "src": "/api/parse-query", "dest": "/api/parse-query" },
+    { "src": "/api/create-subpersona", "dest": "/api/create-subpersona" },
+    { "src": "/api/compress-memory", "dest": "/api/compress-memory" },
+    { "src": "/api/context-recap", "dest": "/api/context-recap" },
+    { "src": "/api/autonomous", "dest": "/api/autonomous" },
+    { "src": "/api/feedback", "dest": "/api/feedback" },
+    { "src": "/api/fetch-gauge-metrics", "dest": "/api/fetch-gauge-metrics" },
+    { "src": "/api/recommendations", "dest": "/api/recommendations" },
+    { "src": "/api/tasks/dependency", "dest": "/api/tasks", "methods": ["POST"] },
+    { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
+    { "src": "/api/tasks/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
+    { "src": "/api/session/init", "dest": "/api/session" }
   ]
 }

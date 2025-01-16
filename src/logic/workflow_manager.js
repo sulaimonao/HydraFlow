@@ -1,21 +1,21 @@
 // src/logic/workflow_manager.js
 // Import necessary modules and utilities for workflow management
-import { gatherGaugeData } from "../src/logic/gauge_logic.js";
-import { parseQuery } from "../src/actions/query_parser.js";
-import { resolveDependencies } from "../src/state/task_manager.js";
-import { compressMemory, storeCompressedMemory } from '../src/actions/memory_compressor.js';
-import { updateContext, logContextUpdate } from "../src/state/context_state.js";
-import { createSubpersonaFromTemplate, pruneHead } from "../src/actions/subpersona_creator.js";
-import { createTaskCard, addDependency, updateTaskStatus } from "../src/state/task_manager.js";
-import { generateContextDigest } from "../src/actions/context_digest.js";
-import { generateFinalResponse } from "../src/actions/response_generator.js";
-import { collectFeedback } from "../src/actions/feedback_collector.js";
-import { getHeads } from "../src/state/heads_state.js";
-import { appendMemory, getMemory, storeProjectData } from "../src/state/memory_state.js";
+import { gatherGaugeData } from "../logic/gauge_logic.js";
+import { parseQuery } from "../actions/query_parser.js";
+import { resolveDependencies } from "../state/task_manager.js";
+import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
+import { updateContext, logContextUpdate } from "../state/context_state.js";
+import { createSubpersonaFromTemplate, pruneHead } from "../actions/subpersona_creator.js";
+import { createTaskCard, addDependency, updateTaskStatus } from "../state/task_manager.js";
+import { generateContextDigest } from "../actions/context_digest.js";
+import { generateFinalResponse } from "../actions/response_generator.js";
+import { collectFeedback } from "../actions/feedback_collector.js";
+import { getHeads } from "../state/heads_state.js";
+import { appendMemory, getMemory, storeProjectData } from "../state/memory_state.js";
 import { logIssue } from "../../api/debug.js";
 import { v4 as uuidv4, validate as validateUUID } from 'uuid';
-import { calculateMetrics } from '../src/util/metrics.js';
-import { handleActions } from '../src/util/actionHandler.js';
+import { calculateMetrics } from '../util/metrics.js';
+import { handleActions } from '../util/actionHandler.js';
 import { shouldCompress, needsContextRecap, shouldCreateHead } from "./conditions.js";
 import { createSession, setSessionContext } from '../../lib/supabaseClient.js';
 

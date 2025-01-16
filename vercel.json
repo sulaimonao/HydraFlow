@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "autonomous.js",
+      "src": "server.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "100mb"
@@ -20,9 +20,7 @@
     {
       "src": "/api/session/auto-init",
       "dest": "/api/session/init",
-      "methods": [
-        "GET"
-      ]
+      "methods": ["GET"]
     },
     {
       "src": "/api/session/init",
@@ -31,11 +29,7 @@
     {
       "src": "/api/session/(.*)",
       "dest": "/api/session",
-      "methods": [
-        "GET",
-        "POST",
-        "DELETE"
-      ]
+      "methods": ["GET", "POST", "DELETE"]
     },
     {
       "src": "/api/parse-query",
@@ -72,31 +66,25 @@
     {
       "src": "/api/tasks/dependency",
       "dest": "/api/tasks",
-      "methods": [
-        "POST"
-      ]
+      "methods": ["POST"]
     },
     {
       "src": "/api/tasks/dependencies/(.*)",
       "dest": "/api/tasks",
-      "methods": [
-        "GET"
-      ]
+      "methods": ["GET"]
     },
     {
       "src": "/api/tasks/(.*)",
       "dest": "/api/tasks",
-      "methods": [
-        "GET"
-      ]
+      "methods": ["GET"]
+    },
+    {
+      "src": "/",
+      "dest": "/server.js"
     },
     {
       "src": "/api/(.*)",
       "dest": "/api/404.js"
-    },
-    {
-      "src": "/",
-      "dest": "/autonomous.js"
     },
     {
       "src": "/(.*)",

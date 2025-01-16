@@ -26,32 +26,38 @@ app.use(
     secret: process.env.SESSION_SECRET,  // ✅ Securely stored in .env
     resave: false,
     saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    }
   })
 );
 
 // 🌐 Middleware to Initialize User and Chatroom Sessions in Supabase
 app.use(async (req, res, next) => {
-  // Check if userId and chatroomId exist in the session
-  if (!req.session.userId || !req.session.chatroomId) {
-    const userId = uuidv4();
-    const chatroomId = uuidv4();
-
-    req.session.userId = userId;
-    req.session.chatroomId = chatroomId;
-
-    await createSession(userId, chatroomId);
+  try {
     if (!req.session.userId || !req.session.chatroomId) {
-      throw new Error("Failed to create session in Supabase");
+      const userId = uuidv4();
+      const chatroomId = uuidv4();
+
+      req.session.userId = userId;
+      req.session.chatroomId = chatroomId;
+
+      await createSession(userId, chatroomId);
+      console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
-    console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
+
+    req.userId = req.session.userId;
+    req.chatroomId = req.session.chatroomId;
+    req.context = { userId: req.userId, chatroomId: req.chatroomId };
+
+    await setSessionContext(req.userId, req.chatroomId);
+    next();
+  } catch (error) {
+    console.error("❌ Error initializing session:", error);
+    res.status(500).json({ error: 'Failed to initialize session.' });
   }
-
-  req.userId = req.session.userId;
-  req.chatroomId = req.session.chatroomId;
-  req.context = { userId: req.userId, chatroomId: req.chatroomId }; // Improved context
-
-  await setSessionContext(req.userId, req.chatroomId);
-  next();
 });
 
 // 🌐 Middleware for Context, Metrics, and Input Validation
@@ -73,11 +79,10 @@ const compressMemorySchema = Joi.object({
 });
 
 // 🛡️ Input Validation Middleware
-const validateInput = (requiredFields) => (req, res, next) => {
-  for (let field of requiredFields) {
-    if (!req.body[field]) {
-      return res.status(400).json({ error: `${field} is required.` });
-    }
+const validateInput = (schema) => (req, res, next) => {
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
   }
   next();
 };
@@ -85,14 +90,11 @@ const validateInput = (requiredFields) => (req, res, next) => {
 // 🔧 Create Subpersona API
 app.post(
   "/api/create-subpersona",
-  validateInput(['name']),
-  validateRequest(createSubpersonaSchema),
+  validateInput(createSubpersonaSchema),
   async (req, res) => {
     try {
       const { name, capabilities, preferences } = req.body;
-
       await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences);
-
       res.status(201).json({ message: "Subpersona created successfully." });
     } catch (error) {
       console.error("❌ Error creating subpersona:", error);
@@ -102,7 +104,7 @@ app.post(
 );
 
 // 🔧 Compress Memory API
-app.post("/api/compress-memory", validateRequest(compressMemorySchema), compressMemory);
+app.post("/api/compress-memory", validateInput(compressMemorySchema), compressMemory);
 
 // 📝 Feedback Routes
 app.use("/api/feedback", feedbackRoutes);
@@ -131,12 +133,10 @@ app.get("/api/recommendations", (req, res) => {
 });
 
 // 🚨 Global Error Handler
-const errorHandler = (err, req, res, next) => {
+app.use((err, req, res, next) => {
   console.error("❌ Unhandled Error:", err.stack);
   res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
-};
-
-app.use(errorHandler);
+});
 
 // 🚀 Start Server
 const PORT = process.env.PORT || 3000;

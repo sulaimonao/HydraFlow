@@ -16,7 +16,8 @@
     { "src": "/api/recommendations", "dest": "/api/recommendations" },
     { "src": "/api/tasks/dependency", "dest": "/api/tasks", "methods": ["POST"] },
     { "src": "/api/tasks/dependencies/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
-    { "src": "/api/tasks/(.*)", "dest": "/api/tasks", "methods": ["GET"] },
-    { "src": "/api/session/init", "dest": "/api/session" }
+    { "src": "/api/tasks/(.*)", "dest": "/api/tasks" },
+    { "src": "/api/session/init", "dest": "/api/session", "methods": ["POST"] },
+    { "src": "/api/session/(.*)", "dest": "/api/session", "methods": ["GET", "POST", "DELETE"] }
   ]
 }

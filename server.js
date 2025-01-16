@@ -17,6 +17,7 @@ import compressMemory from './api/compress-memory.js';
 dotenv.config();
 
 const app = express();
+
 app.use(express.json());
 
 // 🔒 Secure Session Management Middleware
@@ -28,7 +29,7 @@ app.use(
   })
 );
 
-// 🌐 Initialize User and Chatroom Sessions in Supabase
+// 🌐 Middleware to Initialize User and Chatroom Sessions in Supabase
 app.use(async (req, res, next) => {
   // Check if userId and chatroomId exist in the session
   if (!req.session.userId || !req.session.chatroomId) {
@@ -53,7 +54,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// 🌐 Middleware for Context and Metrics
+// 🌐 Middleware for Context, Metrics, and Input Validation
 app.use(initializeUserContext);
 app.use(appendGaugeMetrics);
 

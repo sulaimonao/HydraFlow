@@ -1,4 +1,4 @@
-//src/actions/response_generator.js
+//src/actions/rresponse_generator_actions.js
 import { calculateMetrics } from "../util/metrics.js";
 
 /**

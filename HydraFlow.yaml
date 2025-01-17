@@ -270,7 +270,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -306,7 +306,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -343,7 +343,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -378,7 +378,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -413,7 +413,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -434,7 +434,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -475,7 +475,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -496,7 +496,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -541,7 +541,7 @@ paths:
       parameters:
         - name: subtaskId
           in: path
-          required: true
+          required: false
           schema:
             type: integer
           description: "ID of the subtask."
@@ -585,7 +585,7 @@ paths:
       parameters:
         - name: taskCardId
           in: path
-          required: true
+          required: false
           schema:
             type: integer
           description: "The ID of the task card."
@@ -618,7 +618,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -644,7 +644,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -678,7 +678,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -703,7 +703,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -761,7 +761,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -782,7 +782,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.
@@ -803,7 +803,7 @@ paths:
       parameters:
         - in: header
           name: X-Hydra-Session-ID
-          required: false
+          required: true
           schema:
             type: string
           description: Session ID for maintaining user context.

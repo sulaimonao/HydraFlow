@@ -65,12 +65,6 @@ components:
         preferences:
           type: object
           description: "Preferences for the sub-persona."
-        user_id:
-          type: string
-          description: "Optional user identifier."
-        chatroom_id:
-          type: string
-          description: "Optional chatroom identifier."
     LogSummary:
       type: object
       properties:
@@ -130,6 +124,131 @@ components:
         feedback:
           type: string
           description: "The feedback entry."
+    # Definition for the Head schema
+    Head:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the head (subpersona)."
+        name:
+          type: string
+          description: "Name of the head (subpersona)."
+        status:
+          type: string
+          description: "Status of the head (e.g., active, inactive)."
+        user_id:
+          type: string
+          format: uuid
+          description: "User ID associated with the head."
+        chatroom_id:
+          type: string
+          format: uuid
+          description: "Chatroom ID associated with the head."
+        capabilities:
+          type: object
+          description: "Capabilities of the head."
+          additionalProperties: true
+        preferences:
+          type: object
+          description: "Preferences of the head."
+          additionalProperties: true
+        createdat:
+          type: string
+          format: date-time
+          description: "Timestamp when the head was created."
+
+    # Definition for the Memory schema
+    Memory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Unique identifier for the memory entry."
+        user_id:
+          type: string
+          format: uuid
+          description: "User ID associated with the memory."
+        chatroom_id:
+          type: string
+          format: uuid
+          description: "Chatroom ID associated with the memory."
+        memory:
+          type: string
+          description: "Actual memory content or a reference to it."
+        updated_at:
+          type: string
+          format: date-time
+          description: "Timestamp when the memory entry was last updated."
+
+    # Definition for the TaskCard schema
+    TaskCard:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Unique identifier for the task card."
+        user_id:
+          type: string
+          format: uuid
+          description: "User ID associated with the task card."
+        chatroom_id:
+          type: string
+          format: uuid
+          description: "Chatroom ID associated with the task card."
+        goal:
+          type: string
+          description: "The main goal or objective of the task card."
+        priority:
+          type: string
+          enum: ["High", "Medium", "Low"]
+          description: "Priority of the task card."
+        created_at:
+          type: string
+          format: date-time
+          description: "Timestamp when the task card was created."
+        active:
+          type: boolean
+          description: "Indicates if the task card is currently active."
+        subtasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subtask'
+          description: "Subtasks associated with the task card."
+
+    # Definition for the Subtask schema
+    Subtask:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: "Unique identifier for the subtask."
+        task_card_id:
+          type: integer
+          description: "ID of the parent task card."
+        description:
+          type: string
+          description: "Description of the subtask."
+        status:
+          type: string
+          enum: ["pending", "completed"]
+          description: "Status of the subtask."
+        created_at:
+          type: string
+          format: date-time
+          description: "Timestamp when the subtask was created."
+        child_dependencies:
+          type: array
+          items:
+            type: integer
+          description: "IDs of tasks that depend on this subtask."
+        parent_dependencies:
+          type: array
+          items:
+            type: integer
+          description: "IDs of tasks that this subtask depends on."
 responses:
   ServerError:
     description: "Server error while processing the request."

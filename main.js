@@ -1,5 +1,4 @@
-// main.js
-import express from "express";
+// main.js (Modified for integration with server.js)
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
 import { createSession, setSessionContext } from './lib/supabaseClient.js';
@@ -7,11 +6,7 @@ import { validate as validateUUID } from 'uuid';
 
 dotenv.config();
 
-const app = express();
-app.use(express.json());
-
-const API_BASE_URL = process.env.API_BASE_URL;
-const PORT = process.env.PORT || 3000;
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
 
 // 🔄 Retry mechanism for API calls
 async function withRetry(task, retries = 3) {
@@ -58,9 +53,9 @@ const actionHandlers = {
   "create-subpersona": async (user_id, chatroom_id) => {
     try {
       return await callApi("/create-subpersona", {
-        task: "analyze logs",
-        description: "This sub-persona specializes in log analysis.",
-        triggerCondition: "new log uploaded",
+        name: "Log Analyzer",
+        capabilities: {},
+        preferences: {},
       }, user_id, chatroom_id);
     } catch (error) {
       console.error("❌ Error creating subpersona:", error);
@@ -71,55 +66,36 @@ const actionHandlers = {
     try {
       return await callApi("/compress-memory", {
         memory: "A long conversation history.",
+        gaugeMetrics: {}
       }, user_id, chatroom_id);
     } catch (error) {
       console.error("❌ Error compressing memory:", error);
       return { error: error.message };
     }
-  },
-  "summarize-logs": async (user_id, chatroom_id) => {
-    try {
-      return await callApi("/summarize-logs", {
-        logs: "Error and access logs from the server.",
-      }, user_id, chatroom_id);
-    } catch (error) {
-      console.error("❌ Error summarizing logs:", error);
-      return { error: error.message };
-    }
-  },
+  }
 };
 
-app.post("/api/autonomous", async (req, res) => {
+// Autonomous workflow trigger
+async function runAutonomousWorkflow(query, user_id, chatroom_id) {
   try {
-    const { query } = req.body;
-
-    if (!query) {
-      return res.status(400).json({ error: "Query is required." });
-    }
-
-    const user_id = req.userId;
-    const chatroom_id = req.chatroomId;
-
     if (!validateUUID(user_id) || !validateUUID(chatroom_id)) {
       throw new Error("Invalid session IDs for user or chatroom.");
     }
 
-    console.log(`🔎 Initializing session: user_id=${user_id}, chatroom_id=${chatroom_id}`);
+    console.log(`🔎 Starting autonomous workflow: user_id=${user_id}, chatroom_id=${chatroom_id}`);
 
     await createSession(user_id, chatroom_id);
     await setSessionContext(user_id, chatroom_id);
-
-    console.log("✅ Session initialized successfully.");
 
     const parseResponse = await callApi("/parse-query", { query }, user_id, chatroom_id);
     const { actionItems } = parseResponse;
 
     if (!actionItems || actionItems.length === 0) {
-      return res.status(200).json({ message: "No actionable items found in the query." });
+      console.log("ℹ️ No actionable items found.");
+      return { message: "No actionable items found." };
     }
 
     let results = {};
-
     for (const action of actionItems) {
       if (actionHandlers[action]) {
         console.log(`🔄 Executing action: ${action}`);
@@ -130,15 +106,11 @@ app.post("/api/autonomous", async (req, res) => {
       }
     }
 
-    res.status(200).json({ message: "Workflow executed successfully", results });
+    return { message: "Workflow executed successfully", results };
   } catch (error) {
     console.error("❌ Error in autonomous workflow:", error);
-    res.status(500).json({ error: "Failed to execute workflow.", details: error.message });
+    return { error: error.message };
   }
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
-
-export default app;
+export { runAutonomousWorkflow };

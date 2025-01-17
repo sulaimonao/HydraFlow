@@ -1,4 +1,4 @@
-// server.js
+// server.js (Updated for integration with main.js)
 import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +13,7 @@ import { initializeUserContext } from './middleware/authMiddleware.js';
 import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
+import { runAutonomousWorkflow } from './main.js';
 
 dotenv.config();
 
@@ -23,7 +24,7 @@ app.use(express.json());
 // 🔒 Secure Session Management Middleware
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,  // ✅ Securely stored in .env
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -60,37 +61,42 @@ app.use(async (req, res, next) => {
   }
 });
 
-// 🌐 Middleware for Context, Metrics, and Input Validation
 app.use(initializeUserContext);
 app.use(appendGaugeMetrics);
 
-// 📋 Validation Schemas
-const createSubpersonaSchema = Joi.object({
-  name: Joi.string().required(),
-  capabilities: Joi.object().required(),
-  preferences: Joi.object().required(),
-});
-
-const compressMemorySchema = Joi.object({
-  memory: Joi.string().required(),
-  threshold: Joi.number().optional(),
-  data: Joi.object().optional(),
-  gaugeMetrics: Joi.object().required(),
-});
-
-// 🛡️ Input Validation Middleware
-const validateInput = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+// 🔍 Parse Query API
+app.post("/api/parse-query", (req, res) => {
+  const { query } = req.body;
+  if (!query) {
+    return res.status(400).json({ error: "Query is required." });
   }
-  next();
-};
+
+  const actionItems = [];
+  if (query.includes("analyze logs")) actionItems.push("create-subpersona");
+  if (query.includes("compress")) actionItems.push("compress-memory");
+
+  res.status(200).json({ actionItems });
+});
+
+// 🤖 Autonomous Workflow API
+app.post("/api/autonomous", async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) {
+      return res.status(400).json({ error: "Query is required." });
+    }
+
+    const result = await runAutonomousWorkflow(query, req.userId, req.chatroomId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ Error in autonomous workflow:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // 🔧 Create Subpersona API
 app.post(
   "/api/create-subpersona",
-  validateInput(createSubpersonaSchema),
   async (req, res) => {
     try {
       const { name, capabilities, preferences } = req.body;
@@ -104,41 +110,30 @@ app.post(
 );
 
 // 🔧 Compress Memory API
-app.post("/api/compress-memory", validateInput(compressMemorySchema), compressMemory);
+app.post("/api/compress-memory", compressMemory);
 
-// 📝 Feedback Routes
 app.use("/api/feedback", feedbackRoutes);
 
-// 📊 Fetch Gauge Metrics API
 app.get("/api/fetch-gauge-metrics", (req, res) => {
-  const context = req.context || {
-    tokenUsage: { used: 0, total: 10000 },
-    responseLatency: 0.5,
-    activeSubpersonas: [],
-  };
-  const metrics = calculateMetrics(context);
+  const metrics = calculateMetrics(req.context || {});
   res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
-// 💡 Recommendations API
 app.get("/api/recommendations", (req, res) => {
   try {
-    const gaugeMetrics = res.locals.gaugeMetrics || {};
-    const recommendations = generateRecommendations(gaugeMetrics);
-    res.status(200).json({ recommendations, gaugeMetrics });
+    const recommendations = generateRecommendations(res.locals.gaugeMetrics || {});
+    res.status(200).json({ recommendations });
   } catch (error) {
     console.error("❌ Error generating recommendations:", error);
     res.status(500).json({ error: "Failed to generate recommendations." });
   }
 });
 
-// 🚨 Global Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ Unhandled Error:", err.stack);
-  res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
+  res.status(500).json({ error: 'Internal Server Error.' });
 });
 
-// 🚀 Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

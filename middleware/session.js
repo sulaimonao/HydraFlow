@@ -1,33 +1,34 @@
 //middleware/session.js
 import { v4 as uuidv4 } from 'uuid';
 import cookie from 'cookie';
-import supabase from '../lib/supabaseClient';
+import supabase from '../lib/supabaseClient.js';
 
 export const sessionHandler = async (req, res, next) => {
   try {
     const cookies = cookie.parse(req.headers.cookie || '');
     let sessionId = cookies.session_id;
 
-    // STEP 1: If no session, create one
     if (!sessionId) {
       sessionId = uuidv4();
 
       const { error } = await supabase
         .from('user_sessions')
-        .insert([{ id: sessionId, created_at: new Date().toISOString() }]);
+        .insert([{ id: sessionId, created_at: new Date().toISOString() }])
+        .select();
 
       if (error) throw new Error('Failed to create session');
 
       res.setHeader('Set-Cookie', cookie.serialize('session_id', sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24 * 30,
         path: '/',
         sameSite: 'lax',
       }));
+
+      console.log(`✅ New session cookie set: ${sessionId}`);
     }
 
-    // STEP 2: Validate existing session
     const { data, error: sessionError } = await supabase
       .from('user_sessions')
       .select('*')
@@ -38,14 +39,15 @@ export const sessionHandler = async (req, res, next) => {
       throw new Error('Invalid session');
     }
 
-    // STEP 3: Pass session to the request
     req.sessionId = sessionId;
-    req.userId = data.user_id || null;
-    req.chatroomId = data.chatroom_id || null;
+    req.session = {
+      userId: data.user_id,
+      chatroomId: data.chatroom_id
+    };
 
-    next(); // Proceed to the next handler
+    next();
   } catch (error) {
-    console.error('Session Error:', error.message);
+    console.error('❌ Session Error:', error.message);
     res.status(500).json({ error: 'Session handling failed' });
   }
 };

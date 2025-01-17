@@ -1,4 +1,4 @@
-// server.js (Updated for persistent session handling)
+// server.js
 import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,7 +66,13 @@ app.use(async (req, res, next) => {
       console.log(`✅ New session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
-    await setSessionContext(req.userId, req.chatroomId);
+    if (req.userId && req.chatroomId) {
+      await setSessionContext(req.userId, req.chatroomId);
+    } else {
+      console.error("❌ Missing userId or chatroomId during session context setup.");
+      return res.status(500).json({ error: "Session initialization failed." });
+    }
+
     next();
   } catch (error) {
     console.error("❌ Error initializing session:", error);

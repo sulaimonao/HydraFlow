@@ -51,9 +51,9 @@ app.use(async (req, res, next) => {
         return res.status(400).json({ error: "Invalid session ID." });
       }
 
-      req.userId = sessionData.user_id;
-      req.chatroomId = sessionData.chatroom_id;
-      console.log(`🔐 Existing session: userId=${req.userId}, chatroomId=${req.chatroomId}`);
+      req.session.userId = sessionData.user_id;
+      req.session.chatroomId = sessionData.chatroom_id;
+      console.log(`🔐 Existing session: userId=${req.session.userId}, chatroomId=${req.session.chatroomId}`);
     } else {
       const userId = uuidv4();
       const chatroomId = uuidv4();
@@ -62,14 +62,15 @@ app.use(async (req, res, next) => {
       req.session.chatroomId = chatroomId;
 
       await createSession(userId, chatroomId);
-      res.setHeader('X-Hydra-Session-ID', userId);
+      res.setHeader('X-Hydra-Session-ID', `${userId}:${chatroomId}`);  // Corrected session ID header
       console.log(`✅ New session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
-    if (req.userId && req.chatroomId) {
-      await setSessionContext(req.userId, req.chatroomId);
+    // 🔧 Fix: Corrected session context validation
+    if (req.session.userId && req.session.chatroomId) {
+      await setSessionContext(req.session.userId, req.session.chatroomId);
     } else {
-      console.error("❌ Missing userId or chatroomId during session context setup.");
+      console.error(`❌ Missing userId (${req.session.userId}) or chatroomId (${req.session.chatroomId}) during session context setup.`);
       return res.status(500).json({ error: "Session initialization failed." });
     }
 
@@ -117,7 +118,7 @@ app.post("/api/autonomous", async (req, res) => {
 app.post("/api/create-subpersona", async (req, res) => {
   try {
     const { name, capabilities, preferences } = req.body;
-    await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences);
+    await createSubpersona(name, req.session.userId, req.session.chatroomId, capabilities, preferences);
     res.status(201).json({ message: "Subpersona created successfully." });
   } catch (error) {
     console.error("❌ Error creating subpersona:", error);

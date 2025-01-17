@@ -1,4 +1,4 @@
-// server.js (Updated for integration with main.js)
+// server.js (Updated for persistent session handling)
 import express from 'express';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,7 +18,6 @@ import { runAutonomousWorkflow } from './main.js';
 dotenv.config();
 
 const app = express();
-
 app.use(express.json());
 
 // 🔒 Secure Session Management Middleware
@@ -35,10 +34,27 @@ app.use(
   })
 );
 
-// 🌐 Middleware to Initialize User and Chatroom Sessions in Supabase
+// 🌐 Enhanced Middleware to Initialize or Retrieve Sessions
 app.use(async (req, res, next) => {
   try {
-    if (!req.session.userId || !req.session.chatroomId) {
+    const existingSessionId = req.headers['x-hydra-session-id'];
+
+    if (existingSessionId) {
+      const { data: sessionData, error } = await supabase
+        .from('user_sessions')
+        .select('*')
+        .eq('id', existingSessionId)
+        .single();
+
+      if (error || !sessionData) {
+        console.warn("⚠️ Invalid or expired session ID.");
+        return res.status(400).json({ error: "Invalid session ID." });
+      }
+
+      req.userId = sessionData.user_id;
+      req.chatroomId = sessionData.chatroom_id;
+      console.log(`🔐 Existing session: userId=${req.userId}, chatroomId=${req.chatroomId}`);
+    } else {
       const userId = uuidv4();
       const chatroomId = uuidv4();
 
@@ -46,12 +62,9 @@ app.use(async (req, res, next) => {
       req.session.chatroomId = chatroomId;
 
       await createSession(userId, chatroomId);
-      console.log(`✅ Session initialized: userId=${userId}, chatroomId=${chatroomId}`);
+      res.setHeader('X-Hydra-Session-ID', userId);
+      console.log(`✅ New session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
-
-    req.userId = req.session.userId;
-    req.chatroomId = req.session.chatroomId;
-    req.context = { userId: req.userId, chatroomId: req.chatroomId };
 
     await setSessionContext(req.userId, req.chatroomId);
     next();
@@ -86,7 +99,7 @@ app.post("/api/autonomous", async (req, res) => {
       return res.status(400).json({ error: "Query is required." });
     }
 
-    const result = await runAutonomousWorkflow(query, req.userId, req.chatroomId);
+    const result = await runAutonomousWorkflow(query);
     res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error in autonomous workflow:", error);
@@ -95,23 +108,19 @@ app.post("/api/autonomous", async (req, res) => {
 });
 
 // 🔧 Create Subpersona API
-app.post(
-  "/api/create-subpersona",
-  async (req, res) => {
-    try {
-      const { name, capabilities, preferences } = req.body;
-      await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences);
-      res.status(201).json({ message: "Subpersona created successfully." });
-    } catch (error) {
-      console.error("❌ Error creating subpersona:", error);
-      res.status(500).json({ error: error.message });
-    }
+app.post("/api/create-subpersona", async (req, res) => {
+  try {
+    const { name, capabilities, preferences } = req.body;
+    await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences);
+    res.status(201).json({ message: "Subpersona created successfully." });
+  } catch (error) {
+    console.error("❌ Error creating subpersona:", error);
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 // 🔧 Compress Memory API
 app.post("/api/compress-memory", compressMemory);
-
 app.use("/api/feedback", feedbackRoutes);
 
 app.get("/api/fetch-gauge-metrics", (req, res) => {

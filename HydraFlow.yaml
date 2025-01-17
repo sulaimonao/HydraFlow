@@ -7,7 +7,7 @@ info:
     external systems like CustomGPT, ensuring smooth workflows with dynamic feedback and identifiers.
   version: "1.6.0"
 servers:
-  - url: "https://hydra-flow.vercel.app/api"
+  - url: "https://hydra-flow.vercel.app/api" # Make sure this is your correct Vercel deployment URL
     description: "Deployed API server"
 components:
   schemas:
@@ -65,6 +65,7 @@ components:
         preferences:
           type: object
           description: "Preferences for the sub-persona."
+        # Removed user_id and chatroom_id as they are now handled by the session
     LogSummary:
       type: object
       properties:
@@ -266,6 +267,13 @@ paths:
       operationId: "parseQuery"
       summary: "Parse a query into actionable keywords and tasks"
       description: "Parses user-provided query to extract keywords and actionable tasks."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "User query to parse."
         required: true
@@ -294,8 +302,14 @@ paths:
       operationId: "createSubpersona"
       summary: "Create a specialized sub-persona"
       description: |
-        Dynamically generates a sub-persona for a task. If `user_id` or `chatroom_id` are missing,
-        defaults are generated and returned in the response.
+        Dynamically generates a sub-persona for a task.
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Details for sub-persona creation."
         required: true
@@ -317,12 +331,6 @@ paths:
                   subPersona:
                     type: object
                     description: "Details of the created sub-persona."
-                  user_id:
-                    type: string
-                    description: "Generated or provided user ID."
-                  chatroom_id:
-                    type: string
-                    description: "Generated or provided chatroom ID."
         400:
           description: "Missing required fields or invalid data."
         500:
@@ -332,6 +340,13 @@ paths:
       operationId: "compressMemory"
       summary: "Compress and optimize memory"
       description: "Compresses lengthy conversation memory for optimized context management. Automatically triggers if memory usage exceeds the defined threshold."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Full memory content to compress."
         required: true
@@ -360,6 +375,13 @@ paths:
       operationId: "summarizeLogs"
       summary: "Summarize logs for patterns and errors"
       description: "Analyzes log data to generate summaries of key patterns and errors."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Log data to summarize."
         required: true
@@ -388,6 +410,13 @@ paths:
       operationId: "getFeedbackSummary"
       summary: "Retrieve feedback summary"
       description: "Fetches a summarized view of all feedback, including totals and averages."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully retrieved feedback summary."
@@ -402,6 +431,13 @@ paths:
       operationId: "fetchGaugeMetrics"
       summary: "Fetch gauge metrics for the user interface"
       description: "Provides real-time metrics including token usage, engine load, and latency."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched metrics."
@@ -436,6 +472,13 @@ paths:
       operationId: "getRecommendations"
       summary: "Fetch actionable recommendations"
       description: "Provides recommendations based on system performance and metrics."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched recommendations."
@@ -450,6 +493,13 @@ paths:
       operationId: "addTaskDependency"
       summary: "Add a dependency for a subtask"
       description: "Creates a dependency relationship between subtasks."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Details of the dependency to add."
         required: true
@@ -495,6 +545,12 @@ paths:
           schema:
             type: integer
           description: "ID of the subtask."
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched task dependencies."
@@ -533,6 +589,12 @@ paths:
           schema:
             type: integer
           description: "The ID of the task card."
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched the task card."
@@ -554,18 +616,12 @@ paths:
       summary: "Retrieve the current context state"
       description: "Fetches the current context state for the user and chatroom."
       parameters:
-        - name: user_id
-          in: query
-          required: true
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
           schema:
             type: string
-          description: "User ID."
-        - name: chatroom_id
-          in: query
-          required: true
-          schema:
-            type: string
-          description: "Chatroom ID."
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully retrieved the context state."
@@ -585,6 +641,13 @@ paths:
       operationId: "updateContextState"
       summary: "Update the context state"
       description: "Updates the current context state with new data."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Details of the new context state."
         required: true
@@ -612,6 +675,13 @@ paths:
       operationId: "getFeedback"
       summary: "Retrieve all feedback"
       description: "Fetches all feedback entries."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully retrieved feedback."
@@ -630,6 +700,13 @@ paths:
       operationId: "submitFeedback"
       summary: "Submit feedback"
       description: "Submits feedback for a task or workflow."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         description: "Details of the feedback to submit."
         required: true
@@ -638,12 +715,6 @@ paths:
             schema:
               type: object
               properties:
-                chatroom_id:
-                  type: string
-                  description: The ID of the chatroom
-                responseNumber:
-                  type: integer
-                  description: The response number in the chatroom
                 userFeedback:
                   type: string
                   description: The feedback from the user
@@ -651,8 +722,6 @@ paths:
                   type: integer
                   description: The rating given by the user
               required:
-                - chatroom_id
-                - responseNumber
                 - userFeedback
       responses:
         '200':
@@ -690,16 +759,12 @@ paths:
       description: "Retrieve heads based on user_id and chatroom_id."
       operationId: getHeads
       parameters:
-        - name: user_id
-          in: query
-          required: true
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
           schema:
             type: string
-        - name: chatroom_id
-          in: query
-          required: true
-          schema:
-            type: string
+          description: Session ID for maintaining user context.
       responses:
         '200':
           description: "A list of heads."
@@ -715,16 +780,12 @@ paths:
       description: "Retrieve memories based on user_id and chatroom_id."
       operationId: getMemories
       parameters:
-        - name: user_id
-          in: query
-          required: true
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
           schema:
             type: string
-        - name: chatroom_id
-          in: query
-          required: true
-          schema:
-            type: string
+          description: Session ID for maintaining user context.
       responses:
         '200':
           description: "A list of memories."
@@ -740,16 +801,12 @@ paths:
       description: "Retrieve task cards based on user_id and chatroom_id."
       operationId: getTaskCards
       parameters:
-        - name: user_id
-          in: query
-          required: true
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
           schema:
             type: string
-        - name: chatroom_id
-          in: query
-          required: true
-          schema:
-            type: string
+          description: Session ID for maintaining user context.
       responses:
         '200':
           description: "A list of task cards."
@@ -764,6 +821,13 @@ paths:
       summary: "Post feedback entries"
       description: "Submit feedback entries."
       operationId: postFeedbackEntries
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: false
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
       requestBody:
         required: true
         content:

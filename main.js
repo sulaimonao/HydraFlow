@@ -1,12 +1,12 @@
-// main.js (Modified for integration with server.js)
+// main.js (Updated for session persistence)
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
-import { createSession, setSessionContext } from './lib/supabaseClient.js';
 import { validate as validateUUID } from 'uuid';
 
 dotenv.config();
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+let sessionId = null; // 🔑 Session persistence variable
 
 // 🔄 Retry mechanism for API calls
 async function withRetry(task, retries = 3) {
@@ -29,16 +29,32 @@ async function callApi(endpoint, payload, user_id, chatroom_id) {
       chatroom_id,
     };
 
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    // 🔑 Include session ID if it exists
+    if (sessionId) {
+      headers['X-Hydra-Session-ID'] = sessionId;
+    }
+
     const response = await withRetry(() =>
       fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(enrichedPayload),
       })
     );
 
     if (!response.ok) {
       throw new Error(`Failed to call ${endpoint}: ${response.statusText}`);
+    }
+
+    // 🔄 Capture session ID from response header
+    const newSessionId = response.headers.get('X-Hydra-Session-ID');
+    if (newSessionId) {
+      sessionId = newSessionId;
+      console.log(`🔐 Session ID updated: ${sessionId}`);
     }
 
     return await response.json();
@@ -83,9 +99,6 @@ async function runAutonomousWorkflow(query, user_id, chatroom_id) {
     }
 
     console.log(`🔎 Starting autonomous workflow: user_id=${user_id}, chatroom_id=${chatroom_id}`);
-
-    await createSession(user_id, chatroom_id);
-    await setSessionContext(user_id, chatroom_id);
 
     const parseResponse = await callApi("/parse-query", { query }, user_id, chatroom_id);
     const { actionItems } = parseResponse;

@@ -48,6 +48,12 @@ export async function logIssue({ userId, contextId, issue, resolution }) {
  */
 export async function fetchDebugLogs(req, contextId) {
   try {
+    if (!req.session.userId || !req.session.chatroomId) {
+      throw new Error("Invalid session IDs for fetching debug logs.");
+    }
+
+    const { persistentUserId, persistentChatroomId } = req.session;
+
     // 🌐 Retrieve persistent IDs safely
     const workflowContext = await orchestrateContextWorkflow(req, {
       query: req.body.query || '',
@@ -56,16 +62,12 @@ export async function fetchDebugLogs(req, contextId) {
       tokenCount: req.body.tokenCount || 0,
     });
 
-    if (!req.session.userId || !req.session.chatroomId) {
-      throw new Error("Invalid session IDs for fetching debug logs.");
-    }
-
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(req.session.userId, req.session.chatroomId);
 
     const { data, error } = await supabase
       .from('debug_logs')
-      .select('*').eq('context_id', contextId)
+      .select('*')
       .eq('user_id', persistentUserId)
       .eq('chatroom_id', persistentChatroomId)
 

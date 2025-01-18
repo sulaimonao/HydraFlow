@@ -3,7 +3,7 @@ import { createSubpersona } from './create-subpersona.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 
-export default async (req, res) => {
+export default async (req, res) => {  
   try {
     const { query, memory, feedback } = req.body;
 
@@ -13,7 +13,7 @@ export default async (req, res) => {
     }
 
     // 🌐 Initialize workflow and retrieve session IDs
-    const workflowContext = await orchestrateContextWorkflow(req, {
+    const workflowContextPromise = orchestrateContextWorkflow(req, {
       query: query || '',
       memory: memory || '',
       feedback: feedback || null,
@@ -26,7 +26,7 @@ export default async (req, res) => {
     }
 
     // 🔒 Set Supabase session context for RLS
-    await setSessionContext(req.session.userId, req.session.chatroomId);
+    const setContextPromise = setSessionContext(req.session.userId, req.session.chatroomId);
 
     // 🌐 Prepare session context
     const context = {
@@ -37,21 +37,24 @@ export default async (req, res) => {
 
     console.log(`🚀 Starting workflow for user: ${context.user_id}, chatroom: ${context.chatroom_id}`);
 
+    const workflowContext = await workflowContextPromise;
+    await setContextPromise;
+
     // ✅ Dynamic action handling
     let actionResult;
     if (query.action && typeof query.action === "string") {
       switch (query.action) {
         case 'updateContext':
-          actionResult = await updateContext(query.data, context);
+          actionResult = await updateContext(query.data, context); 
           break;
         case 'fetchData':
-          actionResult = await fetchData(query.data, context);
+          actionResult = await fetchData(query.data, context); 
           break;
         default:
           return res.status(400).json({ error: `Invalid action: ${query.action}` });
       }
     } else {
-      actionResult = workflowContext;  // Reuse initial workflow result
+      actionResult = workflowContext; // Reuse initial workflow result
     }
 
     // ✅ Update context if applicable
@@ -85,14 +88,13 @@ export default async (req, res) => {
 // ✅ Handles context updates
 async function updateContext(data, context) {
   try {
-    const updateAction = supabase
+    const { data: updatedData } = await supabaseRequest(supabase
       .from('chatrooms')
       .update({ ...data })
       .eq('user_id', context.user_id)
-      .eq('chatroom_id', context.chatroom_id);
-
-    const { data: updatedData } = await supabaseRequest(updateAction, context.user_id, context.chatroom_id);
-    return { updatedContext: { ...context, ...updatedData } };
+      .eq('chatroom_id', context.chatroom_id), context.user_id, context.chatroom_id);
+    
+    return { updatedContext: { ...context, ...updatedData[0] } }; // Assuming single row update
   } catch (error) {
     console.error("⚠️ Error updating context:", error.message);
     throw new Error("Failed to update context.");
@@ -102,14 +104,13 @@ async function updateContext(data, context) {
 // ✅ Handles data fetching
 async function fetchData(data, context) {
   try {
-    const fetchAction = supabase
+    const { data: fetchedData } = await supabaseRequest(supabase
       .from('chatrooms')
       .select('*')
       .eq('user_id', context.user_id)
-      .eq('chatroom_id', context.chatroom_id);
-
-    const { data: fetchedData } = await supabaseRequest(fetchAction, context.user_id, context.chatroom_id);
-    return { data: fetchedData };
+      .eq('chatroom_id', context.chatroom_id), context.user_id, context.chatroom_id);
+    
+    return { data: fetchedData[0] }; // Assuming single row fetch
   } catch (error) {
     console.error("⚠️ Error fetching data:", error.message);
     throw new Error("Failed to fetch data.");

@@ -42,8 +42,8 @@ export const orchestrateContextWorkflow = async (req, {
     response.generatedIdentifiers = { user_id: generatedUserId, chatroom_id: generatedChatroomId };
 
     // === 🔍 Retrieve Memory and Active Subpersonas ===
-    const existingMemory = await getMemory(query, req);
-    const heads = await getHeads(query, req);
+    const { existingMemory, heads } = await Promise.all([getMemory(query, req), getHeads(query, req)]);
+
 
     // === 📝 Log Workflow Start ===
     await logIssue({
@@ -59,16 +59,15 @@ export const orchestrateContextWorkflow = async (req, {
     updatedContext.actionItems = actionItems || [];
 
     // === 🗃️ Memory Update ===
-    const updatedMemory = await appendMemory(query, req);
+    const updatedMemory = await appendMemory(query, existingMemory, req);
     updatedContext.memory = updatedMemory;
 
     // === 📋 Task Card Creation ===
     const taskCard = await createTaskCard(query, actionItems);
-    await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
     // === 🗜️ Conditional Memory Compression ===
     if (shouldCompress(actionItems, existingMemory.length)) {
-      const compressed = compressMemory(existingMemory);
+      const compressed = compressMemory(updatedMemory);
       await storeCompressedMemory(generatedUserId, generatedChatroomId, compressed);
       updatedContext.memory = compressed;
       response.compressedMemory = compressed;
@@ -81,20 +80,17 @@ export const orchestrateContextWorkflow = async (req, {
       response.newHead = newHead;
     }
 
-    // === 🗄️ Store Workflow Data ===
-    await storeProjectData(query, req);
-
     // === 🗑️ Prune Inactive Subpersonas ===
     for (const head of heads) {
       await pruneHead(head.id);
     }
 
     // === 🔄 Context Update ===
-    logContextUpdate(updatedContext);
     const context = await updateContext(updatedContext);
+    logContextUpdate(context);
 
     // === 📝 Generate Context Digest ===
-    response.contextDigest = generateContextDigest(updatedContext.memory);
+    response.contextDigest = generateContextDigest(context.memory);
 
     // === 📊 Gauge Metrics Collection ===
     response.gaugeData = await gatherGaugeData({
@@ -107,10 +103,10 @@ export const orchestrateContextWorkflow = async (req, {
     const actions = metrics.actions;
 
     // === ⚡ Dynamic Action Injection ===
-    if (shouldCompress(actions, memory.length)) {
+    if (shouldCompress(actions, context.memory.length)) {
       actions.push('compressMemory');
     }
-    if (needsContextRecap(memory.length, feedback?.engagement)) {
+    if (needsContextRecap(context.memory.length, feedback?.engagement)) {
       actions.push('contextRecap');
     }
 
@@ -137,6 +133,9 @@ export const orchestrateContextWorkflow = async (req, {
       gaugeData: response.gaugeData,
       actionFeedback,
     });
+
+    // === 🗄️ Store Workflow Data ===
+    await storeProjectData(query, req, context);
 
     return {
       status: "context_updated",

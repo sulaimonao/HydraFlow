@@ -16,6 +16,7 @@ async function withRetry(task, retries = 3) {
 
 const handleCreateSubpersona = async (req, res) => {
   try {
+    // Extract request body
     const { name, capabilities, preferences } = req.body;
 
     // ✅ Validate required fields
@@ -32,20 +33,22 @@ const handleCreateSubpersona = async (req, res) => {
     }
 
     // 🌐 Use workflow-generated IDs if not provided
-    const workflowContext = await orchestrateContextWorkflow(req, {
+    const workflowPromise = orchestrateContextWorkflow(req, {
       query: req.body.query || '',
       memory: req.body.memory || '',
       feedback: req.body.feedback || null,
       tokenCount: req.body.tokenCount || 0
     });
 
-    const persistentUserId = req.session.userId || workflowContext?.generatedIdentifiers?.user_id;
-    const persistentChatroomId = req.session.chatroomId || workflowContext?.generatedIdentifiers?.chatroom_id;
+    const workflowContext = await workflowPromise;
+    const persistentUserId = req.session.userId || workflowContext.generatedIdentifiers.user_id;
+    const persistentChatroomId = req.session.chatroomId || workflowContext.generatedIdentifiers.chatroom_id;
 
     // 🔍 Validate persistent IDs
     if (!persistentUserId || !persistentChatroomId) {
       console.error("❌ Missing persistent user_id or chatroom_id.");
-      return res.status(400).json({ error: 'Persistent user_id and chatroom_id are required.' });
+      return res.status(400).json({ error: 'Persistent user_id and chatroom_id are required. ' +
+      'Ensure the workflow successfully generated these identifiers.'});
     }
 
     // 🔒 Ensure session context is set for RLS with error handling
@@ -57,22 +60,21 @@ const handleCreateSubpersona = async (req, res) => {
     }
 
     // 📝 Insert new subpersona into the heads table with retry mechanism
-    const { data, error } = await withRetry(() =>
-      supabase
+    const { data, error } = await withRetry(async () => {
+      return await supabase
         .from('heads')
-        .insert([
-          {
-            name,
-            user_id: persistentUserId,
-            chatroom_id: persistentChatroomId,
-            capabilities: capabilities || null,
-            preferences: preferences || null,
-            status: 'active',
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select()
-    );
+        .insert([{
+          name,
+          user_id: persistentUserId,
+          chatroom_id: persistentChatroomId,
+          capabilities: capabilities || null,
+          preferences: preferences || null,
+          status: 'active',
+          created_at: new Date().toISOString()
+        }])
+        .select();
+    });
+
 
     // ❗ Handle insertion errors
     if (error) {

@@ -3,19 +3,15 @@ import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseCli
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 export default async function handler(req, res) {
-  try {
-    if (req.method === 'POST') {
+  switch (req.method) {
+    case 'POST':
       return await submitFeedback(req, res);
-    } else if (req.method === 'GET') {
+    case 'GET':
       return await handleGetFeedback(req, res);
-    } else {
+    default:
       return res.status(405).json({ error: 'Method not allowed.' });
-    }
-  } catch (error) {
-    console.error("❌ Error in feedback handler:", error);
-    return res.status(500).json({ error: "Internal server error." });
   }
-}
+  }
 
 /**
  * Handles GET feedback requests by type.
@@ -58,14 +54,14 @@ async function submitFeedback(req, res) {
   }
 
   try {
-    await orchestrateContextWorkflow(req, {
+    const workflowResult = await orchestrateContextWorkflow(req, {
       query: query || '',
       memory: req.body.memory || '',
       feedback: userFeedback,
       tokenCount: req.body.tokenCount || 0,
     });
 
-    const responseId = `${chatroomId}_${responseNumber}`;
+    const responseId = `${chatroomId}_${responseNumber || 0}`; // Handle undefined responseNumber
 
     //Store feedback in Supabase
     const { data, error } = await supabase
@@ -86,12 +82,17 @@ async function submitFeedback(req, res) {
     }
 
     await improveWorkflowsBasedOnFeedback(userFeedback, rating);
-
-    return res.status(200).json({ message: "Feedback submitted successfully.", data });
+    return res.status(200).json({ message: "Feedback submitted successfully.", data, workflowResult });
   } catch (error) {
-    console.error("❌ Error in submitFeedback:", error);
-    return res.status(500).json({ error: error.message });
+    return handleError(res, error);
   }
+}
+
+function handleError(res, error) {
+  console.error("❌ Error:", error);
+  const errorMessage = error.message || "Internal server error.";
+  const statusCode = error.statusCode || 500;
+  return res.status(statusCode).json({ error: errorMessage });
 }
 
 /**

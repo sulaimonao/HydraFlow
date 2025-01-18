@@ -21,38 +21,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "'additionalNotes' must be a string if provided." });
     }
 
-    // 🌐 Retrieve persistent IDs from the workflow manager
-    const workflowContext = await orchestrateContextWorkflow(req, {
+    // 🌐 Run workflow and update memory concurrently
+    const [workflowContext, updateMemoryResult] = await Promise.all([
+      orchestrateContextWorkflow(req, {
       query: query,
       history: history,
       compressedMemory: compressedMemory,
       additionalNotes: additionalNotes,
       tokenCount: req.body.tokenCount || 0, // Add tokenCount
-    });
+      }),
+      updateMemory(req.session.userId, req.session.chatroomId, compressedMemory) //Update memory concurrently
+    ]);
+
     const persistentUserId = req.session.userId; // Use session ID
     const persistentChatroomId = req.session.chatroomId; //Use session ID
 
     // 🔍 Validate persistent IDs
     if (!persistentUserId || !persistentChatroomId) {
       console.error("❌ Missing persistent user_id or chatroom_id.");
-      return res.status(400).json({ error: "Failed to retrieve valid user_id and chatroom_id." });
+      throw new Error("Failed to retrieve valid user_id and chatroom_id.");
     }
 
     // 🔒 Set session context for RLS enforcement with error handling
     try {
       await setSessionContext(persistentUserId, persistentChatroomId);
     } catch (error) {
-      console.error("❌ Failed to set session context:", error);
-      return res.status(500).json({ error: "Failed to initialize session context." });
+      console.error("❌ Failed to set session context:", error.message);
+      throw new Error("Failed to initialize session context.");
     }
 
-    // 💾 Update Supabase with compressed memory.  Error handling included.
-    try {
-      await updateMemory(persistentUserId, persistentChatroomId, compressedMemory);
-    } catch (updateError) {
-      console.error("❌ Failed to update memory in Supabase:", updateError);
+    //Check for errors from the concurrent memory update
+    if (updateMemoryResult.error) {
+      console.error("❌ Failed to update memory in Supabase:", updateMemoryResult.error);
       // Consider a more nuanced error response, perhaps retry logic.
-      return res.status(500).json({ error: "Failed to update memory." });
+      throw new Error("Failed to update memory.");
     }
 
 
@@ -92,9 +94,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("❌ Error in context-recap:", error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       error: "Failed to generate context recap.",
-      details: error.message
+      details: error.message || error
     });
   }
 }

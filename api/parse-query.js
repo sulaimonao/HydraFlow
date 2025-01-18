@@ -15,14 +15,12 @@ export default async (req, res) => {
       return res.status(400).json({ error: "A valid query string is required." });
     }
 
-    // 📦 Fetch existing task cards with error handling
-    let existingTaskCards = [];
-    try {
-      existingTaskCards = await fetchTaskCards();
-    } catch (fetchError) {
-      console.error("❌ Failed to fetch task cards:", fetchError);
-      return res.status(500).json({ error: "Error fetching existing task cards." });
-    }
+    // 📦 Fetch existing task cards concurrently with other async operations if needed.  For now, it's sequential.
+    const existingTaskCardsPromise = fetchTaskCards();
+
+    //Consider using Promise.all here if you have other independent async operations to perform concurrently.
+    //Example: const [existingTaskCards, otherData] = await Promise.all([existingTaskCardsPromise, otherAsyncOperation()]);
+
 
     // 📝 Initialize tasks and details
     const actionItems = [];
@@ -57,6 +55,7 @@ export default async (req, res) => {
     };
 
     // 🚀 Predictive analysis and workflow orchestration
+    const existingTaskCards = await existingTaskCardsPromise; //Await the promise here
     let workflowPlan;
     try {
       workflowPlan = await orchestrateContextWorkflow({

@@ -29,8 +29,8 @@ export default async function handler(req, res) {
       additionalNotes: additionalNotes,
       tokenCount: req.body.tokenCount || 0, // Add tokenCount
     });
-    const persistentUserId = workflowContext?.generatedIdentifiers?.user_id;
-    const persistentChatroomId = workflowContext?.generatedIdentifiers?.chatroom_id;
+    const persistentUserId = req.session.userId; // Use session ID
+    const persistentChatroomId = req.session.chatroomId; //Use session ID
 
     // 🔍 Validate persistent IDs
     if (!persistentUserId || !persistentChatroomId) {

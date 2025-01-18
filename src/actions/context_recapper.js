@@ -10,7 +10,7 @@ import { setSessionContext, createSession } from '../../lib/supabaseClient.js'; 
  * @param {string} chatroom_id - Chatroom ID for session context.
  * @returns {Promise<Object>} - API response or error.
  */
-export async function contextRecap(history, compressedMemory, user_id, chatroom_id) {
+export async function contextRecap(history, compressedMemory, req) {
   try {
     const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
 
@@ -19,21 +19,20 @@ export async function contextRecap(history, compressedMemory, user_id, chatroom_
       throw new Error("❌ Missing user_id or chatroom_id for context recap.");
     }
 
+    const { userId: user_id, chatroomId: chatroom_id } = req.session;
+
     // ✅ Ensure session exists in the user_sessions table
     await createSession(user_id, chatroom_id);
-
     // 🔒 Set Supabase session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
-
     // 📝 Summarize history for more efficient recap
     const summarizedHistory = summarizeHistory(history);
-
     // 📦 Prepare payload with context identifiers
     const payload = {
       user_id,             // ✅ Include user ID
       chatroom_id,         // ✅ Include chatroom ID
       history: JSON.stringify(summarizedHistory),
-      compressedMemory: compressedMemory || ""
+      compressedMemory: compressedMemory || "",
     };
 
     // ⚠️ Validate payload before API call

@@ -8,26 +8,16 @@ const router = express.Router();
 
 // ✅ Middleware to enforce session context using user_sessions table
 async function enforceSessionContext(req, res, next) {
-  const { query, memory, feedback, tokenCount } = req.body;
-
   try {
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: memory || '',
-      feedback: feedback || null,
-      tokenCount: tokenCount || 0,
-    });
-    const { user_id, chatroom_id } = workflowContext.generatedIdentifiers;
-
-    if (!user_id || !chatroom_id) {
+    if (!req.session.userId || !req.session.chatroomId) {
       return res.status(403).json({ error: "Unauthorized access. Missing session identifiers." });
     }
 
     // ✅ Set session context in user_sessions
-    await setSessionContext(user_id, chatroom_id);
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
-    req.user_id = user_id;
-    req.chatroom_id = chatroom_id;
+    req.user_id = req.session.userId;
+    req.chatroom_id = req.session.chatroomId;
     next();
   } catch (error) {
     console.error("❌ Error enforcing session context:", error);
@@ -42,8 +32,8 @@ router.get("/all", enforceSessionContext, async (req, res) => {
       supabase
         .from('feedback_entries')
         .select('*')
-        .eq('user_id', req.user_id)
-        .eq('chatroom_id', req.chatroom_id)
+        .eq('user_id', req.session.userId)
+        .eq('chatroom_id', req.session.chatroomId)
     );
 
     res.status(200).json({ status: "success", data: feedback });
@@ -73,9 +63,9 @@ router.get("/task/:taskId", enforceSessionContext, async (req, res) => {
       supabase
         .from('feedback_entries')
         .select('*')
-        .eq('task_id', taskId)
-        .eq('user_id', req.user_id)
-        .eq('chatroom_id', req.chatroom_id)
+        .eq('task_id', taskId)        
+        .eq('user_id', req.session.userId)
+        .eq('chatroom_id', req.session.chatroomId)
     );
 
     res.status(200).json({ status: "success", data: feedback });
@@ -94,9 +84,9 @@ router.get("/persona/:personaName", enforceSessionContext, async (req, res) => {
       supabase
         .from('feedback_entries')
         .select('*')
-        .eq('persona', personaName)
-        .eq('user_id', req.user_id)
-        .eq('chatroom_id', req.chatroom_id)
+        .eq('persona', personaName)        
+        .eq('user_id', req.session.userId)
+        .eq('chatroom_id', req.session.chatroomId)
     );
 
     res.status(200).json({ status: "success", data: feedback });

@@ -11,21 +11,16 @@ const CPU_LOAD_THRESHOLD = process.env.CPU_LOAD_THRESHOLD || 1.5;
 /**
  * 📊 Generates context-aware system optimization recommendations.
  */
-export function generateRecommendations(metrics) {
-  const { 
-    tokenUsagePercentage, 
-    averageLatency, 
-    activeSubpersonasCount, 
-    memoryUsageMB, 
-    cpuLoad, 
-    user_id = null, 
-    chatroom_id = null 
-  } = metrics;
+export function generateRecommendations(metrics, req) {
+  const { tokenUsagePercentage, averageLatency, activeSubpersonasCount, memoryUsageMB, cpuLoad } = metrics;
+  const userId = req.session.userId;
+  const chatroomId = req.session.chatroomId;
 
   const recommendations = [];
 
   // 🔒 Log context for traceability
-  logInfo(`📊 Generating recommendations for user: ${user_id}, chatroom: ${chatroom_id}`);
+  logInfo(`📊 Generating recommendations for user: ${userId}, chatroom: ${chatroomId}`);
+  console.log("req.session", req.session);
 
   // 🚀 Token usage optimization
   if (tokenUsagePercentage > TOKEN_USAGE_CRITICAL) {

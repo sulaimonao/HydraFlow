@@ -28,14 +28,13 @@ export function sleep(ms) {
 }
 
 /**
- * Validates that both user_id and chatroom_id are provided.
- * @param {string} user_id - User ID.
- * @param {string} chatroom_id - Chatroom ID.
+ * Validates that both req.session.userId and req.session.chatroomId are provided.
+ * @param {object} req - The request object.
  * @returns {boolean}
  */
-export function validateUserAndChatroom(user_id, chatroom_id) {
-  if (!user_id || !chatroom_id) {
-    console.error("⚠️ Missing user_id or chatroom_id.");
+export function validateUserAndChatroom(req) {
+  if (!req.session.userId || !req.session.chatroomId) {
+    console.error("⚠️ Missing req.session.userId or req.session.chatroomId.");
     return false;
   }
   return true;

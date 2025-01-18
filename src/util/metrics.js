@@ -11,10 +11,10 @@ const LATENCY_THRESHOLD = process.env.LATENCY_THRESHOLD || 1;
 /**
  * 📊 Calculates system and operational metrics with user context.
  */
-export function calculateMetrics(context) {
+export function calculateMetrics(context, req) {
   if (!context) throw new Error("❗ Context data is missing");
 
-  const { tokenUsage, responseLatency, activeSubpersonas = [], user_id = 'system', chatroom_id = 'global' } = context;
+  const { tokenUsage, responseLatency, activeSubpersonas = [] } = context;
 
   // 🔍 Validate essential data
   validateTokenUsage(tokenUsage);
@@ -45,13 +45,13 @@ export function calculateMetrics(context) {
   ]);
 
   // 📝 Detailed logging
-  logInfo(`📊 Metrics calculated for user: ${user_id}, chatroom: ${chatroom_id}`);
+  logInfo(`📊 Metrics calculated for user: ${req.session.userId}, chatroom: ${req.session.chatroomId}`);
   logInfo(`🔍 Health Status: ${JSON.stringify(healthStatus)}`);
   logInfo(`⚙️ Recommended Actions: ${actions.join(', ')}`);
 
   return {
-    user_id,
-    chatroom_id,
+    user_id: req.session.userId,
+    chatroom_id: req.session.chatroomId,
     tokenUsagePercentage: tokenUsagePercentage.toFixed(2),
     inputTokenUsage,
     outputTokenUsage,

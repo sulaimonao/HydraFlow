@@ -8,24 +8,24 @@ const buildQueryString = (params) => {
 
 // 🚀 Dynamic API Endpoints with scalable parameter support
 export const API_ENDPOINTS = {
-  PARSE_QUERY: (user_id, chatroom_id) =>
-    `/api/parse-query${buildQueryString({ user_id, chatroom_id })}`,
+  PARSE_QUERY: (req) =>
+    `/api/parse-query${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 
-  COMPRESS_MEMORY: (user_id, chatroom_id) =>
-    `/api/compress-memory${buildQueryString({ user_id, chatroom_id })}`,
+  COMPRESS_MEMORY: (req) =>
+    `/api/compress-memory${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 
-  CREATE_SUBPERSONA: (user_id, chatroom_id) =>
-    `/api/create-subpersona${buildQueryString({ user_id, chatroom_id })}`,
+  CREATE_SUBPERSONA: (req) =>
+    `/api/create-subpersona${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 
-  CONTEXT_RECAP: (user_id, chatroom_id) =>
-    `/api/context-recap${buildQueryString({ user_id, chatroom_id })}`,
+  CONTEXT_RECAP: (req) =>
+    `/api/context-recap${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 
-  SUMMARIZE_LOGS: (user_id, chatroom_id) =>
-    `/api/summarize-logs${buildQueryString({ user_id, chatroom_id })}`,
+  SUMMARIZE_LOGS: (req) =>
+    `/api/summarize-logs${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 
   // 🌟 Example of easily adding new endpoints
-  FETCH_FEEDBACK: (user_id, chatroom_id) =>
-    `/api/feedback${buildQueryString({ user_id, chatroom_id })}`,
+  FETCH_FEEDBACK: (req) =>
+    `/api/feedback${buildQueryString({ userId: req.session.userId, chatroomId: req.session.chatroomId })}`,
 };
 
 // 📊 Standardized Status Responses

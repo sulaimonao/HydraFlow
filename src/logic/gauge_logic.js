@@ -61,11 +61,11 @@ export const trackResponseTime = async (start, end, user_id, chatroom_id) => {
 
 /**
  * 📈 Collect system and database metrics, track performance, and associate with user context.
- * @param {string} user_id - User ID for personalized metrics.
- * @param {string} chatroom_id - Chatroom ID for session-specific tracking.
+ * @param {object} req - Express request object containing user and chatroom IDs.
  */
-export const collectGaugeMetrics = async (user_id, chatroom_id) => {
-    if (!user_id || !chatroom_id) {
+export const collectGaugeMetrics = async (req) => {
+    const { user_id, chatroom_id } = req.session;
+    if (!user_id || !chatroom_id || !req.session) {
         throw new Error("❗ Missing user_id or chatroom_id for gauge metrics collection.");
     }
 
@@ -105,9 +105,9 @@ export const collectGaugeMetrics = async (user_id, chatroom_id) => {
 
 /**
  * 🔄 Alias function to maintain consistent import usage.
- * @param {string} user_id - User ID for the session.
- * @param {string} chatroom_id - Chatroom ID for the session.
+ * @param {object} req - Express request object containing user and chatroom IDs.
  */
-export const gatherGaugeData = async (user_id, chatroom_id) => {
-    return await collectGaugeMetrics(user_id, chatroom_id);
+export const gatherGaugeData = async (req) => {
+    return await collectGaugeMetrics(req);
 };
+

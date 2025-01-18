@@ -15,19 +15,17 @@ export async function handleActions(actions, context, req) {
   const feedback = [];
 
   try {
-    // 🌐 Retrieve persistent user and chatroom IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: context.query });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    // 🔒 Set session context for RLS enforcement using session data
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
-    // 🔒 Set session context for RLS enforcement
-    await setSessionContext(user_id, chatroom_id);
-
+    const userId = req.session.userId;
+    const chatroomId = req.session.chatroomId;
     for (const action of actions) {
       try {
         switch (action) {
           case 'compressMemory':
             const compressedMemory = compressMemory(context.memory);
-            await storeCompressedMemory(user_id, chatroom_id, compressedMemory.compressedMemory);
+            await storeCompressedMemory(userId, chatroomId, compressedMemory.compressedMemory);
             console.log("🗜️ Memory compressed and stored.");
             feedback.push("Memory usage is high. Optimizing memory for better performance.");
             break;

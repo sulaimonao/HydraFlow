@@ -9,15 +9,15 @@ import { setSessionContext } from '../../lib/supabaseClient.js';
  * @param {string} chatroom_id - Chatroom ID for context.
  * @returns {Promise<Object>} Summarized logs response.
  */
-async function summarizeLogs(logs, user_id, chatroom_id) {
+async function summarizeLogs(logs, req) {
   try {
     // 🔒 Validate user and chatroom context
-    if (!user_id || !chatroom_id) {
+    if (!req.session.userId || !req.session.chatroomId) {
       throw new Error("Missing user_id or chatroom_id for log summarization.");
     }
 
     // 🔐 Set Supabase session context for RLS enforcement
-    await setSessionContext(user_id, chatroom_id);
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
     // 📦 Prepare the payload with context
     const payload = {
@@ -31,7 +31,7 @@ async function summarizeLogs(logs, user_id, chatroom_id) {
     // 🚀 Execute API call with retry logic
     const response = await callApiWithRetry(endpoint, payload);
 
-    console.log(`✅ Logs summarized for user_id: ${user_id}, chatroom_id: ${chatroom_id}`);
+    console.log(`✅ Logs summarized for user_id: ${req.session.userId}, chatroom_id: ${req.session.chatroomId}`);
     return response;
 
   } catch (error) {

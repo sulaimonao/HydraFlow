@@ -5,37 +5,26 @@ import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 export default async function handler(req, res) {
   try {
-    const { query } = req.body;
+    const { query, memory, feedback, tokenCount } = req.body;
 
     // ✅ Validate input
     if (!query || typeof query !== 'string') {
       return res.status(400).json({ error: "Invalid or missing 'query' parameter." });
     }
 
-    // 🌐 Safely retrieve persistent IDs
-    let workflowContext;
-    try {
-      workflowContext = await orchestrateContextWorkflow(req, {
-        query: query,
-        memory: req.body.memory || '',
-        feedback: req.body.feedback || null,
-        tokenCount: req.body.tokenCount || 0,
-      });
-      //workflowContext = await orchestrateContextWorkflow({ query, req });
-
-    } catch (workflowError) {
-      console.error("❌ Workflow context retrieval failed:", workflowError);
-      return res.status(500).json({ error: "Failed to retrieve workflow context." });
-    }
-
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+    // Use session IDs directly
+    const persistentUserId = req.session.userId;
+    const persistentChatroomId = req.session.chatroomId;
 
     if (!persistentUserId || !persistentChatroomId) {
       return res.status(400).json({ error: 'Invalid user_id or chatroom_id.' });
     }
 
     // 🔒 Set session context
+    // Note:  This might be redundant if the session is already set correctly.
+    // Consider removing this line if the session is managed elsewhere and already contains the IDs.
+    // The orchestrateContextWorkflow function might be unnecessary if session management is handled properly.
+
     await setSessionContext(persistentUserId, persistentChatroomId);
 
     // 🔍 Retrieve metric type

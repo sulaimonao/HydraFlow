@@ -14,24 +14,14 @@ const INITIAL_COMPRESSION_THRESHOLD = 10;
  * @returns {Object} - Extracted user and chatroom IDs.
  */
 const getSessionIdentifiers = async (query, req) => {
-  try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+  const userId = req.session.userId;
+  const chatroomId = req.session.chatroomId;
 
-    if (!user_id || !chatroom_id) {
-      throw new Error("❗ Missing user_id or chatroom_id.");
-    }
-
-    return { user_id, chatroom_id };
-  } catch (error) {
-    console.error("❌ Error retrieving session identifiers:", error.message);
-    throw error;
+  if (!userId || !chatroomId) {
+    throw new Error("❗ Missing userId or chatroomId in session.");
   }
+
+  return { user_id: userId, chatroom_id: chatroomId };
 };
 
 /**
@@ -88,10 +78,9 @@ const needsContextRecap = async (conversationLength, userEngagement, query, req)
  * ✅ Checks if a task has any pending dependencies.
  */
 const hasPendingDependencies = async (taskId, query, req) => {
-  const { user_id, chatroom_id } = await getSessionIdentifiers(query, req);
+  const { user_id, chatroom_id } = await getSessionIdentifiers(query, req)
 
-  const taskCard = await getTaskCard(taskId, user_id, chatroom_id);
-
+  const taskCard = await getTaskCard(taskId, user_id, chatroom_id)
   if (!taskCard) {
     console.warn(`⚠️ Task ${taskId} not found for user: ${user_id}`);
     return false;

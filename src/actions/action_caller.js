@@ -5,17 +5,17 @@ import { generateResponse } from './response_generator_actions.js';
 import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session checks
 
 // 🔄 Retry logic for API calls with session context
-async function callApiWithRetry(endpoint, payload, user_id, chatroom_id, retries = 3, backoff = 300) {
+async function callApiWithRetry(endpoint, payload, req, retries = 3, backoff = 300) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       // ✅ Ensure the session exists before making the API call
-      await createSession(user_id, chatroom_id);
-      await setSessionContext(user_id, chatroom_id);
+      await createSession(req.session.userId, req.session.chatroomId);
+      await setSessionContext(req.session.userId, req.session.chatroomId);
 
       const response = await axios.post(endpoint, {
         ...payload,
-        user_id,
-        chatroom_id,  // 🔒 Attach user and chatroom IDs
+        userId: req.session.userId,
+        chatroomId: req.session.chatroomId,  // 🔒 Attach user and chatroom IDs from session
       });
 
       return response.data;
@@ -39,20 +39,15 @@ function shouldRetry(error) {
 export { callApiWithRetry };
 
 // 🎯 Centralized action dispatcher with persistent session context
-async function callAction(action, payload, context) {
-  const { user_id, chatroom_id } = context;
+async function callAction(action, payload, req) {
 
-  // ✅ Validate IDs
-  if (!user_id || !chatroom_id) {
-    throw new Error("Missing user_id or chatroom_id in context.");
-  }
-
-  // ✅ Ensure session exists and set context
-  await createSession(user_id, chatroom_id);
-  await setSessionContext(user_id, chatroom_id);
+  // Validate session
+  if (!req.session.userId || !req.session.chatroomId) {
+    throw new Error("Missing userId or chatroomId in session.");
+  }  
 
   switch (action) {
-    case "generate_response":
+    case 'generate_response':
       return await generateResponse(payload, context);
 
     case "fetch_gauge_metrics":
@@ -60,11 +55,11 @@ async function callAction(action, payload, context) {
 
     case "compress_memory":
       // ✅ Memory compression with context enforcement
-      return await callApiWithRetry('/api/compress-memory', payload, user_id, chatroom_id);
+      return await callApiWithRetry('/api/compress-memory', payload, req);
 
     case "create_subpersona":
       // ✅ Persona creation with context enforcement
-      return await callApiWithRetry('/api/create-subpersona', payload, user_id, chatroom_id);
+      return await callApiWithRetry('/api/create-subpersona', payload, req);
 
     default:
       throw new Error(`❌ Unknown action: ${action}`);

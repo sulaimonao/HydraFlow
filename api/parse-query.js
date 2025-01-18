@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase.js';
 
 export default async (req, res) => {
   try {
+    const userId = req.session.userId;
+    const chatroomId = req.session.chatroomId;
     const { query } = req.body;
 
     // ✅ Input Validation
@@ -65,6 +67,8 @@ export default async (req, res) => {
         existingTasks: existingTaskCards,
         proposedTasks: taskCard.subtasks,
         req: req,
+        userId: userId,
+        chatroomId: chatroomId,
       });
       console.log("🚀 Workflow plan:", workflowPlan);
 
@@ -88,15 +92,12 @@ export default async (req, res) => {
     }
 
 
-    const persistentUserId = workflowPlan.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowPlan.generatedIdentifiers.chatroom_id;
-
     // 🔒 Validate session context IDs
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!userId || !chatroomId) {
       console.warn("⚠️ Invalid user_id or chatroom_id detected.");
       return res.status(400).json({ error: "Invalid user_id or chatroom_id." });
     }
-
+    
     // 🔍 Enhanced keyword extraction (removes special characters)
     const keywords = query.match(/\b\w+\b/g) || [];
 
@@ -107,8 +108,8 @@ export default async (req, res) => {
       taskCard,
       workflowPlan,
       gaugeMetrics: res.locals?.gaugeMetrics || {},
-      user_id: persistentUserId,
-      chatroom_id: persistentChatroomId,
+      user_id: userId,
+      chatroom_id: chatroomId,
       message: "Query parsed and workflow planned successfully.",
     });
 

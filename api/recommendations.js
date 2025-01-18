@@ -27,13 +27,13 @@ export default async (req, res) => {
       return res.status(500).json({ error: "Workflow orchestration failed." });
     }
 
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+    const userId = req.session.userId;
+    const chatroomId = req.session.chatroomId;
 
     // 🔒 Validate session IDs
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!userId || !chatroomId) {
       console.warn("⚠️ Invalid user_id or chatroom_id detected.");
-      return res.status(400).json({ error: "Invalid user_id or chatroom_id." });
+      return res.status(401).json({ error: "Unauthorized: Missing user_id or chatroom_id in session." });
     }
 
     // 📊 Access or initialize gauge metrics
@@ -57,8 +57,8 @@ export default async (req, res) => {
     res.status(200).json({
       recommendations,
       gaugeMetrics,
-      user_id: persistentUserId,
-      chatroom_id: persistentChatroomId,
+      user_id: userId,
+      chatroom_id: chatroomId,
       message: "Recommendations generated successfully."
     });
 

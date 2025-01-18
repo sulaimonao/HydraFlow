@@ -33,8 +33,8 @@ export const orchestrateContextWorkflow = async (req, {
     const updatedContext = {};
 
     // === 🛡️ Session Validation ===
-    const generatedUserId = req.session.userId;
-    const generatedChatroomId = req.session.chatroomId;
+    const generatedUserId = req.session?.userId;
+    const generatedChatroomId = req.session?.chatroomId;
 
     if (!validateUUID(generatedUserId) || !validateUUID(generatedChatroomId)) {
       throw new Error("Invalid session IDs for user or chatroom.");
@@ -146,8 +146,8 @@ export const orchestrateContextWorkflow = async (req, {
   } catch (error) {
     console.error("❌ Error in orchestrateContextWorkflow:", error);
     await logIssue({
-      userId: req.session.userId,
-      contextId: req.session.chatroomId,
+      userId: req.session?.userId,
+      contextId: req.session?.chatroomId,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });

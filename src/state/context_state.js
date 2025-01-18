@@ -74,12 +74,11 @@ export function logContextUpdate(newData) {
  */
 export async function updateContext(newData, req) {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ req, query: 'update context' });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const { user_id, chatroom_id } = req.session;
 
     if (!currentContext || currentContext.user_id !== user_id || currentContext.chatroom_id !== chatroom_id) {
       currentContext = new ContextState(user_id, chatroom_id);
-    }
+    }    
 
     logContextUpdate(newData);
     Object.assign(currentContext, newData);

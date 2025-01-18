@@ -56,7 +56,7 @@ export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerforme
  * @param {Object} context - Current state and data context.
  * @returns {Object} - Response with feedback and gauge metrics.
  */
-export async function generateResponse(input, context) {
+export async function generateResponse(input, context, req) {
   try {
     if (!input || typeof input !== "string" || input.trim() === "") {
       throw new Error("❌ Invalid input provided to generateResponse. Input must be a non-empty string.");
@@ -66,7 +66,7 @@ export async function generateResponse(input, context) {
     const responseText = `🔍 **Processed Input:** ${input.trim()}`;
 
     // 📊 Calculate and attach system metrics
-    const gaugeMetrics = calculateMetrics(context);
+    const gaugeMetrics = calculateMetrics(context, req.session.userId, req.session.chatroomId);
 
     return {
       status: "success",

@@ -119,9 +119,10 @@ function listActiveSubpersonas() {
 // 🛠️ Create a custom subpersona with user-defined parameters
 export async function createSubpersona(query, name, capabilities, preferences, req) {
   try {
+    // Orchestrate the workflow to get user_id and chatroom_id from the request
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
-
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
     validateIds(user_id, chatroom_id);
     await setSessionContext(user_id, chatroom_id);
 

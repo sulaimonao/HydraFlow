@@ -8,18 +8,18 @@ import { setSessionContext, createSession } from '../../lib/supabaseClient.js'; 
  * @param {string} chatroom_id - The chatroom ID for session context.
  * @returns {Object|string} - A digest summary or an error message.
  */
-export const generateContextDigest = async (memory, user_id, chatroom_id) => {
+export const generateContextDigest = async (memory, req) => {
   try {
     // ✅ Validate user_id and chatroom_id
-    if (!user_id || !chatroom_id) {
+    if (!req.session.userId || !req.session.chatroomId) {
       throw new Error("❌ Missing user_id or chatroom_id for context digest generation.");
     }
 
     // ✅ Ensure the session exists in the user_sessions table
-    await createSession(user_id, chatroom_id);
+    await createSession(req.session.userId, req.session.chatroomId);
 
     // 🔒 Set session context for RLS compliance
-    await setSessionContext(user_id, chatroom_id);
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
     // ⚠️ Handle empty memory
     if (!memory || memory.length === 0) {
@@ -29,14 +29,14 @@ export const generateContextDigest = async (memory, user_id, chatroom_id) => {
 
     // 📝 Generate digest summary
     const digest = {
-      user_id,                // ✅ Include user ID for tracking
-      chatroom_id,            // ✅ Include chatroom ID for tracking
+      user_id: req.session.userId,                // ✅ Include user ID for tracking
+      chatroom_id: req.session.chatroomId,            // ✅ Include chatroom ID for tracking
       totalEntries: memory.length,
       highlights: memory.slice(0, 3),  // 📌 First 3 entries as highlights
       generatedAt: new Date().toISOString(),  // ⏰ Timestamp for reference
     };
 
-    console.log(`✅ Context digest generated for user_id: ${user_id}, chatroom_id: ${chatroom_id}`);
+    console.log(`✅ Context digest generated for user_id: ${req.session.userId}, chatroom_id: ${req.session.chatroomId}`);
     return digest;
 
   } catch (error) {

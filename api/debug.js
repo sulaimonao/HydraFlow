@@ -56,15 +56,12 @@ export async function fetchDebugLogs(req, contextId) {
       tokenCount: req.body.tokenCount || 0,
     });
 
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!req.session.userId || !req.session.chatroomId) {
       throw new Error("Invalid session IDs for fetching debug logs.");
     }
 
     // 🔒 Set session context for RLS enforcement
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
     const { data, error } = await supabase
       .from('debug_logs')
@@ -103,16 +100,13 @@ router.post('/debug/log', async (req, res) => {
       tokenCount: req.body.tokenCount || 0,
     });
 
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!req.session.userId || !req.session.chatroomId) {
       return res.status(400).json({ error: "Invalid user or chatroom identifiers." });
     }
 
     const log = await logIssue({
-      userId: persistentUserId,
-      contextId: persistentChatroomId,
+      userId: req.session.userId,
+      contextId: req.session.chatroomId,
       issue,
       resolution
     });

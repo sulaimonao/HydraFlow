@@ -14,8 +14,8 @@ let memory = "";
 export async function appendMemory(newMemory, req, query) {
   try {
     // 🌐 Retrieve persistent IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
 
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
@@ -49,8 +49,8 @@ export async function appendMemory(newMemory, req, query) {
 export async function storeProjectData(req, query, projectData) {
   try {
     // 🌐 Retrieve persistent IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
 
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
@@ -80,8 +80,8 @@ export async function storeProjectData(req, query, projectData) {
 export async function getMemory(req, query) {
   try {
     // 🌐 Retrieve persistent IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
 
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);

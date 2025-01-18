@@ -17,10 +17,12 @@ export async function generateFinalResponse({
   context,
   taskCard,
   actionsPerformed
-}) {
+}) {  
   // 🔍 Validate essential inputs
   if (!userInput || !context || !context.domain || !context.project_goal) {
     throw new Error("❗ Missing required fields: 'userInput' or 'context' (with 'domain' and 'project_goal').");
+  }
+  if (!req.session.userId || !req.session.chatroomId){
   }
 
   let draftResponse = `### 💬 Assistant Response\n\n`;

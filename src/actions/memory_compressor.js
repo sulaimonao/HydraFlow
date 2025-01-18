@@ -36,16 +36,14 @@ export function compressMemory(memory) {
 
 /**
  * ✅ Store compressed memory in the 'memories' table with proper session context.
- * @param {string} userId - UUID of the user.
- * @param {string} chatroomId - UUID of the chatroom.
+ * @param {Request} req - The request object containing user and chatroom IDs.
  * @param {string} compressedMemory - The compressed memory data to store.
  */
-export async function storeCompressedMemory(userId, chatroomId, compressedMemory) {
+export async function storeCompressedMemory(req, compressedMemory) {
   try {
     // 🔒 Validate input before proceeding
-    if (!userId || !chatroomId) {
-      throw new Error("❌ Missing userId or chatroomId for storing compressed memory.");
-    }
+    const { userId, chatroomId } = req.session;
+    if (!userId || !chatroomId || !compressedMemory) throw new Error("❌ Missing userId, chatroomId, or compressedMemory.");
 
     // 🔐 Ensure session exists in the user_sessions table
     await createSession(userId, chatroomId);

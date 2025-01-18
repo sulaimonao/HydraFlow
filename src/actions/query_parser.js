@@ -4,7 +4,7 @@
  * @param {string} query - The input query from the user.
  * @returns {Object} - Extracted keywords and identified action items.
  */
-function parseQuery(query) {
+function parseQuery(query,req) {
   if (!query || typeof query !== "string" || query.trim().length === 0) {
     throw new Error("❌ Invalid query input. Must be a non-empty string.");
   }
@@ -44,7 +44,7 @@ function parseQuery(query) {
     console.warn("⚠️ No specific action identified in the query.");
   }
 
-  return { keywords, actionItems };
+  return { keywords, actionItems, userId: req.session.userId, chatroomId: req.session.chatroomId };
 }
 
 // 🚫 Common words to exclude from keywords

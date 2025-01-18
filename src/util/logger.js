@@ -10,24 +10,22 @@ function timestamp() {
 
 /**
  * Formats context data for logs.
- * @param {string} user_id - User ID.
- * @param {string} chatroom_id - Chatroom ID.
+ * @param {object} req - The request object.
  * @returns {string} - Formatted context string.
  */
-function formatContext(user_id, chatroom_id) {
-  return user_id && chatroom_id
-    ? ` | user_id: ${user_id} | chatroom_id: ${chatroom_id}`
+function formatContext(req) {
+  return req.session && req.session.userId && req.session.chatroomId
+    ? ` | user_id: ${req.session.userId} | chatroom_id: ${req.session.chatroomId}`
     : '';
 }
 
 /**
  * Logs informational messages.
  * @param {string} message - The log message.
- * @param {string} [user_id] - Optional user ID.
- * @param {string} [chatroom_id] - Optional chatroom ID.
+ * @param {object} req - The request object.  Contains session data.
  */
-export function logInfo(message, user_id = null, chatroom_id = null) {
-  console.log(`[INFO] ${timestamp()}: ${message}${formatContext(user_id, chatroom_id)}`);
+export function logInfo(message, req) {
+  console.log(`[INFO] ${timestamp()}: ${message}${formatContext(req)}`);
 }
 
 /**
@@ -43,11 +41,11 @@ export function logError(message, user_id = null, chatroom_id = null) {
 /**
  * Logs debug messages only in development mode.
  * @param {string} message - The debug message.
- * @param {string} [user_id] - Optional user ID.
- * @param {string} [chatroom_id] - Optional chatroom ID.
+ * @param {object} req - The request object. Contains session data.
  */
-export function logDebug(message, user_id = null, chatroom_id = null) {
+export function logDebug(message, req) {
   if (process.env.NODE_ENV === 'development') {
-    console.debug(`[DEBUG] ${timestamp()}: ${message}${formatContext(user_id, chatroom_id)}`);
+    console.debug(`[DEBUG] ${timestamp()}: ${message}${formatContext(req)}`);
   }
 }
+

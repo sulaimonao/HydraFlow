@@ -1,5 +1,6 @@
 // src/actions/feedback_collector.js
 import supabase, { supabaseRequest, setSessionContext, createSession } from '../../lib/supabaseClient.js';
+import { getSession } from '../../lib/session.js';
 
 /**
  * ✅ Collect feedback and associate it with user and chatroom context.
@@ -11,15 +12,16 @@ import supabase, { supabaseRequest, setSessionContext, createSession } from '../
  * @param {string} params.chatroom_id - Chatroom ID for context.
  * @returns {Object} Result of feedback submission.
  */
-export const collectFeedback = async ({ responseId, userFeedback, rating, user_id, chatroom_id }) => {
+export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
   try {
+    const session = await getSession();
+    const user_id = session.userId;
+    const chatroom_id = session.chatroomId;
+
     // ✅ Validate input
     if (!user_id || !chatroom_id) {
       throw new Error("❌ Missing user_id or chatroom_id for feedback submission.");
     }
-
-    // 🔐 Ensure session exists in user_sessions table
-    await createSession(user_id, chatroom_id);
 
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
@@ -59,11 +61,12 @@ export const collectFeedback = async ({ responseId, userFeedback, rating, user_i
  * @param {string} chatroom_id - Chatroom ID for filtering.
  * @returns {Object} Feedback logs or error message.
  */
-export const getFeedbackLog = async (user_id, chatroom_id) => {
+export const getFeedbackLog = async () => {
   try {
-    // 🔐 Ensure session exists in user_sessions table
-    await createSession(user_id, chatroom_id);
-
+    const session = await getSession();
+    const user_id = session.userId;
+    const chatroom_id = session.chatroomId;
+    
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
 
@@ -94,11 +97,12 @@ export const getFeedbackLog = async (user_id, chatroom_id) => {
  * @param {string} chatroom_id - Chatroom ID for summary generation.
  * @returns {Object} Summary insights or error message.
  */
-export const generateFeedbackSummary = async (user_id, chatroom_id) => {
+export const generateFeedbackSummary = async () => {
   try {
-    // 🔐 Ensure session exists in user_sessions table
-    await createSession(user_id, chatroom_id);
-
+    const session = await getSession();
+    const user_id = session.userId;
+    const chatroom_id = session.chatroomId;
+    
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
 

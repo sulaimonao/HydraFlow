@@ -11,21 +11,12 @@ async function hasCircularDependency(subtaskId, dependsOn) {
 
 // ✅ Add a Task Dependency
 export async function addTaskDependency(req, res) {
+  const { subtaskId, dependsOn } = req.body;
+  const { userId, chatroomId } = req.session;
+
   try {
-    const { query, subtaskId, dependsOn } = req.body;
-
-    // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
     // 🔒 Set session context for RLS
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    await setSessionContext(userId, chatroomId);
 
     // ⚠️ Input validation
     if (!subtaskId || !dependsOn) {
@@ -45,8 +36,8 @@ export async function addTaskDependency(req, res) {
     const { data, error } = await insertTaskDependency({
       subtaskId,
       dependsOn,
-      user_id: persistentUserId,
-      chatroom_id: persistentChatroomId,
+      user_id: userId,
+      chatroom_id: chatroomId,
     });
 
     if (error) {
@@ -66,22 +57,12 @@ export async function addTaskDependency(req, res) {
 
 // ✅ Fetch Task Dependencies
 export async function getTaskDependencies(req, res) {
+  const { subtaskId } = req.params;
+  const { userId, chatroomId } = req.session;
+
   try {
-    const { query } = req.body;
-    const { subtaskId } = req.params;
-
-    // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
     // 🔒 Set session context for RLS
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    await setSessionContext(userId, chatroomId);
 
     if (!subtaskId) {
       return res.status(400).json({ error: 'subtaskId is required.' });
@@ -111,29 +92,19 @@ export async function getTaskDependencies(req, res) {
 
 // ✅ Fetch Task Card with Subtasks and Dependencies
 export async function getTaskCard(req, res) {
+  const { taskCardId } = req.params;
+  const { userId, chatroomId } = req.session;
+
   try {
-    const { query } = req.body;
-    const { taskCardId } = req.params;
-
-    // 🚀 Generate persistent IDs
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
-
     // 🔒 Set session context for RLS
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    await setSessionContext(userId, chatroomId);
 
     if (!taskCardId) {
       return res.status(400).json({ error: 'taskCardId is required.' });
     }
 
     // 🔍 Fetch task card securely
-    const taskCard = await fetchTaskCards(taskCardId, persistentUserId, persistentChatroomId);
+    const taskCard = await fetchTaskCards(taskCardId, userId, chatroomId);
     if (!taskCard) {
       return res.status(404).json({ error: 'Task card not found.' });
     }

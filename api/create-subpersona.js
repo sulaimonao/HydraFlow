@@ -16,7 +16,7 @@ async function withRetry(task, retries = 3) {
 
 const handleCreateSubpersona = async (req, res) => {
   try {
-    const { name, capabilities, preferences, user_id, chatroom_id } = req.body;
+    const { name, capabilities, preferences } = req.body;
 
     // ✅ Validate required fields
     if (!name || typeof name !== 'string') {
@@ -39,8 +39,8 @@ const handleCreateSubpersona = async (req, res) => {
       tokenCount: req.body.tokenCount || 0
     });
 
-    const persistentUserId = user_id || workflowContext?.generatedIdentifiers?.user_id;
-    const persistentChatroomId = chatroom_id || workflowContext?.generatedIdentifiers?.chatroom_id;
+    const persistentUserId = req.session.userId || workflowContext?.generatedIdentifiers?.user_id;
+    const persistentChatroomId = req.session.chatroomId || workflowContext?.generatedIdentifiers?.chatroom_id;
 
     // 🔍 Validate persistent IDs
     if (!persistentUserId || !persistentChatroomId) {

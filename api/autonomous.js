@@ -1,4 +1,5 @@
 // api/autonomous.js
+import { createSubpersona } from './create-subpersona.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
 
@@ -18,14 +19,14 @@ export default async (req, res) => {
       feedback: feedback || null,
       tokenCount: req.body.tokenCount || 0,
     });
-    const { user_id: persistentUserId, chatroom_id: persistentChatroomId } = workflowContext.generatedIdentifiers;
+    const { user_id: persistentUserId, chatroom_id: persistentChatroomId } = workflowContext.generatedIdentifiers || {};
 
     if (!persistentUserId || !persistentChatroomId) {
       return res.status(400).json({ error: "Persistent user_id and chatroom_id are required." });
     }
 
     // 🔒 Set Supabase session context for RLS
-    await setSessionContext(persistentUserId, persistentChatroomId);
+    await setSessionContext(req.session.userId, req.session.chatroomId);
 
     // 🌐 Prepare session context
     const context = {
@@ -72,7 +73,7 @@ export default async (req, res) => {
 
   } catch (error) {
     console.error("❌ Error in autonomous workflow:", error);
-    console.error(`Error details: query=${JSON.stringify(req.body.query)}, user_id=${req.userId}, chatroom_id=${req.chatroomId}`);
+    console.error(`Error details: query=${JSON.stringify(req.body.query)}, user_id=${req.session.userId}, chatroom_id=${req.session.chatroomId}`);
 
     res.status(500).json({
       error: "Failed to execute workflow. Please try again.",

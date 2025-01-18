@@ -12,9 +12,8 @@ import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
  */
 export async function addHead(name, status, req, query) {
   try {
-    // 🌐 Retrieve persistent user and chatroom IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
 
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
@@ -52,9 +51,8 @@ export async function addHead(name, status, req, query) {
  */
 export async function getHeads(req, query) {
   try {
-    // 🌐 Retrieve persistent user and chatroom IDs
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
 
     // 🔒 Set session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);

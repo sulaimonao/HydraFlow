@@ -118,9 +118,9 @@ export async function addDependency(req, query, taskId, dependencyId) {
  */
 export const updateTaskStatus = async (req, query, taskId, status) => {
   try {
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
-
+    // const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
+    const user_id = req.session.userId;
+    const chatroom_id = req.session.chatroomId;
     await setSessionContext(user_id, chatroom_id);
 
     await supabaseRequest(() =>

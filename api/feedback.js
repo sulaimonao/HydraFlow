@@ -41,6 +41,12 @@ async function handleGetFeedback(req, res) {
  * Handles feedback submission.
  */
 async function submitFeedback(req, res) {
+  const userId = req.session.userId;
+  const chatroomId = req.session.chatroomId;
+  if (!userId || !chatroomId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing user or chatroom ID in session.' });
+  }
+
   const { query, responseNumber, userFeedback, rating } = req.body;
 
   if (!userFeedback || typeof userFeedback !== 'string') {
@@ -52,24 +58,16 @@ async function submitFeedback(req, res) {
   }
 
   try {
-    const workflowContext = await orchestrateContextWorkflow(req, {
+    await orchestrateContextWorkflow(req, {
       query: query || '',
       memory: req.body.memory || '',
       feedback: userFeedback,
       tokenCount: req.body.tokenCount || 0,
     });
 
-    const persistentUserId = workflowContext.generatedIdentifiers.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers.chatroom_id;
+    const responseId = `${chatroomId}_${responseNumber}`;
 
-    if (!persistentUserId || !persistentChatroomId) {
-      return res.status(400).json({ error: 'Invalid user or chatroom identifiers.' });
-    }
-
-    await setSessionContext(persistentUserId, persistentChatroomId);
-
-    const responseId = `${persistentChatroomId}_${responseNumber}`;
-
+    //Store feedback in Supabase
     const { data, error } = await supabase
       .from('feedback_entries')
       .insert([
@@ -77,8 +75,8 @@ async function submitFeedback(req, res) {
           response_id: responseId,
           user_feedback: userFeedback,
           rating,
-          user_id: persistentUserId,
-          chatroom_id: persistentChatroomId,
+          user_id: userId,
+          chatroom_id: chatroomId,
           created_at: new Date().toISOString()
         }
       ]);

@@ -17,23 +17,15 @@ async function withRetry(task, retries = 3) {
 }
 
 export default async function handler(req, res) {
+  if (!req.session.userId || !req.session.chatroomId) {
+    return res.status(401).json({ error: 'Unauthorized: Missing session data.' });
+  }
+
   try {
-    const { query, memory, gaugeMetrics, user_id, chatroom_id } = req.body;
+    const { query, memory, gaugeMetrics } = req.body;
 
     // ✅ Validate input memory
     if (!memory || typeof memory !== "string") {
-      return res.status(400).json({ error: 'Memory data is required and must be a string.' });
-    }
-
-    // Verify Supabase connection
-    if (!supabase) {
-      console.error("❌ Supabase connection not established.");
-      return res.status(500).json({ error: 'Database connection failed.' });
-    }
-
-    // Validate user_id and chatroom_id if provided directly
-    if (user_id && chatroom_id) {
-      await setSessionContext(user_id, chatroom_id);
     }
 
     // 🌐 Initialize session context via workflow manager
@@ -44,13 +36,13 @@ export default async function handler(req, res) {
       tokenCount: gaugeMetrics?.tokenCount || 0,
     });
 
-    const persistentUserId = workflowContext.generatedIdentifiers?.user_id;
-    const persistentChatroomId = workflowContext.generatedIdentifiers?.chatroom_id;
+    const userId = req.session.userId;
+    const chatroomId = req.session.chatroomId;
 
     // 🔒 Validate persistent session IDs
-    if (!persistentUserId || !persistentChatroomId) {
+    if (!userId || !chatroomId) {
       console.error("❌ Missing session identifiers.");
-      return res.status(400).json({ error: 'Persistent user_id and chatroom_id are required.' });
+      return res.status(401).json({ error: 'Unauthorized: Missing session identifiers.' });
     }
 
     // 🧮 Calculate gauge metrics if not provided
@@ -65,20 +57,20 @@ export default async function handler(req, res) {
       supabaseRequest(
         supabase
           .from('memories')
-          .select('id, memory')
-          .eq('user_id', persistentUserId)
-          .eq('chatroom_id', persistentChatroomId)
+          .select('*')
+          .eq('user_id', userId)
+          .eq('chatroom_id', chatroomId)
           .limit(1)
       )
     );
 
     if (memoryError) {
       console.error('❌ Error validating memory ownership:', memoryError);
-      return res.status(500).json({ error: 'Failed to validate memory ownership.' });
+      return res.status(500).json({ error: 'Failed to validate memory ownership', details: memoryError });
     }
 
     if (!existingMemory || existingMemory.length === 0) {
-      console.warn(`⚠️ No memory found for user: ${persistentUserId}, chatroom: ${persistentChatroomId}`);
+      console.warn(`⚠️ No memory found for user: ${userId}, chatroom: ${chatroomId}`);
       return res.status(403).json({ error: 'Unauthorized: Memory does not belong to the provided user or chatroom.' });
     }
 
@@ -91,8 +83,7 @@ export default async function handler(req, res) {
         supabase.from('memories')
           .update({ memory: compressedMemory })
           .eq('id', existingMemory[0].id),
-        persistentUserId,
-        persistentChatroomId
+        userId, chatroomId
       )
     );
 
@@ -105,8 +96,8 @@ export default async function handler(req, res) {
     await supabaseRequest(
       supabase.from('debug_logs').insert([
         {
-          user_id: persistentUserId,
-          context_id: existingMemory[0].id,
+          user_id: userId,
+          chatroom_id: chatroomId,
           issue: 'Memory compression executed',
           resolution: 'Memory compressed and updated in DB',
           timestamp: new Date().toISOString()
@@ -118,9 +109,9 @@ export default async function handler(req, res) {
     res.status(200).json({
       success: true,
       message: 'Memory compression completed and updated successfully.',
-      data: compressedMemory,
-      user_id: persistentUserId,
-      chatroom_id: persistentChatroomId
+      compressedMemory,
+      user_id: userId,
+      chatroom_id: chatroomId
     });
   } catch (error) {
     console.error("❌ Error in compress-memory:", error);

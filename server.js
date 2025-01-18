@@ -14,23 +14,36 @@ import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
 import { runAutonomousWorkflow } from './main.js';
+import pg from 'pg';
+import connectPgSimple from 'connect-pg-simple';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// 🔒 Secure Session Management Middleware
+// 🛡️ Production-Ready Session Store
+const pgSession = connectPgSimple(session);
+const pgPool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
 app.use(
   session({
+    store: new pgSession({
+      pool: pgPool,
+      tableName: 'user_sessions',
+      createTableIfMissing: true,
+    }),
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
-    }
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   })
 );
 
@@ -62,11 +75,10 @@ app.use(async (req, res, next) => {
       req.session.chatroomId = chatroomId;
 
       await createSession(userId, chatroomId);
-      res.setHeader('X-Hydra-Session-ID', `${userId}:${chatroomId}`);  // Corrected session ID header
+      res.setHeader('X-Hydra-Session-ID', `${userId}:${chatroomId}`);
       console.log(`✅ New session initialized: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
-    // 🔧 Fix: Corrected session context validation
     if (req.session.userId && req.session.chatroomId) {
       await setSessionContext(req.session.userId, req.session.chatroomId);
     } else {
@@ -90,11 +102,9 @@ app.post("/api/parse-query", (req, res) => {
   if (!query) {
     return res.status(400).json({ error: "Query is required." });
   }
-
   const actionItems = [];
   if (query.includes("analyze logs")) actionItems.push("create-subpersona");
   if (query.includes("compress")) actionItems.push("compress-memory");
-
   res.status(200).json({ actionItems });
 });
 
@@ -105,7 +115,6 @@ app.post("/api/autonomous", async (req, res) => {
     if (!query) {
       return res.status(400).json({ error: "Query is required." });
     }
-
     const result = await runAutonomousWorkflow(query);
     res.status(200).json(result);
   } catch (error) {
@@ -128,13 +137,14 @@ app.post("/api/create-subpersona", async (req, res) => {
 
 // 🔧 Compress Memory API
 app.post("/api/compress-memory", compressMemory);
-app.use("/api/feedback", feedbackRoutes);
 
+// 📊 Fetch Gauge Metrics
 app.get("/api/fetch-gauge-metrics", (req, res) => {
   const metrics = calculateMetrics(req.context || {});
   res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
 });
 
+// 📝 Recommendations API
 app.get("/api/recommendations", (req, res) => {
   try {
     const recommendations = generateRecommendations(res.locals.gaugeMetrics || {});
@@ -145,10 +155,7 @@ app.get("/api/recommendations", (req, res) => {
   }
 });
 
-app.use((err, req, res, next) => {
-  console.error("❌ Unhandled Error:", err.stack);
-  res.status(500).json({ error: 'Internal Server Error.' });
-});
+app.use("/api/feedback", feedbackRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

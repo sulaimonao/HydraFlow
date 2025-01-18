@@ -13,6 +13,17 @@
     {
       "src": "/api/(.*)",
       "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
     }
-  ]
+  ],
+  "env": {
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_KEY": "@supabase-key",
+    "SESSION_SECRET": "@session-secret",
+    "DATABASE_URL": "@database-url",
+    "NODE_ENV": "production"
+  }
 }

@@ -8,9 +8,7 @@ import feedbackRoutes from './routes/feedback_collector.js';
 import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { generateRecommendations } from './src/util/recommendations.js';
-import { validateRequest } from './middleware/validationMiddleware.js';
 import { initializeUserContext } from './middleware/authMiddleware.js';
-import Joi from 'joi';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
 import { runAutonomousWorkflow } from './main.js';
@@ -50,30 +48,30 @@ app.use(
 // 🌐 Enhanced Middleware to Initialize or Retrieve Sessions
 app.use(async (req, res, next) => {
   try {
-    const existingSessionId = req.headers['x-hydra-session-id'];
+    const sessionHeader = req.headers['x-hydra-session-id'];
+    let userId, chatroomId;
 
-    if (existingSessionId) {
+    if (sessionHeader && sessionHeader.includes(':')) {
+      [userId, chatroomId] = sessionHeader.split(':');
       const { data: sessionData, error } = await supabase
         .from('user_sessions')
         .select('*')
-        .eq('id', existingSessionId)
+        .eq('user_id', userId)
+        .eq('chatroom_id', chatroomId)
         .single();
 
       if (error || !sessionData) {
-        console.warn("⚠️ Invalid or expired session ID.");
+        console.warn("⚠️ Invalid session ID.");
         return res.status(400).json({ error: "Invalid session ID." });
       }
-
-      req.session.userId = sessionData.user_id;
-      req.session.chatroomId = sessionData.chatroom_id;
-      console.log(`🔐 Existing session: userId=${req.session.userId}, chatroomId=${req.session.chatroomId}`);
-    } else {
-      const userId = uuidv4();
-      const chatroomId = uuidv4();
-
       req.session.userId = userId;
       req.session.chatroomId = chatroomId;
-
+      console.log(`🔐 Existing session: userId=${userId}, chatroomId=${chatroomId}`);
+    } else {
+      userId = uuidv4();
+      chatroomId = uuidv4();
+      req.session.userId = userId;
+      req.session.chatroomId = chatroomId;
       await createSession(userId, chatroomId);
       res.setHeader('X-Hydra-Session-ID', `${userId}:${chatroomId}`);
       console.log(`✅ New session initialized: userId=${userId}, chatroomId=${chatroomId}`);
@@ -82,7 +80,7 @@ app.use(async (req, res, next) => {
     if (req.session.userId && req.session.chatroomId) {
       await setSessionContext(req.session.userId, req.session.chatroomId);
     } else {
-      console.error(`❌ Missing userId (${req.session.userId}) or chatroomId (${req.session.chatroomId}) during session context setup.`);
+      console.error("❌ Missing userId or chatroomId during session context setup.");
       return res.status(500).json({ error: "Session initialization failed." });
     }
 
@@ -99,12 +97,12 @@ app.use(appendGaugeMetrics);
 // 🔍 Parse Query API
 app.post("/api/parse-query", (req, res) => {
   const { query } = req.body;
-  if (!query) {
-    return res.status(400).json({ error: "Query is required." });
-  }
+  if (!query) return res.status(400).json({ error: "Query is required." });
+
   const actionItems = [];
   if (query.includes("analyze logs")) actionItems.push("create-subpersona");
   if (query.includes("compress")) actionItems.push("compress-memory");
+
   res.status(200).json({ actionItems });
 });
 
@@ -112,9 +110,8 @@ app.post("/api/parse-query", (req, res) => {
 app.post("/api/autonomous", async (req, res) => {
   try {
     const { query } = req.body;
-    if (!query) {
-      return res.status(400).json({ error: "Query is required." });
-    }
+    if (!query) return res.status(400).json({ error: "Query is required." });
+
     const result = await runAutonomousWorkflow(query);
     res.status(200).json(result);
   } catch (error) {
@@ -137,23 +134,6 @@ app.post("/api/create-subpersona", async (req, res) => {
 
 // 🔧 Compress Memory API
 app.post("/api/compress-memory", compressMemory);
-
-// 📊 Fetch Gauge Metrics
-app.get("/api/fetch-gauge-metrics", (req, res) => {
-  const metrics = calculateMetrics(req.context || {});
-  res.json({ ...metrics, gaugeMetrics: res.locals.gaugeMetrics });
-});
-
-// 📝 Recommendations API
-app.get("/api/recommendations", (req, res) => {
-  try {
-    const recommendations = generateRecommendations(res.locals.gaugeMetrics || {});
-    res.status(200).json({ recommendations });
-  } catch (error) {
-    console.error("❌ Error generating recommendations:", error);
-    res.status(500).json({ error: "Failed to generate recommendations." });
-  }
-});
 
 app.use("/api/feedback", feedbackRoutes);
 

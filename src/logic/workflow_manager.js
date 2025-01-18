@@ -1,5 +1,4 @@
 // src/logic/workflow_manager.js
-// Import necessary modules and utilities for workflow management
 import { gatherGaugeData } from '../logic/gauge_logic.js';
 import { parseQuery } from '../actions/query_parser.js';
 import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
@@ -34,8 +33,8 @@ export const orchestrateContextWorkflow = async (req, {
     const updatedContext = {};
 
     // === 🛡️ Session Validation ===
-    const generatedUserId = req.userId;
-    const generatedChatroomId = req.body.chatroomId;
+    const generatedUserId = req.session.userId;
+    const generatedChatroomId = req.session.chatroomId;
 
     if (!validateUUID(generatedUserId) || !validateUUID(generatedChatroomId)) {
       throw new Error("Invalid session IDs for user or chatroom.");
@@ -43,8 +42,8 @@ export const orchestrateContextWorkflow = async (req, {
     response.generatedIdentifiers = { user_id: generatedUserId, chatroom_id: generatedChatroomId };
 
     // === 🔍 Retrieve Memory and Active Subpersonas ===
-    const existingMemory = await getMemory(generatedUserId, generatedChatroomId);
-    const heads = await getHeads(generatedUserId, generatedChatroomId);
+    const existingMemory = await getMemory(query, req);
+    const heads = await getHeads(query, req);
 
     // === 📝 Log Workflow Start ===
     await logIssue({
@@ -60,11 +59,11 @@ export const orchestrateContextWorkflow = async (req, {
     updatedContext.actionItems = actionItems || [];
 
     // === 🗃️ Memory Update ===
-    const updatedMemory = await appendMemory(query, generatedUserId, generatedChatroomId);
+    const updatedMemory = await appendMemory(query, req);
     updatedContext.memory = updatedMemory;
 
     // === 📋 Task Card Creation ===
-    const taskCard = createTaskCard(query, actionItems);
+    const taskCard = await createTaskCard(query, actionItems);
     await resolveDependencies(taskCard, generatedUserId, generatedChatroomId);
 
     // === 🗜️ Conditional Memory Compression ===
@@ -83,7 +82,7 @@ export const orchestrateContextWorkflow = async (req, {
     }
 
     // === 🗄️ Store Workflow Data ===
-    await storeProjectData(generatedUserId, generatedChatroomId, query);
+    await storeProjectData(query, req);
 
     // === 🗑️ Prune Inactive Subpersonas ===
     for (const head of heads) {
@@ -139,29 +138,19 @@ export const orchestrateContextWorkflow = async (req, {
       actionFeedback,
     });
 
-    // === 💬 Prompt for Feedback if Task is Completed ===
-    if (taskCard.status === "completed") {
-      response.feedbackPrompt = {
-        message: "How was the workflow? Please provide your feedback.",
-      };
-    }
-
     return {
       status: "context_updated",
       context,
       finalResponse: response.finalResponse,
-      feedbackPrompt: response.feedbackPrompt || null,
     };
   } catch (error) {
     console.error("❌ Error in orchestrateContextWorkflow:", error);
-
     await logIssue({
-      userId: req.userId,
-      contextId: req.chatroomId,
+      userId: req.session.userId,
+      contextId: req.session.chatroomId,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });
-
     throw new Error("Workflow orchestration failed.");
   }
 };

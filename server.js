@@ -2,11 +2,8 @@
 import express from 'express';
 import session, {Store} from 'express-session';
 import dotenv from 'dotenv';
-import supabase, { supabaseRequest, setSessionContext, createSession } from './lib/supabaseClient.js';
 import feedbackRoutes from './routes/feedback_collector.js';
-import { calculateMetrics } from './src/util/metrics.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
-import { generateRecommendations } from './src/util/recommendations.js';
 import { initializeUserContext } from './middleware/authMiddleware.js';
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';

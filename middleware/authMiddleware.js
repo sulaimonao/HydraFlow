@@ -1,57 +1,58 @@
 // middleware/authMiddleware.js
 import { v4 as uuidv4 } from 'uuid';
-import supabase, { setSessionContext } from '../lib/supabaseClient.js';
+import supabase, { setSessionContext, createSession } from '../lib/supabaseClient.js';
 
 /**
  * Middleware to initialize or validate user and chatroom context.
  */
 export const initializeUserContext = async (req, res, next) => {
   try {
-    const existingSessionId = req.headers['x-hydra-session-id'];
+    const sessionHeader = req.headers['x-hydra-session-id'];
 
-    if (existingSessionId) {
+    if (sessionHeader) {
+      // ✅ Validate session format: "userId:chatroomId"
+      const [userId, chatroomId] = sessionHeader.split(':');
+
+      if (!userId || !chatroomId) {
+        console.warn(`⚠️ Malformed session header: ${sessionHeader}`);
+        return res.status(400).json({ error: 'Invalid session format.' });
+      }
+
+      // 🔍 Verify the session exists in Supabase
       const { data: sessionData, error } = await supabase
         .from('user_sessions')
         .select('*')
-        .eq('id', existingSessionId)
+        .eq('user_id', userId)
+        .eq('chatroom_id', chatroomId)
         .single();
 
       if (error || !sessionData) {
-        console.warn(`⚠️ Invalid session ID: ${existingSessionId}`);
-        return res.status(400).json({ error: 'Invalid session ID.' });
+        console.warn(`⚠️ Session not found for user_id: ${userId}, chatroom_id: ${chatroomId}`);
+        return res.status(400).json({ error: 'Session not found.' });
       }
 
-      req.session = {
-        userId: sessionData.user_id,
-        chatroomId: sessionData.chatroom_id
-      };
-
-      console.log(`🔐 Existing session: user_id=${req.session.userId}, chatroom_id=${req.session.chatroomId}`);
+      // ✅ Attach session to request
+      req.session = { userId, chatroomId };
+      console.log(`🔐 Valid session: user_id=${userId}, chatroom_id=${chatroomId}`);
 
     } else {
+      // ❌ No session → Create a new one
       const userId = uuidv4();
       const chatroomId = uuidv4();
 
-      const { error } = await supabase
-        .from('user_sessions')
-        .insert([{ id: uuidv4(), user_id: userId, chatroom_id: chatroomId }])
-        .select();
+      // 🔐 Insert new session into Supabase
+      await createSession(userId, chatroomId);
 
-      if (error) {
-        console.error('❌ Failed to create user session:', error);
-        return res.status(500).json({ error: 'Failed to initialize session.' });
-      }
+      req.session = { userId, chatroomId };
 
-      req.session = {
-        userId,
-        chatroomId
-      };
-
+      // 📨 Set the session ID in the response header
       res.setHeader('X-Hydra-Session-ID', `${userId}:${chatroomId}`);
-      console.log(`✅ New session initialized: user_id=${userId}, chatroom_id=${chatroomId}`);
+      console.log(`✅ New session created: user_id=${userId}, chatroom_id=${chatroomId}`);
     }
 
+    // 🔒 Set Supabase session context
     await setSessionContext(req.session.userId, req.session.chatroomId);
+
     next();
   } catch (error) {
     console.error("❌ Error initializing user context:", error);

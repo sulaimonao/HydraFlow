@@ -1,7 +1,6 @@
 // api/parse-query.js
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
-import { supabase } from '../lib/supabase.js';
 
 export default async (req, res) => {
   try {
@@ -74,20 +73,6 @@ export default async (req, res) => {
     } catch (workflowError) {
       console.error("❌ Workflow orchestration failed:", workflowError);
       return res.status(500).json({ error: "Workflow orchestration failed." });
-    }
-
-    //Update Supabase with the workflowPlan
-    try {
-      const { data, error } = await supabase
-        .from('workflows')
-        .insert([workflowPlan])
-      if (error) {
-        console.error("❌ Failed to insert workflow plan into Supabase:", error);
-        return res.status(500).json({ error: "Failed to save workflow plan." });
-      }
-    } catch (supabaseError) {
-      console.error("❌ Supabase error:", supabaseError);
-      return res.status(500).json({ error: "Supabase error." });
     }
 
 

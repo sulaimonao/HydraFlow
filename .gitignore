@@ -40,3 +40,5 @@ lib/test_db.js
 dump-codebase.js
 *.txt
 checker.cjs
+additional_inputs_with_contents.json
+additional_inputs.json

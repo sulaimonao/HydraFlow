@@ -1,6 +1,4 @@
 // api/create-subpersona.js
-import supabase, { setSessionContext } from '../lib/supabaseClient.js';
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { insertHead } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 

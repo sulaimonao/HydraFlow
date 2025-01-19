@@ -1,5 +1,4 @@
 // api/context-recap.js
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { updateMemory } from '../src/logic/memory_manager.js';
 import { sessionContext } from '../middleware/sessionContext.js';

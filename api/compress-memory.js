@@ -1,7 +1,6 @@
 // api/compress-memory.js
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 
 const TOKEN_THRESHOLD = 3000;

@@ -1,6 +1,7 @@
-// src/middleware/sessionInitializer.js
+// middleware/sessionInitializer.js
 import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 import supabase from '../lib/supabaseClient.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
 export async function initializeSession(req, res, next) {
   try {
@@ -54,7 +55,7 @@ export async function initializeSession(req, res, next) {
       console.log(`✅ New session created: user_id=${userId}, chatroom_id=${chatroomId}`);
     }
 
-    // Set Supabase context (assuming you implement setSessionContext later)
+    // Set Supabase context
     await setSessionContext(userId, chatroomId);
 
     next();

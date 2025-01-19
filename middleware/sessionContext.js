@@ -1,6 +1,6 @@
 // middleware/sessionContext.js
 import { initializeSession } from '../middleware/sessionInitializer.js';
-import { setSessionContext } from '../lib/supabaseClient.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
 /**
  * Middleware to validate and set session context.

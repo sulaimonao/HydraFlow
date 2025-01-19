@@ -1,6 +1,5 @@
 // api/task.js
 import { insertTaskDependency, fetchTaskDependencies, fetchTaskCards } from '../lib/db.js';
-import { setSessionContext } from '../lib/supabaseClient.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 // ✅ Enhanced Circular Dependency Checker
@@ -10,13 +9,12 @@ async function hasCircularDependency(subtaskId, dependsOn) {
 }
 
 // ✅ Add a Task Dependency
-export async function addTaskDependency(req, res) {
+async function addTaskDependency(req, res, setSessionContext) {
   const { subtaskId, dependsOn } = req.body;
   const { userId, chatroomId } = req.session;
 
   try {
     // 🔒 Set session context for RLS
-    await setSessionContext(userId, chatroomId);
 
     // ⚠️ Input validation
     if (!subtaskId || !dependsOn) {
@@ -56,7 +54,7 @@ export async function addTaskDependency(req, res) {
 }
 
 // ✅ Fetch Task Dependencies
-export async function getTaskDependencies(req, res) {
+async function getTaskDependencies(req, res, setSessionContext) {
   const { subtaskId } = req.params;
   const { userId, chatroomId } = req.session;
 
@@ -91,7 +89,7 @@ export async function getTaskDependencies(req, res) {
 }
 
 // ✅ Fetch Task Card with Subtasks and Dependencies
-export async function getTaskCard(req, res) {
+async function getTaskCard(req, res, setSessionContext) {
   const { taskCardId } = req.params;
   const { userId, chatroomId } = req.session;
 
@@ -135,3 +133,9 @@ export async function getTaskCard(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+export {
+  addTaskDependency,
+  getTaskDependencies,
+  getTaskCard
+};

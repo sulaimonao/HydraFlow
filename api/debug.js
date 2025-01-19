@@ -1,6 +1,6 @@
 // api/debug.js
 import express from 'express';
-import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 const router = express.Router();
@@ -8,16 +8,8 @@ const router = express.Router();
 /**
  * Logs issues in the debug_logs table.
  */
-export async function logIssue({ userId, contextId, issue, resolution }) {
+async function logIssue({ userId, contextId, issue, resolution }) {
   try {
-    // 🔒 Set session context with error handling
-    try {
-      await setSessionContext(userId, contextId);
-    } catch (sessionError) {
-      console.error("❌ Failed to set session context:", sessionError);
-      throw new Error("Session context setup failed.");
-    }
-
     const { data, error } = await supabase
       .from('debug_logs')
       .insert([
@@ -46,7 +38,7 @@ export async function logIssue({ userId, contextId, issue, resolution }) {
 /**
  * Fetches debug logs for a specific context.
  */
-export async function fetchDebugLogs(req, contextId) {
+async function fetchDebugLogs(req, contextId) {
   try {
     if (!req.session.userId || !req.session.chatroomId) {
       throw new Error("Invalid session IDs for fetching debug logs.");
@@ -61,9 +53,6 @@ export async function fetchDebugLogs(req, contextId) {
       feedback: req.body.feedback || null,
       tokenCount: req.body.tokenCount || 0,
     });
-
-    // 🔒 Set session context for RLS enforcement
-    await setSessionContext(req.session.userId, req.session.chatroomId);
 
     const { data, error } = await supabase
       .from('debug_logs')

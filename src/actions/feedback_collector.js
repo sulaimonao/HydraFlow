@@ -1,6 +1,5 @@
 // src/actions/feedback_collector.js
-import supabase, { supabaseRequest, setSessionContext, createSession } from '../../lib/supabaseClient.js';
-import { getSession } from '../../lib/session.js';
+import supabase, { supabaseRequest, setSessionContext, getSession } from '../../lib/supabaseClient.js';
 
 /**
  * ✅ Collect feedback and associate it with user and chatroom context.
@@ -14,9 +13,9 @@ import { getSession } from '../../lib/session.js';
  */
 export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
   try {
-    const session = await getSession();
-    const user_id = session.userId;
-    const chatroom_id = session.chatroomId;
+    const { user_id, chatroom_id } = await getSession();
+
+
 
     // ✅ Validate input
     if (!user_id || !chatroom_id) {
@@ -63,9 +62,8 @@ export const collectFeedback = async ({ responseId, userFeedback, rating }) => {
  */
 export const getFeedbackLog = async () => {
   try {
-    const session = await getSession();
-    const user_id = session.userId;
-    const chatroom_id = session.chatroomId;
+    const { user_id, chatroom_id } = await getSession();
+
     
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);
@@ -99,9 +97,8 @@ export const getFeedbackLog = async () => {
  */
 export const generateFeedbackSummary = async () => {
   try {
-    const session = await getSession();
-    const user_id = session.userId;
-    const chatroom_id = session.chatroomId;
+    const { user_id, chatroom_id } = await getSession();
+
     
     // 🔒 Set Supabase session context for RLS
     await setSessionContext(user_id, chatroom_id);

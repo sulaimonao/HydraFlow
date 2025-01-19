@@ -1,17 +1,19 @@
 // api/feedback.js
 import supabase, { supabaseRequest, setSessionContext } from '../lib/supabaseClient.js';
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
+import { sessionContext } from '../middleware/sessionContext.js';
 
 export default async function handler(req, res) {
-  switch (req.method) {
-    case 'POST':
-      return await submitFeedback(req, res);
-    case 'GET':
-      return await handleGetFeedback(req, res);
-    default:
-      return res.status(405).json({ error: 'Method not allowed.' });
-  }
-  }
+  sessionContext(req, res, async () => {
+    switch (req.method) {
+      case 'POST':
+        return await submitFeedback(req, res);
+      case 'GET':
+        return await handleGetFeedback(req, res);
+      default:
+        return res.status(405).json({ error: 'Method not allowed.' });
+    }
+  });
+}
 
 /**
  * Handles GET feedback requests by type.
@@ -37,12 +39,7 @@ async function handleGetFeedback(req, res) {
  * Handles feedback submission.
  */
 async function submitFeedback(req, res) {
-  const userId = req.session.userId;
-  const chatroomId = req.session.chatroomId;
-  if (!userId || !chatroomId) {
-    return res.status(401).json({ error: 'Unauthorized: Missing user or chatroom ID in session.' });
-  }
-
+  const { userId, chatroomId } = req.locals;
   const { query, responseNumber, userFeedback, rating } = req.body;
 
   if (!userFeedback || typeof userFeedback !== 'string') {
@@ -63,7 +60,7 @@ async function submitFeedback(req, res) {
 
     const responseId = `${chatroomId}_${responseNumber || 0}`; // Handle undefined responseNumber
 
-    //Store feedback in Supabase
+    // Store feedback in Supabase
     const { data, error } = await supabase
       .from('feedback_entries')
       .insert([

@@ -1,7 +1,7 @@
 // api/debug.js
 import express from 'express';
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
-import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
+import { sessionContext } from '../middleware/sessionContext.js';
 
 const router = express.Router();
 
@@ -38,27 +38,14 @@ async function logIssue({ userId, contextId, issue, resolution }) {
 /**
  * Fetches debug logs for a specific context.
  */
-async function fetchDebugLogs(req, contextId) {
+async function fetchDebugLogs(contextId, userId, chatroomId) {
   try {
-    if (!req.session.userId || !req.session.chatroomId) {
-      throw new Error("Invalid session IDs for fetching debug logs.");
-    }
-
-    const { persistentUserId, persistentChatroomId } = req.session;
-
-    // 🌐 Retrieve persistent IDs safely
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: req.body.query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-
     const { data, error } = await supabase
       .from('debug_logs')
       .select('*')
-      .eq('user_id', persistentUserId)
-      .eq('chatroom_id', persistentChatroomId)
+      .eq('user_id', userId)
+      .eq('chatroom_id', chatroomId)
+      .eq('context_id', contextId);
 
     if (error) {
       console.error(`❌ Error fetching debug logs: ${error.message}`);
@@ -75,66 +62,60 @@ async function fetchDebugLogs(req, contextId) {
 /**
  * API Endpoint: Log an issue.
  */
-router.post('/debug/log', async (req, res) => {
-  try {
-    const { query, issue, resolution } = req.body;
+router.post('/debug/log', (req, res) => {
+  sessionContext(req, res, async () => {
+    try {
+      const { issue, resolution } = req.body;
+      const { userId, chatroomId } = req.locals;
 
-    if (!issue || !resolution) {
-      return res.status(400).json({ error: "Both 'issue' and 'resolution' are required." });
+      if (!issue || !resolution) {
+        return res.status(400).json({ error: "Both 'issue' and 'resolution' are required." });
+      }
+
+      const log = await logIssue({
+        userId,
+        contextId: chatroomId,
+        issue,
+        resolution
+      });
+
+      res.status(200).json({
+        message: "Issue logged successfully.",
+        log
+      });
+
+    } catch (error) {
+      console.error("❌ Error in POST /debug/log:", error);
+      res.status(500).json({ error: "Failed to log issue.", details: error.message });
     }
-
-    // 🌐 Retrieve persistent IDs from workflow
-    const workflowContext = await orchestrateContextWorkflow(req, {
-      query: query || '',
-      memory: req.body.memory || '',
-      feedback: req.body.feedback || null,
-      tokenCount: req.body.tokenCount || 0,
-    });
-
-    if (!req.session.userId || !req.session.chatroomId) {
-      return res.status(400).json({ error: "Invalid user or chatroom identifiers." });
-    }
-
-    const log = await logIssue({
-      userId: req.session.userId,
-      contextId: req.session.chatroomId,
-      issue,
-      resolution
-    });
-
-    res.status(200).json({
-      message: "Issue logged successfully.",
-      log
-    });
-
-  } catch (error) {
-    console.error("❌ Error in POST /debug/log:", error);
-    res.status(500).json({ error: "Failed to log issue.", details: error.message });
-  }
+  });
 });
 
 /**
  * API Endpoint: Retrieve debug logs by context ID.
  */
-router.get('/debug/logs/:contextId', async (req, res) => {
-  try {
-    const { contextId } = req.params;
+router.get('/debug/logs/:contextId', (req, res) => {
+  sessionContext(req, res, async () => {
+    try {
+      const { contextId } = req.params;
+      const { userId, chatroomId } = req.locals;
 
-    if (!contextId) {
-      return res.status(400).json({ error: "Context ID is required." });
+      if (!contextId) {
+        return res.status(400).json({ error: "Context ID is required." });
+      }
+
+      const logs = await fetchDebugLogs(contextId, userId, chatroomId);
+
+      res.status(200).json({
+        message: "Debug logs retrieved successfully.",
+        logs
+      });
+
+    } catch (error) {
+      console.error("❌ Error in GET /debug/logs/:contextId:", error);
+      res.status(500).json({ error: "Failed to fetch debug logs.", details: error.message });
     }
-
-    const logs = await fetchDebugLogs(req, contextId);
-
-    res.status(200).json({
-      message: "Debug logs retrieved successfully.",
-      logs
-    });
-
-  } catch (error) {
-    console.error("❌ Error in GET /debug/logs/:contextId:", error);
-    res.status(500).json({ error: "Failed to fetch debug logs.", details: error.message });
-  }
+  });
 });
 
 export default router;

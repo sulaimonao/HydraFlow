@@ -1,16 +1,15 @@
 // server.js
 import express from 'express';
-import session, {Store} from 'express-session';
+import session from 'express-session';
 import dotenv from 'dotenv';
 import feedbackRoutes from './routes/feedback_collector.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
-import { initializeUserContext } from './middleware/authMiddleware.js';
+import { sessionContext } from './middleware/sessionContext.js'; // Import sessionContext
 import createSubpersona from './api/create-subpersona.js';
 import compressMemory from './api/compress-memory.js';
 import { runAutonomousWorkflow } from './main.js';
 import pg from 'pg';
 import connectPgSimple from 'connect-pg-simple';
-import { initializeSession } from './src/middleware/sessionInitializer.js';
 
 dotenv.config();
 
@@ -42,9 +41,9 @@ app.use(
   })
 );
 
-app.use(initializeSession);
+// Middleware for session context handling
+app.use('/api', sessionContext); // Apply sessionContext middleware to all API routes
 
-app.use(initializeUserContext);
 app.use(appendGaugeMetrics);
 
 // 🔍 Parse Query API
@@ -65,7 +64,7 @@ app.post("/api/autonomous", async (req, res) => {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Query is required." });
 
-    const result = await runAutonomousWorkflow(query);
+    const result = await runAutonomousWorkflow(query, req.userId, req.chatroomId); // Use session context
     res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error in autonomous workflow:", error);
@@ -77,7 +76,7 @@ app.post("/api/autonomous", async (req, res) => {
 app.post("/api/create-subpersona", async (req, res) => {
   try {
     const { name, capabilities, preferences } = req.body;
-    await createSubpersona(name, req.session.userId, req.session.chatroomId, capabilities, preferences);
+    await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences); // Use session context
     res.status(201).json({ message: "Subpersona created successfully." });
   } catch (error) {
     console.error("❌ Error creating subpersona:", error);

@@ -1,5 +1,5 @@
 // middleware/sessionContext.js
-import { initializeSession } from '../src/middleware/sessionInitializer.js';
+import { initializeSession } from '../middleware/sessionInitializer.js';
 import { setSessionContext } from '../lib/supabaseClient.js';
 
 /**

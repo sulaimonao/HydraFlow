@@ -1,6 +1,6 @@
 // src/actions/memory_compressor.js
 import supabase, { supabaseRequest, createSession } from '../../lib/supabaseClient.js';
-import { setSessionContext } from '../lib/sessionUtils.js';
+import { setSessionContext } from '../../lib/sessionUtils.js';
 import zlib from 'zlib';
 
 /**

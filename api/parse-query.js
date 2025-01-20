@@ -3,7 +3,7 @@ import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
 
 export default async (req, res) => {
-  await req.sessionContext(async () => {
+  await req.session.context(async () => {
     try {
       const { query } = req.body;
 

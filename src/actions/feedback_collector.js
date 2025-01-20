@@ -1,5 +1,7 @@
 // src/actions/feedback_collector.js
-import supabase, { supabaseRequest, setSessionContext, getSession } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest} from '../../lib/supabaseClient.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
+
 
 /**
  * ✅ Collect feedback and associate it with user and chatroom context.

@@ -1,5 +1,6 @@
 // src/state/memory_state.js
-import supabase, { supabaseRequest, setSessionContext } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest} from '../../lib/supabaseClient.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 
 let memory = "";

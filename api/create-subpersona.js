@@ -18,7 +18,11 @@ const handleCreateSubpersona = async (req, res) => {
         return res.status(400).json({ error: 'Preferences must be an object.' });
       }
 
-      const { userId, chatroomId } = req.locals;
+      const userId = req.locals?.userId;
+      const chatroomId = req.locals?.chatroomId;
+      if (!userId || !chatroomId) {
+        return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
+      }
 
       // 📝 Insert new subpersona into the heads table
       const head = await insertHead(userId, chatroomId, name, capabilities, preferences);

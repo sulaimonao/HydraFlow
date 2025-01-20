@@ -22,11 +22,11 @@ import { shouldCompress, needsContextRecap, shouldCreateHead } from './condition
  * - Executes dynamic actions
  * - Generates final user response
  */
-export const orchestrateContextWorkflow = async (req, {
+export const orchestrateContextWorkflow = async (req, input = {
   query,
   memory,
   feedback,
-  tokenCount = 0,
+  tokenCount: 0
 }) => {
   try {
     const response = {};
@@ -43,7 +43,6 @@ export const orchestrateContextWorkflow = async (req, {
 
     // === 🔍 Retrieve Memory and Active Subpersonas ===
     const { existingMemory, heads } = await Promise.all([getMemory(query, req), getHeads(query, req)]);
-
 
     // === 📝 Log Workflow Start ===
     await logIssue({

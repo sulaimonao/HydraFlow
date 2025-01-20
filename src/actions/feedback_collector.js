@@ -1,6 +1,6 @@
 // src/actions/feedback_collector.js
 import supabase, { supabaseRequest} from '../../lib/supabaseClient.js';
-import { setSessionContext } from '../lib/sessionUtils.js';
+import { setSessionContext } from '../../lib/sessionUtils.js';
 
 
 /**

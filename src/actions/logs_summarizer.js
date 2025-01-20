@@ -1,6 +1,6 @@
 // src/actions/log_summarizer.js
 import { callApiWithRetry } from './action_caller.js';
-import { setSessionContext } from '../lib/sessionUtils.js';
+import { setSessionContext } from '../../lib/sessionUtils.js';
 
 /**
  * ✅ Summarize logs with persistent user and chatroom context.

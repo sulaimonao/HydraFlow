@@ -3,6 +3,7 @@ import axios from 'axios';
 import { calculateMetrics } from "../util/metrics.js";
 import { generateResponse } from './response_generator_actions.js';
 import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session checks
+import { setSessionContext } from '../../lib/sessionUtils.js';
 
 // 🔄 Retry logic for API calls with session context
 async function callApiWithRetry(endpoint, payload, req, retries = 3, backoff = 300) {

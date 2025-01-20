@@ -1,6 +1,7 @@
 // src/actions/context_recapper.js
 import { callApiWithRetry } from './action_caller.js';
 import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session validation
+import { setSessionContext } from '../../lib/sessionUtils.js';
 
 /**
  * Generates a context recap by summarizing history and updating the backend.

@@ -2,7 +2,7 @@
 import { compressMemory, storeCompressedMemory } from '../actions/memory_compressor.js';
 import { prioritizeTasks, limitResponses, simplifyResponses } from '../state/task_manager.js';
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
-import { setSessionContext } from '../lib/sessionUtils.js';
+import { setSessionContext } from '../../lib/sessionUtils.js';
 
 /**
  * 🚀 Handles dynamic actions with session enforcement and optimized execution.

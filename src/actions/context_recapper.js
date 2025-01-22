@@ -1,6 +1,6 @@
 // src/actions/context_recapper.js
 import { callApiWithRetry } from './action_caller.js';
-import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session validation
+import { createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session validation
 import { setSessionContext } from '../../lib/sessionUtils.js';
 
 /**

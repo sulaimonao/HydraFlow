@@ -258,6 +258,224 @@ components:
           description: "IDs of tasks that this subtask depends on."
 
 paths:
+  /api/parse-query:
+    post:
+      summary: "Parse a query into actionable keywords and tasks"
+      description: "Parses user-provided query to extract keywords and actionable tasks, utilizing the session context maintained via the X-Hydra-Session-ID header."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: true
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
+      requestBody:
+        description: "User query to parse."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["query"]
+              properties:
+                query:
+                  type: string
+                  description: "The query input that needs parsing."
+      responses:
+        200:
+          description: "Successfully parsed query."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParseQueryResponse"
+        400:
+          description: "Bad request. Query is required."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+
+  /api/autonomous:
+    post:
+      summary: "Run an autonomous workflow based on the provided query"
+      description: "Executes an autonomous workflow using the provided query, utilizing the session context maintained via the X-Hydra-Session-ID header."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: true
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
+      requestBody:
+        description: "User query to execute the autonomous workflow."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["query"]
+              properties:
+                query:
+                  type: string
+                  description: "The query input for the autonomous workflow."
+      responses:
+        200:
+          description: "Successfully executed autonomous workflow."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+                  results:
+                    type: object
+                    description: "Results of the workflow execution."
+        400:
+          description: "Bad request. Query is required."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+
+  /api/create-subpersona:
+    post:
+      summary: "Create a new subpersona"
+      description: "Creates a new subpersona with the provided details, utilizing the session context maintained via the X-Hydra-Session-ID header."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: true
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
+      requestBody:
+        description: "Details for the new subpersona."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["name", "capabilities", "preferences"]
+              properties:
+                name:
+                  type: string
+                  description: "Name of the subpersona."
+                capabilities:
+                  type: object
+                  description: "Capabilities of the subpersona."
+                preferences:
+                  type: object
+                  description: "Preferences of the subpersona."
+      responses:
+        201:
+          description: "Subpersona created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+        400:
+          description: "Bad request. Required fields are missing."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+
+  /api/compress-memory:
+    post:
+      summary: "Compress memory data"
+      description: "Compresses memory data, utilizing the session context maintained via the X-Hydra-Session-ID header."
+      parameters:
+        - in: header
+          name: X-Hydra-Session-ID
+          required: true
+          schema:
+            type: string
+          description: Session ID for maintaining user context.
+      requestBody:
+        description: "Memory data to compress."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["memory", "gaugeMetrics"]
+              properties:
+                memory:
+                  type: string
+                  description: "Memory data to compress."
+                gaugeMetrics:
+                  type: object
+                  description: "Gauge metrics for compression."
+      responses:
+        200:
+          description: "Memory compressed successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message."
+        400:
+          description: "Bad request. Required fields are missing."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+        500:
+          description: "Internal server error."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: "Error message."
+
   /parse-query:
     post:
       operationId: "parseQuery"

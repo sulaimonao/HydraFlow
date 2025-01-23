@@ -2,7 +2,6 @@
 import axios from 'axios';
 import { calculateMetrics } from "../util/metrics.js";
 import { generateResponse } from './response_generator_actions.js';
-import { setSessionContext, createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session checks
 import { setSessionContext } from '../../lib/sessionUtils.js';
 
 // 🔄 Retry logic for API calls with session context
@@ -10,7 +9,6 @@ async function callApiWithRetry(endpoint, payload, req, retries = 3, backoff = 3
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       // ✅ Ensure the session exists before making the API call
-      await createSession(req.session.userId, req.session.chatroomId);
       await setSessionContext(req.session.userId, req.session.chatroomId);
 
       const response = await axios.post(endpoint, {

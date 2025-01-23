@@ -1,7 +1,7 @@
 // src/actions/memory_compressor.js
-import supabase, { supabaseRequest, createSession } from '../../lib/supabaseClient.js';
+import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
 import { setSessionContext } from '../../lib/sessionUtils.js';
-import zlib from 'zlib';
+import zlib from 'zlib'; 
 
 /**
  * ✅ Compress memory using zlib for efficient storage.
@@ -45,9 +45,6 @@ export async function storeCompressedMemory(req, compressedMemory) {
     // 🔒 Validate input before proceeding
     const { userId, chatroomId } = req.session;
     if (!userId || !chatroomId || !compressedMemory) throw new Error("❌ Missing userId, chatroomId, or compressedMemory.");
-
-    // 🔐 Ensure session exists in the user_sessions table
-    await createSession(userId, chatroomId);
 
     // 🔐 Set Supabase session context to enforce RLS policies
     await setSessionContext(userId, chatroomId);

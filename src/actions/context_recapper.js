@@ -1,6 +1,5 @@
 // src/actions/context_recapper.js
 import { callApiWithRetry } from './action_caller.js';
-import { createSession } from '../../lib/supabaseClient.js';  // ✅ Added createSession for session validation
 import { setSessionContext } from '../../lib/sessionUtils.js';
 
 /**
@@ -22,8 +21,6 @@ export async function contextRecap(history, compressedMemory, req) {
 
     const { userId: user_id, chatroomId: chatroom_id } = req.session;
 
-    // ✅ Ensure session exists in the user_sessions table
-    await createSession(user_id, chatroom_id);
     // 🔒 Set Supabase session context for RLS enforcement
     await setSessionContext(user_id, chatroom_id);
     // 📝 Summarize history for more efficient recap

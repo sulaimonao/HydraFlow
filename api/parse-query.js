@@ -1,9 +1,10 @@
 // api/parse-query.js
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
+import { sessionContext } from '../middleware/sessionContext.js';
 
 export default async (req, res) => {
-  await req.session.context(async () => {
+  sessionContext(req, res, async () => {
     try {
       const { query } = req.body;
 

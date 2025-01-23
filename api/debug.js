@@ -8,7 +8,7 @@ const router = express.Router();
 /**
  * Logs issues in the debug_logs table.
  */
-async function logIssue({ userId, contextId, issue, resolution }) {
+export async function logIssue({ userId, contextId, issue, resolution }) {
   try {
     const { data, error } = await supabase
       .from('debug_logs')

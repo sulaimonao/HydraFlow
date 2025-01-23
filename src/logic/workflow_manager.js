@@ -64,6 +64,16 @@ export const orchestrateContextWorkflow = async (req, input = {
     // === 📋 Task Card Creation ===
     const taskCard = await createTaskCard(query, actionItems);
 
+    // === 🔗 Add Dependencies ===
+    for (const actionItem of actionItems) {
+      await addDependency(req, query, taskCard.id, actionItem.dependencyId);
+    }
+
+    // === 🔄 Update Task Status ===
+    for (const actionItem of actionItems) {
+      await updateTaskStatus(req, query, actionItem.taskId, actionItem.status);
+    }
+
     // === 🗜️ Conditional Memory Compression ===
     if (shouldCompress(actionItems, existingMemory.length)) {
       const compressed = compressMemory(updatedMemory);

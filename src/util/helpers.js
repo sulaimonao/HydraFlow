@@ -49,3 +49,13 @@ export function validateUserAndChatroom(req) {
 export function mergeObjects(target, source) {
   return { ...target, ...Object.fromEntries(Object.entries(source).filter(([_, v]) => v != null)) };
 }
+
+/**
+ * Validates a UUID.
+ * @param {string} uuid - The UUID to validate.
+ * @returns {boolean}
+ */
+export function validateUUID(uuid) {
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return regex.test(uuid);
+}

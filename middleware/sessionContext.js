@@ -24,6 +24,8 @@ export async function sessionContext(req, res, next) {
       });
     }
 
+    console.log(`🔍 Session data available: userId=${userId}, chatroomId=${chatroomId}`);
+
     // Set Supabase session context
     await setSessionContext(userId, chatroomId);
 
@@ -32,7 +34,7 @@ export async function sessionContext(req, res, next) {
     req.locals.userId = userId;
     req.locals.chatroomId = chatroomId;
 
-    console.log(`🔐 Session context set: user_id=${userId}, chatroom_id=${chatroomId}`);
+    console.log(`🔐 Session context set: userId=${userId}, chatroomId=${chatroomId}`);
     next();
   } catch (error) {
     console.error(`❌ Error in sessionContext middleware. Path: ${req.path}, Method: ${req.method}`, error.message);

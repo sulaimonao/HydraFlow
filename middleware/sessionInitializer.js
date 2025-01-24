@@ -18,6 +18,8 @@ export async function initializeSession(req, res, next) {
         return res.status(400).json({ error: "Invalid session ID format." });
       }
 
+      console.log(`🔍 Valid session ID: userId=${userId}, chatroomId=${chatroomId}`);
+
       // Check if the session exists in the database
       const { data: sessionData, error: sessionError } = await supabase
         .from('user_sessions')
@@ -31,14 +33,14 @@ export async function initializeSession(req, res, next) {
         return res.status(401).json({ error: "Session not found or invalid." });
       }
 
-      req.session = { userId, chatroomId };
-      console.log(`🔐 Session validated for user_id: ${userId}, chatroom_id: ${chatroomId}`);
-
+      console.log(`✅ Session validated for userId=${userId}, chatroomId=${chatroomId}`);
     } else {
       // New session
       userId = uuidv4();
       chatroomId = uuidv4();
       sessionId = `${userId}:${chatroomId}`;
+
+      console.log(`🔄 Creating new session: userId=${userId}, chatroomId=${chatroomId}`);
 
       // Create a new session in the database
       const { error: creationError } = await supabase
@@ -52,13 +54,13 @@ export async function initializeSession(req, res, next) {
 
       req.session = { userId, chatroomId };
       res.setHeader('X-Hydra-Session-ID', sessionId);
-      console.log(`✅ New session created: user_id=${userId}, chatroom_id=${chatroomId}`);
+      console.log(`✅ New session created: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
     // Set Supabase context
     try {
       await setSessionContext(userId, chatroomId);
-      console.log(`🔐 Session context set: user_id=${userId}, chatroom_id=${chatroomId}`);
+      console.log(`🔐 Session context set: userId=${userId}, chatroomId=${chatroomId}`);
     } catch (contextError) {
       console.error("❌ Error setting session context:", contextError);
       return res.status(500).json({ error: 'Failed to set session context.' });

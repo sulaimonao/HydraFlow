@@ -56,7 +56,13 @@ export async function initializeSession(req, res, next) {
     }
 
     // Set Supabase context
-    await setSessionContext(userId, chatroomId);
+    try {
+      await setSessionContext(userId, chatroomId);
+      console.log(`🔐 Session context set: user_id=${userId}, chatroom_id=${chatroomId}`);
+    } catch (contextError) {
+      console.error("❌ Error setting session context:", contextError);
+      return res.status(500).json({ error: 'Failed to set session context.' });
+    }
 
     next();
   } catch (error) {

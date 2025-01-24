@@ -2,16 +2,24 @@
 import supabase, { supabaseRequest} from '../lib/supabaseClient.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js'; // Import orchestrateContextWorkflow
 import { sessionContext } from '../middleware/sessionContext.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
 export default async function handler(req, res) {
   sessionContext(req, res, async () => {
-    switch (req.method) {
-      case 'POST':
-        return await submitFeedback(req, res);
-      case 'GET':
-        return await handleGetFeedback(req, res);
-      default:
-        return res.status(405).json({ error: 'Method not allowed.' });
+    try {
+      const { userId, chatroomId } = req.locals;
+      await setSessionContext(userId, chatroomId);
+      switch (req.method) {
+        case 'POST':
+          return await submitFeedback(req, res);
+        case 'GET':
+          return await handleGetFeedback(req, res);
+        default:
+          return res.status(405).json({ error: 'Method not allowed.' });
+      }
+    } catch (error) {
+      console.error("❌ Error in feedback handler:", error);
+      res.status(500).json({ error: "Failed to handle feedback.", details: error.message });
     }
   });
 }

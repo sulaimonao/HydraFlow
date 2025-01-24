@@ -2,10 +2,14 @@
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { fetchTaskCards } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
-export default async (req, res) => {
+export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
+      const { userId, chatroomId } = req.locals;
+      await setSessionContext(userId, chatroomId);
+
       const { query } = req.body;
 
       // ✅ Input Validation
@@ -13,8 +17,6 @@ export default async (req, res) => {
         console.warn("⚠️ Invalid query input.");
         return res.status(400).json({ error: "A valid query string is required." });
       }
-
-      const { userId, chatroomId } = req.locals;
 
       // 📦 Fetch existing task cards concurrently with other async operations if needed. For now, it's sequential.
       const existingTaskCardsPromise = fetchTaskCards();
@@ -89,8 +91,8 @@ export default async (req, res) => {
       });
 
     } catch (error) {
-      console.error("❌ Error in parse-query:", error);
-      res.status(500).json({ error: "Failed to parse query. Please try again." });
+      console.error("❌ Error in parse-query handler:", error);
+      res.status(500).json({ error: "Failed to parse query.", details: error.message });
     }
   });
 };

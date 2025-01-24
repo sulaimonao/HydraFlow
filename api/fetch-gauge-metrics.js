@@ -2,18 +2,20 @@
 import { calculateMetrics } from '../src/util/metrics.js';
 import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
 import { sessionContext } from '../middleware/sessionContext.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
 export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
+      const { userId, chatroomId } = req.locals;
+      await setSessionContext(userId, chatroomId);
+
       const { query, memory, feedback, tokenCount } = req.body;
 
       // ✅ Validate input
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: "Invalid or missing 'query' parameter." });
       }
-
-      const { userId, chatroomId } = req.locals;
 
       // 🔍 Retrieve metric type
       const metricType = req.query.metricType || 'default';

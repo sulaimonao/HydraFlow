@@ -1,6 +1,7 @@
 // api/create-subpersona.js
 import { insertHead } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
+import { setSessionContext } from '../lib/sessionUtils.js';
 
 const handleCreateSubpersona = async (req, res) => {
   sessionContext(req, res, async () => {
@@ -23,6 +24,8 @@ const handleCreateSubpersona = async (req, res) => {
       if (!userId || !chatroomId) {
         return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
       }
+
+      await setSessionContext(userId, chatroomId);
 
       // 📝 Insert new subpersona into the heads table
       const head = await insertHead(userId, chatroomId, name, capabilities, preferences);

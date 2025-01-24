@@ -15,6 +15,10 @@ export async function handleActions(actions, context, req) {
   const feedback = [];
 
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      throw new Error("❗ Session context is missing");
+    }
+
     // 🔒 Set session context for RLS enforcement using session data
     await setSessionContext(req.session.userId, req.session.chatroomId);
 

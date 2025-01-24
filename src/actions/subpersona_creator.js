@@ -29,6 +29,10 @@ const validateIds = (user_id, chatroom_id) => {
 // 🚀 Create a subpersona from a predefined template
 async function createSubpersonaFromTemplate(templateName, query, req) {
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      throw new Error("❗ Session context is missing");
+    }
+
     const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
     const { user_id, chatroom_id } = generatedIdentifiers;
 

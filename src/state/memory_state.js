@@ -14,6 +14,10 @@ let memory = "";
  */
 export async function appendMemory(newMemory, req, query) {
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      throw new Error("❗ Session context is missing");
+    }
+
     // 🌐 Retrieve persistent IDs
     const user_id = req.session.userId;
     const chatroom_id = req.session.chatroomId;

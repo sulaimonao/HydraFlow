@@ -13,6 +13,9 @@ const LATENCY_THRESHOLD = process.env.LATENCY_THRESHOLD || 1;
  */
 export function calculateMetrics(context, req) {
   if (!context) throw new Error("❗ Context data is missing");
+  if (!req.session || !req.session.userId || !req.session.chatroomId) {
+    throw new Error("❗ Session context is missing");
+  }
 
   const { tokenUsage, responseLatency, activeSubpersonas = [] } = context;
 

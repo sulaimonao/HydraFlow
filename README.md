@@ -165,3 +165,27 @@ HydraFlow is a dynamic, API-driven workflow and state management system designed
 
 ## **License**
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+---
+
+## **Troubleshooting**
+
+### Common Issues
+
+1. **Session Context Issues**
+   - Ensure that the `X-Hydra-Session-ID` header is included in all requests.
+   - Verify that the session initialization middleware is correctly configured.
+
+2. **Endpoint Not Found**
+   - Check that the endpoint paths are correctly defined in the API routes.
+   - Ensure that the server is running and the routes are properly registered.
+
+3. **Permission Issues**
+   - Verify that the database row-level security policies are correctly configured.
+   - Ensure that the user has the necessary permissions to access the data.
+
+4. **Query/Parameter Errors**
+   - Ensure that all required parameters are included in the request.
+   - Validate the input data to match the expected format.
+
+---

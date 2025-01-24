@@ -35,7 +35,7 @@ export function logInfo(message, req) {
  * @param {string} [chatroom_id] - Optional chatroom ID.
  */
 export function logError(message, user_id = null, chatroom_id = null) {
-  console.error(`[ERROR] ${timestamp()}: ${message}${formatContext(user_id, chatroom_id)}`);
+  console.error(`[ERROR] ${timestamp()}: ${message}${formatContext({ session: { userId: user_id, chatroomId: chatroom_id } })}`);
 }
 
 /**

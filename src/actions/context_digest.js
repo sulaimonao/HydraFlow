@@ -12,7 +12,7 @@ import { setSessionContext } from '../../lib/sessionUtils.js';
 export const generateContextDigest = async (memory, req) => {
   try {
     // ✅ Validate user_id and chatroom_id
-    if (!req.session.userId || !req.session.chatroomId) {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
       throw new Error("❌ Missing user_id or chatroom_id for context digest generation.");
     }
 

@@ -27,6 +27,11 @@ export async function sessionContext(req, res, next) {
     // Set Supabase session context
     await setSessionContext(userId, chatroomId);
 
+    // Ensure req.locals is defined and set userId and chatroomId
+    req.locals = req.locals || {};
+    req.locals.userId = userId;
+    req.locals.chatroomId = chatroomId;
+
     console.log(`🔐 Session context set: user_id=${userId}, chatroom_id=${chatroomId}`);
     next();
   } catch (error) {

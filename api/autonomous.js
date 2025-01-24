@@ -65,6 +65,7 @@ export default async (req, res) => {
 // ✅ Handles context updates
 async function updateContext(data, context) {
   try {
+    console.log('🔍 Checking sessionContext middleware execution...');
     const { data: updatedData } = await supabaseRequest(
       supabase
         .from('chatrooms')
@@ -73,6 +74,7 @@ async function updateContext(data, context) {
         .eq('chatroom_id', context.chatroomId)
     );
 
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
     return { updatedContext: { ...context, ...updatedData[0] } }; // Assuming single row update
   } catch (error) {
     console.error("⚠️ Error updating context:", error.message);

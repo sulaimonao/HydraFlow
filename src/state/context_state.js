@@ -74,6 +74,7 @@ export function logContextUpdate(newData) {
  * @param {Object} req - Request object for workflow context.
  */
 export async function updateContext(newData, req) {
+  console.log('🔍 Checking sessionContext middleware execution...');
   try {
     const { user_id, chatroom_id } = req.session;
 
@@ -94,6 +95,7 @@ export async function updateContext(newData, req) {
         .eq('chatroom_id', chatroom_id)
     );
 
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
     console.log('✅ Context updated successfully.');
     return currentContext;
 

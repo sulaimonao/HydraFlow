@@ -4,6 +4,7 @@ import { updateMemory } from '../src/logic/memory_manager.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 
 export default async function handler(req, res) {
+  console.log('🔍 Checking sessionContext middleware execution...');
   sessionContext(req, res, async () => {
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method Not Allowed' });
@@ -22,6 +23,8 @@ export default async function handler(req, res) {
       }
 
       const { userId, chatroomId } = req.locals;
+
+      console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
 
       // 🌐 Run workflow and update memory concurrently
       const [workflowContext, updateMemoryResult] = await Promise.all([

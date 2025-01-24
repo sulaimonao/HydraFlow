@@ -11,6 +11,7 @@ import { setSessionContext } from '../../lib/sessionUtils.js';
  * @returns {Promise<Object>} - API response or error.
  */
 export async function contextRecap(history, compressedMemory, req) {
+  console.log('🔍 Checking sessionContext middleware execution...');
   try {
     const endpoint = 'https://hydra-flow.vercel.app/api/context-recap';
 
@@ -42,6 +43,7 @@ export async function contextRecap(history, compressedMemory, req) {
     // 🚀 Make API call with retries
     const response = await callApiWithRetry(endpoint, payload, user_id, chatroom_id);
 
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
     console.log(`✅ Context recap completed for user_id: ${user_id}, chatroom_id: ${chatroom_id}`);
     return response;
 

@@ -28,6 +28,7 @@ export const orchestrateContextWorkflow = async (req, input = {
   feedback,
   tokenCount: 0
 }) => {
+  console.log('🔍 Checking sessionContext middleware execution...');
   try {
     const response = {};
     const updatedContext = {};
@@ -146,19 +147,16 @@ export const orchestrateContextWorkflow = async (req, input = {
     // === 🗄️ Store Workflow Data ===
     await storeProjectData(query, req, context);
 
-    return {
-      status: "context_updated",
-      context,
-      finalResponse: response.finalResponse,
-    };
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    return response;
   } catch (error) {
-    console.error("❌ Error in orchestrateContextWorkflow:", error);
+    console.error("❌ Error in orchestrateContextWorkflow:", error.message);
     await logIssue({
       userId: req.session?.userId,
       contextId: req.session?.chatroomId,
       issue: 'Workflow orchestration failed',
       resolution: `Error: ${error.message}`,
     });
-    throw new Error("Workflow orchestration failed.");
+    throw new Error("Failed to orchestrate context workflow.");
   }
 };

@@ -14,6 +14,7 @@ import { setSessionContext } from '../../lib/sessionUtils.js';
 export async function handleActions(actions, context, req) {
   const feedback = [];
 
+  console.log('🔍 Checking sessionContext middleware execution...');
   try {
     if (!req.session || !req.session.userId || !req.session.chatroomId) {
       throw new Error("❗ Session context is missing");
@@ -57,12 +58,14 @@ export async function handleActions(actions, context, req) {
             feedback.push(`Unrecognized action: ${action}`);
             break;
         }
+        feedback.push(`✅ Action ${action} executed successfully.`);
       } catch (actionError) {
         console.error(`❌ Error executing action '${action}':`, actionError.message);
-        feedback.push(`Error executing action '${action}': ${actionError.message}`);
+        feedback.push(`❌ Action ${action} failed: ${actionError.message}`);
       }
     }
-
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    return feedback;
   } catch (workflowError) {
     console.error("❌ Error in handleActions workflow:", workflowError.message);
     feedback.push(`Error in handling actions: ${workflowError.message}`);

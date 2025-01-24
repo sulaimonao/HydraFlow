@@ -6,6 +6,7 @@ import { setSessionContext } from '../lib/sessionUtils.js';
  * Middleware to validate and set session context.
  */
 export async function sessionContext(req, res, next) {
+  console.log('🔍 Checking sessionContext middleware execution...');
   try {
     // Initialize session (if not already done)
     await initializeSession(req, res, () => {});
@@ -34,6 +35,7 @@ export async function sessionContext(req, res, next) {
     req.locals.userId = userId;
     req.locals.chatroomId = chatroomId;
 
+    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
     console.log(`🔐 Session context set: userId=${userId}, chatroomId=${chatroomId}`);
     next();
   } catch (error) {

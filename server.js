@@ -42,9 +42,12 @@ app.use(
 );
 
 // Middleware for session context handling
-app.use('/api', sessionContext); // Apply sessionContext middleware to all API routes
+app.use(sessionContext); // Apply sessionContext middleware to all routes
 
 app.use(appendGaugeMetrics);
+
+app.use('/favicon.ico', express.static('public/favicon.ico'));
+app.use('/favicon.png', express.static('public/favicon.png'));
 
 // 🔍 Parse Query API
 app.post("/api/parse-query", (req, res) => {

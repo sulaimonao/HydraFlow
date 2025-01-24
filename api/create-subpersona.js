@@ -2,6 +2,25 @@
 import { insertHead } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
+const express = require('express');
+const router = express.Router();
+const validationMiddleware = require('../middleware/validationMiddleware');
+const Joi = require('joi');
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+const schema = Joi.object({
+  user_id: Joi.string().required(),
+  // other fields
+});
 
 const handleCreateSubpersona = async (req, res) => {
   sessionContext(req, res, async () => {
@@ -49,4 +68,16 @@ const handleCreateSubpersona = async (req, res) => {
   });
 };
 
-export default handleCreateSubpersona;
+router.post('/create-subpersona', validationMiddleware(schema), (req, res) => {
+  try {
+    handleCreateSubpersona(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.stack,
+    });
+  }
+});
+
+module.exports = router;

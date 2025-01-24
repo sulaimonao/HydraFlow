@@ -1,6 +1,7 @@
 // src/actions/context_recapper.js
 import { callApiWithRetry } from './action_caller.js';
 import { setSessionContext } from '../../lib/sessionUtils.js';
+const logger = require('../util/logger');
 
 /**
  * Generates a context recap by summarizing history and updating the backend.
@@ -48,6 +49,7 @@ export async function contextRecap(history, compressedMemory, req) {
     return response;
 
   } catch (error) {
+    logger.error('Error in contextRecap', { error, context: { history, compressedMemory, req } });
     console.error("❌ Error in contextRecap:", error.message);
     throw new Error(`Context recap failed: ${error.message}`);
   }
@@ -77,3 +79,14 @@ function validateContextRecap(payload) {
     payload.chatroom_id
   );
 }
+
+function recapContext(context) {
+  try {
+    // existing code
+  } catch (error) {
+    logger.error('Error in recapContext', { error, context });
+    throw error;
+  }
+}
+
+module.exports = recapContext;

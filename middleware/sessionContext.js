@@ -8,6 +8,11 @@ import { setSessionContext } from '../lib/sessionUtils.js';
 export async function sessionContext(req, res, next) {
   console.log('🔍 Checking sessionContext middleware execution...');
   try {
+    // Check for x-hydra-session-id header
+    if (!req.headers['x-hydra-session-id']) {
+      return res.status(400).json({ error: 'Missing session ID' });
+    }
+
     // Initialize session (if not already done)
     await initializeSession(req, res, () => {});
 

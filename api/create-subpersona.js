@@ -1,12 +1,13 @@
 // api/create-subpersona.js
+import express from 'express';
+import Joi from 'joi';
 import { insertHead } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
-const express = require('express');
+import validationMiddleware from '../middleware/validationMiddleware.js';
+import winston from 'winston';
+
 const router = express.Router();
-const validationMiddleware = require('../middleware/validationMiddleware');
-const Joi = require('joi');
-const winston = require('winston');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -80,4 +81,4 @@ router.post('/create-subpersona', validationMiddleware(schema), (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

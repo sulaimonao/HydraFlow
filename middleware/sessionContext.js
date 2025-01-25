@@ -9,7 +9,8 @@ export async function sessionContext(req, res, next) {
   console.log('🔍 Checking sessionContext middleware execution...');
   try {
     // Check for x-hydra-session-id header
-    if (!req.headers['x-hydra-session-id']) {
+    const sessionId = req.headers['x-hydra-session-id'];
+    if (!sessionId) {
       return res.status(400).json({ error: 'Missing session ID' });
     }
 
@@ -29,8 +30,6 @@ export async function sessionContext(req, res, next) {
         code: 'SESSION_DATA_MISSING',
       });
     }
-
-    console.log(`🔍 Session data available: userId=${userId}, chatroomId=${chatroomId}`);
 
     // Set Supabase session context
     await setSessionContext(userId, chatroomId);

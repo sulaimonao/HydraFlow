@@ -89,7 +89,16 @@ app.post("/api/create-subpersona", async (req, res) => {
 });
 
 // 🔧 Compress Memory API
-app.post("/api/compress-memory", compressMemory);
+app.post("/api/compress-memory", async (req, res) => {
+  try {
+    const { memory } = req.body;
+    const result = await compressMemory(memory, req.userId, req.chatroomId); // Use session context
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ Error compressing memory:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.use("/api/feedback", feedbackRoutes);
 

@@ -5,7 +5,7 @@ import { validate as validateUUID } from 'uuid';
 
 dotenv.config();
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.API_BASE_URL || "https://hydra-flow.vercel.app/api" //'http://localhost:3000/api';
 let sessionId = null; // 🔑 Session persistence variable
 
 // 🔄 Retry mechanism for API calls
@@ -96,6 +96,12 @@ async function runAutonomousWorkflow(query, user_id, chatroom_id) {
   try {
     if (!validateUUID(user_id) || !validateUUID(chatroom_id)) {
       throw new Error("Invalid session IDs for user or chatroom.");
+    }
+
+    // Initialize sessionId if not already set
+    if (!sessionId) {
+      sessionId = `${user_id}:${chatroom_id}`;
+      console.log(`🔐 Initialized session ID: ${sessionId}`);
     }
 
     console.log(`🔎 Starting autonomous workflow: user_id=${user_id}, chatroom_id=${chatroom_id}`);

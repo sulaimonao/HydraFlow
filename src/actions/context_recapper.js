@@ -44,7 +44,7 @@ export async function contextRecap(history, compressedMemory, req) {
     // 🚀 Make API call with retries
     const response = await callApiWithRetry(endpoint, payload, user_id, chatroom_id);
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     console.log(`✅ Context recap completed for user_id: ${user_id}, chatroom_id: ${chatroom_id}`);
     return response;
 

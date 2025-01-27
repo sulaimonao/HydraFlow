@@ -67,7 +67,7 @@ app.post("/api/autonomous", async (req, res) => {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Query is required." });
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     const result = await runAutonomousWorkflow(query, req.userId, req.chatroomId); // Use session context
     res.status(200).json(result);
   } catch (error) {

@@ -12,7 +12,7 @@ async function hasCircularDependency(subtaskId, dependsOn) {
 async function addTaskDependency(req, res) {
   sessionContext(req, res, async () => {
     const { subtaskId, dependsOn } = req.body;
-    const { userId, chatroomId } = req.locals;
+    const { userId, chatroomId } = req.session;
 
     try {
       // ⚠️ Input validation
@@ -57,7 +57,7 @@ async function addTaskDependency(req, res) {
 async function getTaskDependencies(req, res) {
   sessionContext(req, res, async () => {
     const { subtaskId } = req.params;
-    const { userId, chatroomId } = req.locals;
+    const { userId, chatroomId } = req.session;
 
     try {
       if (!subtaskId) {
@@ -91,7 +91,7 @@ async function getTaskDependencies(req, res) {
 async function getTaskCard(req, res) {
   sessionContext(req, res, async () => {
     const { taskCardId } = req.params;
-    const { userId, chatroomId } = req.locals;
+    const { userId, chatroomId } = req.session;
 
     try {
       if (!taskCardId) {

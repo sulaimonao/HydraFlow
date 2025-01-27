@@ -64,7 +64,7 @@ export async function handleActions(actions, context, req) {
         feedback.push(`❌ Action ${action} failed: ${actionError.message}`);
       }
     }
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     return feedback;
   } catch (workflowError) {
     console.error("❌ Error in handleActions workflow:", workflowError.message);

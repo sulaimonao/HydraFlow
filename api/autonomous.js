@@ -13,7 +13,7 @@ export default async (req, res) => {
         return res.status(400).json({ error: "Invalid or missing query object." });
       }
 
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
 
       // 🚀 Initialize workflow
       const workflowContext = await orchestrateContextWorkflow(req, {
@@ -74,7 +74,7 @@ async function updateContext(data, context) {
         .eq('chatroom_id', context.chatroomId)
     );
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     return { updatedContext: { ...context, ...updatedData[0] } }; // Assuming single row update
   } catch (error) {
     console.error("⚠️ Error updating context:", error.message);

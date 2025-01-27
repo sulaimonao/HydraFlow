@@ -20,12 +20,12 @@ async function withRetry(task, retries = 3) {
 export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
       await setSessionContext(userId, chatroomId);
 
-      // Check if req.locals is defined and contains userId and chatroomId
-      if (!req.locals || !req.locals.userId || !req.locals.chatroomId) {
-        console.error('❌ Error: req.locals.userId or req.locals.chatroomId is undefined.');
+      // Check if req.session is defined and contains userId and chatroomId
+      if (!req.session || !req.session.userId || !req.session.chatroomId) {
+        console.error('❌ Error: req.session.userId or req.session.chatroomId is undefined.');
         return res.status(500).json({ error: 'Internal Server Error: Missing user or chatroom information.' });
       }
       try {

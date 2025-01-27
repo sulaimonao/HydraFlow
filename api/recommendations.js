@@ -12,12 +12,12 @@ export default async (req, res) => {
         return res.status(400).json({ error: "A valid query string is required." });
       }
 
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
 
       // 🚀 Generate Recommendations
       let recommendations;
       try {
-        const gaugeMetrics = req.locals.gaugeMetrics || { tokenUsage: 0, performanceScore: 0 };
+        const gaugeMetrics = req.session.gaugeMetrics || { tokenUsage: 0, performanceScore: 0 };
         recommendations = generateRecommendations(gaugeMetrics);
         if (!Array.isArray(recommendations) || recommendations.length === 0) {
           recommendations = ["No specific recommendations available."];

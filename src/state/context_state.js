@@ -95,7 +95,7 @@ export async function updateContext(newData, req) {
         .eq('chatroom_id', chatroom_id)
     );
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     console.log('✅ Context updated successfully.');
     return currentContext;
 

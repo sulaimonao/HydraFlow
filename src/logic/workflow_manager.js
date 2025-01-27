@@ -147,7 +147,7 @@ export const orchestrateContextWorkflow = async (req, input = {
     // === 🗄️ Store Workflow Data ===
     await storeProjectData(query, req, context);
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     return response;
   } catch (error) {
     console.error("❌ Error in orchestrateContextWorkflow:", error.message);

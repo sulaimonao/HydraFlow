@@ -66,7 +66,7 @@ router.post('/debug/log', (req, res) => {
   sessionContext(req, res, async () => {
     try {
       const { issue, resolution } = req.body;
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
 
       if (!issue || !resolution) {
         return res.status(400).json({ error: "Both 'issue' and 'resolution' are required." });
@@ -98,7 +98,7 @@ router.get('/debug/logs/:contextId', (req, res) => {
   sessionContext(req, res, async () => {
     try {
       const { contextId } = req.params;
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
 
       if (!contextId) {
         return res.status(400).json({ error: "Context ID is required." });

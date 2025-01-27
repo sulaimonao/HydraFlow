@@ -39,8 +39,8 @@ const handleCreateSubpersona = async (req, res) => {
         return res.status(400).json({ error: 'Preferences must be an object.' });
       }
 
-      const userId = req.locals?.userId;
-      const chatroomId = req.locals?.chatroomId;
+      const userId = req.session?.userId;
+      const chatroomId = req.session?.chatroomId;
       if (!userId || !chatroomId) {
         return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
       }

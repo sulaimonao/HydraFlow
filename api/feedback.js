@@ -7,7 +7,7 @@ import { setSessionContext } from '../lib/sessionUtils.js';
 export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
       await setSessionContext(userId, chatroomId);
       switch (req.method) {
         case 'POST':
@@ -48,7 +48,7 @@ async function handleGetFeedback(req, res) {
  * Handles feedback submission.
  */
 async function submitFeedback(req, res) {
-  const { userId, chatroomId } = req.locals;
+  const { userId, chatroomId } = req.session;
   const { query, responseNumber, userFeedback, rating } = req.body;
 
   if (!userFeedback || typeof userFeedback !== 'string') {

@@ -22,9 +22,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "'additionalNotes' must be a string if provided." });
       }
 
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
 
-      console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+      console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
 
       // 🌐 Run workflow and update memory concurrently
       const [workflowContext, updateMemoryResult] = await Promise.all([

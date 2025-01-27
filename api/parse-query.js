@@ -7,7 +7,7 @@ import { setSessionContext } from '../lib/sessionUtils.js';
 export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
       await setSessionContext(userId, chatroomId);
 
       const { query } = req.body;

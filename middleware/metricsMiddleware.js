@@ -24,7 +24,7 @@ export function appendGaugeMetrics(req, res, next) {
       memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024, // Convert to MB
     };
 
-    console.log(`🔍 req.locals content: ${JSON.stringify(req.locals)}`);
+    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
     next();
   } catch (error) {
     console.error("❌ Error in appendGaugeMetrics middleware:", error.message);

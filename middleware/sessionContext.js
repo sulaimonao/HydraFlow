@@ -11,27 +11,27 @@ export async function sessionContext(req, res, next) {
     // Check for x-hydra-session-id header or generate a new session ID
     let sessionId = req.headers['x-hydra-session-id'];
     if (!sessionId) {
-      sessionId = `${uuidv4()}:${uuidv4()}`;
+      sessionId = `${uuidv4()}`;
+      console.log(`🆕 Generated new session ID: ${sessionId}`);
       req.headers['x-hydra-session-id'] = sessionId;
     }
-    const [userId, chatroomId] = sessionId.split(':');
 
-    // Safeguard in case req.session is undefined
-    req.session = req.session || {};
-    req.session.userId = userId;
-    req.session.chatroomId = chatroomId;
+    // Generate default user_id and chatroom_id if not provided
+    let userId = req.headers['user_id'] || `user-${uuidv4()}`;
+    let chatroomId = req.headers['chatroom_id'] || `chatroom-${uuidv4()}`;
 
-    // Set Supabase session context
+    console.log(`🔐 Using user_id: ${userId}, chatroom_id: ${chatroomId}`);
+
+    // Set session context
     await setSessionContext(userId, chatroomId);
 
-    // Log the session initialization
-    console.log(`✅ Session initialized. userId: ${userId}, chatroomId: ${chatroomId}`);
+    // Pass updated headers to next middleware
+    req.headers['user_id'] = userId;
+    req.headers['chatroom_id'] = chatroomId;
 
     next();
   } catch (error) {
-    console.error(`❌ Session Error: ${error.message}`);
-    res.status(500).json({
-      error: 'Failed to set session context.',
-    });
+    console.error('❌ Error in session context middleware:', error);
+    res.status(500).json({ error: 'Failed to initialize session context.' });
   }
 }

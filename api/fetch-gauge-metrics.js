@@ -1,13 +1,17 @@
 // api/fetch-gauge-metrics.js
-import { calculateMetrics } from '../src/util/metrics.js';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
-import { sessionContext } from '../middleware/sessionContext.js';
-import { setSessionContext } from '../lib/sessionUtils.js';
 
-export default async function handler(req, res) {
+import express from "express";
+import { sessionContext } from "../../middleware/sessionContext.js";
+import { setSessionContext } from "../../lib/sessionUtils.js";
+import { calculateMetrics } from "../../src/util/metrics.js";
+import supabase from "../../lib/supabaseClient.js";
+
+const router = express.Router();
+
+router.get("/fetch-gauge-metrics", async (req, res) => {
   sessionContext(req, res, async () => {
     try {
-      const { userId, chatroomId } = req.locals;
+      const { userId, chatroomId } = req.session;
       await setSessionContext(userId, chatroomId);
 
       const { query, memory, feedback, tokenCount } = req.body;
@@ -25,16 +29,14 @@ export default async function handler(req, res) {
 
       // 🔄 Retrieve token usage if not provided
       if (!tokenUsage) {
-        const { data, error } = await supabaseRequest(
-          supabase
-            .from('gauge_metrics')
-            .select('token_used, token_total')
-            .eq('user_id', userId)
-            .eq('chatroom_id', chatroomId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
-        );
+        const { data, error } = await supabase
+          .from('gauge_metrics')
+          .select('token_used, token_total')
+          .eq('user_id', userId)
+          .eq('chatroom_id', chatroomId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
         if (error) {
           console.warn("⚠️ Token usage fetch failed. Defaulting values.");
@@ -76,4 +78,6 @@ export default async function handler(req, res) {
       res.status(500).json({ error: "Failed to fetch gauge metrics.", details: error.message });
     }
   });
-}
+});
+
+export default router;

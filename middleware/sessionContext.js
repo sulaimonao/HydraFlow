@@ -15,7 +15,7 @@ export async function sessionContext(req, res, next) {
       req.headers['x-hydra-session-id'] = sessionId;
     }
     const [userId, chatroomId] = sessionId.split(':');
-    
+
     // Safeguard in case req.session is undefined
     req.session = req.session || {};
     req.session.userId = userId;

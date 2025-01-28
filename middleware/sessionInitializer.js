@@ -2,6 +2,17 @@
 import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 import supabase from '../lib/supabaseClient.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
+import { isValidUUID } from '../src/util/helpers.js';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
 
 export async function initializeSession(req, res, next) {
   try {
@@ -9,18 +20,15 @@ export async function initializeSession(req, res, next) {
     let userId, chatroomId;
 
     if (sessionId && sessionId.includes(':')) {
-      // Existing session
       [userId, chatroomId] = sessionId.split(':');
 
-      // Validate the IDs
-      if (!validateUUID(userId) || !validateUUID(chatroomId)) {
+      if (!isValidUUID(userId) || !isValidUUID(chatroomId)) {
         console.warn("⚠️ Invalid session ID format.");
         return res.status(400).json({ error: "Invalid session ID format." });
       }
 
       console.log(`🔍 Valid session ID: userId=${userId}, chatroomId=${chatroomId}`);
 
-      // Check if the session exists in the database
       const { data: sessionData, error: sessionError } = await supabase
         .from('user_sessions')
         .select('*')
@@ -35,14 +43,12 @@ export async function initializeSession(req, res, next) {
 
       console.log(`✅ Session validated for userId=${userId}, chatroomId=${chatroomId}`);
     } else {
-      // New session
       userId = uuidv4();
       chatroomId = uuidv4();
       sessionId = `${userId}:${chatroomId}`;
 
       console.log(`🔄 Creating new session: userId=${userId}, chatroomId=${chatroomId}`);
 
-      // Create a new session in the database
       const { error: creationError } = await supabase
         .from('user_sessions')
         .insert([{ user_id: userId, chatroom_id: chatroomId }]);
@@ -57,18 +63,17 @@ export async function initializeSession(req, res, next) {
       console.log(`✅ New session created: userId=${userId}, chatroomId=${chatroomId}`);
     }
 
-    // Set Supabase context
     try {
       await setSessionContext(userId, chatroomId);
       console.log(`🔐 Session context set: userId=${userId}, chatroomId=${chatroomId}`);
     } catch (contextError) {
-      console.error("❌ Error setting session context:", contextError);
+      logger.error("❌ Error setting session context:", contextError);
       return res.status(500).json({ error: 'Failed to set session context.' });
     }
 
     next();
   } catch (error) {
-    console.error("❌ Error initializing session:", error);
+    logger.error("❌ Error initializing session:", error);
     res.status(500).json({ error: 'Failed to initialize session.' });
   }
 }

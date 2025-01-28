@@ -28,7 +28,6 @@ const handleCreateSubpersona = async (req, res) => {
     try {
       const { name, capabilities, preferences } = req.body;
 
-      // ✅ Input Validation
       if (!name || typeof name !== 'string') {
         return res.status(400).json({ error: 'Valid subpersona name is required.' });
       }
@@ -47,10 +46,20 @@ const handleCreateSubpersona = async (req, res) => {
 
       await setSessionContext(userId, chatroomId);
 
-      // 📝 Insert new subpersona into the heads table
       const head = await insertHead(userId, chatroomId, name, capabilities, preferences);
 
-      // ✅ Success Response
+      await supabaseRequest(
+        supabase.from('debug_logs').insert([
+          {
+            user_id: userId,
+            chatroom_id: chatroomId,
+            issue: 'Subpersona creation executed',
+            resolution: 'Subpersona created successfully',
+            timestamp: new Date().toISOString()
+          }
+        ])
+      );
+
       return res.status(200).json({
         success: true,
         message: 'Subpersona created successfully.',
@@ -59,7 +68,7 @@ const handleCreateSubpersona = async (req, res) => {
         chatroom_id: chatroomId
       });
     } catch (error) {
-      console.error("❌ Error in create-subpersona:", error);
+      logger.error("❌ Error in create-subpersona:", error);
       res.status(500).json({
         success: false,
         error: 'Unexpected error occurred.',

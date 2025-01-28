@@ -1,5 +1,7 @@
 // src/util/helpers.js
 
+import { validate as validateUUID } from 'uuid';
+
 /**
  * Capitalizes the first letter of a string.
  * @param {string} string - The string to capitalize.
@@ -55,7 +57,6 @@ export function mergeObjects(target, source) {
  * @param {string} uuid - The UUID to validate.
  * @returns {boolean}
  */
-export function validateUUID(uuid) {
-  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return regex.test(uuid);
+export function isValidUUID(uuid) {
+  return validateUUID(uuid);
 }

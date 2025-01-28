@@ -1,6 +1,17 @@
 // middleware/sessionContext.js
 import { setSessionContext } from '../lib/sessionUtils.js';
 import { v4 as uuidv4 } from 'uuid';
+import { isValidUUID } from '../src/util/helpers.js';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
 
 /**
  * Middleware to validate and set session context.
@@ -20,10 +31,22 @@ export async function sessionContext(req, res, next) {
     let userId = req.headers['user_id'] || `user-${uuidv4()}`;
     let chatroomId = req.headers['chatroom_id'] || `chatroom-${uuidv4()}`;
 
+    if (!isValidUUID(userId)) {
+      userId = uuidv4();
+      console.warn(`⚠️ Invalid userId. Generated new userId: ${userId}`);
+    }
+    if (!isValidUUID(chatroomId)) {
+      chatroomId = uuidv4();
+      console.warn(`⚠️ Invalid chatroomId. Generated new chatroomId: ${chatroomId}`);
+    }
+
     console.log(`🔐 Using user_id: ${userId}, chatroom_id: ${chatroomId}`);
 
-    // Set session context
-    await setSessionContext(userId, chatroomId);
+    try {
+      await setSessionContext(userId, chatroomId);
+    } catch (error) {
+      logger.error('❌ Error setting session context:', error);
+    }
 
     // Pass updated headers to next middleware
     req.headers['user_id'] = userId;
@@ -31,7 +54,7 @@ export async function sessionContext(req, res, next) {
 
     next();
   } catch (error) {
-    console.error('❌ Error in session context middleware:', error);
+    logger.error('❌ Error in session context middleware:', error);
     res.status(500).json({ error: 'Failed to initialize session context.' });
   }
 }

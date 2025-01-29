@@ -68,7 +68,7 @@ app.post("/api/autonomous", async (req, res) => {
     if (!query) return res.status(400).json({ error: "Query is required." });
 
     console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
-    const result = await runAutonomousWorkflow(query, req.userId, req.chatroomId); // Use session context
+    const result = await runAutonomousWorkflow(query, req.session.userId, req.session.chatroomId); // Use session context
     res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error in autonomous workflow:", error);
@@ -80,7 +80,7 @@ app.post("/api/autonomous", async (req, res) => {
 app.post("/api/create-subpersona", async (req, res) => {
   try {
     const { name, capabilities, preferences } = req.body;
-    await createSubpersona(name, req.userId, req.chatroomId, capabilities, preferences); // Use session context
+    await createSubpersona(name, req.session.userId, req.session.chatroomId, capabilities, preferences); // Use session context
     res.status(201).json({ message: "Subpersona created successfully." });
   } catch (error) {
     console.error("❌ Error creating subpersona:", error);
@@ -92,7 +92,7 @@ app.post("/api/create-subpersona", async (req, res) => {
 app.post("/api/compress-memory", async (req, res) => {
   try {
     const { memory } = req.body;
-    const result = await compressMemory(memory, req.userId, req.chatroomId); // Use session context
+    const result = await compressMemory(memory, req.session.userId, req.session.chatroomId); // Use session context
     res.status(200).json(result);
   } catch (error) {
     console.error("❌ Error compressing memory:", error);
@@ -101,5 +101,10 @@ app.post("/api/compress-memory", async (req, res) => {
 });
 
 app.use("/api/feedback", feedbackRoutes);
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
 
 export default app;

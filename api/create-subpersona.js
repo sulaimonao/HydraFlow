@@ -30,6 +30,7 @@ const handleCreateSubpersona = async (req, res) => {
     if (!name || typeof name !== 'string') {
       return res.status(400).json({ error: 'Valid subpersona name is required.' });
     }
+
     if (capabilities && typeof capabilities !== 'object') {
       return res.status(400).json({ error: 'Capabilities must be an object.' });
     }

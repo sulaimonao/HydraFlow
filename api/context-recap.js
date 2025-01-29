@@ -56,25 +56,16 @@ router.post('/', sessionContext, async (req, res) => {
     `;
 
     // 📊 Handle Gauge Metrics
-    const gaugeMetrics = res.locals?.gaugeMetrics || {};
-    if (!res.locals?.gaugeMetrics) {
-      console.warn("⚠️ Warning: gaugeMetrics is missing. Using default values.");
-    }
+    const gaugeMetrics = await gatherGaugeData({ user_id: userId, chatroom_id: chatroomId });
 
-    // 📤 Respond with Recap and Gauge Metrics
     res.status(200).json({
-      recap: recap.trim(),
+      message: "Context recap generated successfully.",
+      recap,
       gaugeMetrics,
-      user_id: userId,
-      chatroom_id: chatroomId
     });
-
   } catch (error) {
-    console.error("❌ Error in context-recap:", error);
-    res.status(error.status || 500).json({
-      error: "Failed to generate context recap.",
-      details: error.message || error
-    });
+    console.error("❌ Error in context-recap handler:", error);
+    res.status(500).json({ error: "Failed to generate context recap.", details: error.message });
   }
 });
 

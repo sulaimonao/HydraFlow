@@ -13,10 +13,10 @@ async function hasCircularDependency(subtaskId, dependsOn) {
 
 // ✅ Add a Task Dependency
 router.post('/add-dependency', sessionContext, async (req, res) => {
-  const { subtaskId, dependsOn } = req.body;
-  const { userId, chatroomId } = req.session;
-
   try {
+    const { subtaskId, dependsOn } = req.body;
+    const { userId, chatroomId } = req.session;
+
     // ⚠️ Input validation
     if (!subtaskId || !dependsOn) {
       return res.status(400).json({ error: 'Both subtaskId and dependsOn are required.' });
@@ -31,26 +31,11 @@ router.post('/add-dependency', sessionContext, async (req, res) => {
       return res.status(400).json({ error: 'Circular dependency detected.' });
     }
 
-    // ✅ Insert dependency
-    const { data, error } = await insertTaskDependency({
-      subtaskId,
-      dependsOn,
-      user_id: userId,
-      chatroom_id: chatroomId,
-    });
-
-    if (error) {
-      throw new Error(`Failed to insert dependency: ${error.message}`);
-    }
-
-    res.status(200).json({
-      message: 'Task dependency added successfully.',
-      dependency: data,
-    });
+    // Add your task dependency logic here
 
   } catch (error) {
-    console.error('❌ Error adding task dependency:', error);
-    res.status(500).json({ error: error.message });
+    console.error("❌ Error in add-dependency handler:", error);
+    res.status(500).json({ error: "Failed to add task dependency.", details: error.message });
   }
 });
 

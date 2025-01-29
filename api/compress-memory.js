@@ -23,14 +23,8 @@ async function withRetry(task, retries = 3) {
     try {
       return await task();
     } catch (error) {
-      if (attempt < retries) {
-        const backoff = Math.pow(2, attempt) * 100;
-        console.warn(`⚠️ Retry ${attempt} failed. Retrying in ${backoff}ms...`);
-        await new Promise(resolve => setTimeout(resolve, backoff));
-      } else {
-        logger.error(`❌ Task failed after ${attempt} attempts: ${error.message}`);
-        throw error;
-      }
+      console.warn(`⚠️ Attempt ${attempt} failed: ${error.message}`);
+      if (attempt === retries) throw error;
     }
   }
 }
@@ -69,7 +63,10 @@ router.post('/', sessionContext, async (req, res) => {
     const calculatedGaugeMetrics = gaugeMetrics ? gaugeMetrics : calculateTokenUsage(memory);
 
     if (calculatedGaugeMetrics.tokenCount < TOKEN_THRESHOLD) {
-      return res.status(200).json({ message: 'Compression not required. Token load is acceptable.' });
+      return res.status(200).json({
+        message: "Memory usage is within acceptable limits.",
+        tokenUsage: calculatedGaugeMetrics.tokenCount,
+      });
     }
 
     const { data: existingMemory, error: memoryError } = await withRetry(() =>
@@ -93,14 +90,12 @@ router.post('/', sessionContext, async (req, res) => {
       return res.status(404).json({ error: 'No memory found for the provided user and chatroom.' });
     }
 
-    const compressedMemory = compressMemory(memory, calculatedGaugeMetrics);
+    const compressedMemory = compressMemory(memory);
 
     const updateResult = await withRetry(() =>
-      supabaseRequest(
-        supabase.from('memories')
-          .update({ memory: compressedMemory })
-          .eq('id', existingMemory[0].id)
-      )
+      supabase.from('memories')
+        .update({ memory: compressedMemory })
+        .eq('id', existingMemory[0].id)
     );
 
     if (updateResult.error) {

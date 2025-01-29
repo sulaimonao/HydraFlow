@@ -33,8 +33,8 @@ export async function sessionContext(req, res, next) {
     }
 
     // Generate default user_id and chatroom_id if not provided
-    let userId = req.headers['user_id'] || `user-${uuidv4()}`;
-    let chatroomId = req.headers['chatroom_id'] || `chatroom-${uuidv4()}`;
+    let userId = req.session.userId || `user-${uuidv4()}`;
+    let chatroomId = req.session.chatroomId || `chatroom-${uuidv4()}`;
 
     if (!isValidUUID(userId)) {
       userId = uuidv4();
@@ -52,10 +52,6 @@ export async function sessionContext(req, res, next) {
     } catch (error) {
       logger.error('❌ Error setting session context:', error);
     }
-
-    // Pass updated headers to next middleware
-    req.headers['user_id'] = userId;
-    req.headers['chatroom_id'] = chatroomId;
 
     // Set session values
     req.session.userId = userId;

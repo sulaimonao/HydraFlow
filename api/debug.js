@@ -1,6 +1,6 @@
 // api/debug.js
 import express from 'express';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 
 const router = express.Router();

@@ -1,6 +1,6 @@
 // api/compress-memory.js
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
-import supabase, { supabaseRequest } from '../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import winston from 'winston';
 

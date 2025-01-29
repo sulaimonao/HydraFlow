@@ -3,6 +3,7 @@ import { setSessionContext } from '../lib/sessionUtils.js';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidUUID } from '../src/util/helpers.js';
 import winston from 'winston';
+import { supabase } from '../lib/db.js';
 
 const logger = winston.createLogger({
   level: 'info',
@@ -24,25 +25,28 @@ export async function sessionContext(req, res, next) {
       req.session = {};
     }
 
-    // Check for x-hydra-session-id header or generate a new session ID
+    // Check for x-hydra-session-id header
     let sessionId = req.headers['x-hydra-session-id'];
     if (!sessionId) {
-      sessionId = `${uuidv4()}`;
-      console.log(`🆕 Generated new session ID: ${sessionId}`);
-      req.headers['x-hydra-session-id'] = sessionId;
+      return res.status(400).json({ error: 'x-hydra-session-id header is required.' });
     }
 
-    // Generate default user_id and chatroom_id if not provided
-    let userId = req.session.userId || `user-${uuidv4()}`;
-    let chatroomId = req.session.chatroomId || `chatroom-${uuidv4()}`;
+    let [userId, chatroomId] = sessionId.split(':');
 
-    if (!isValidUUID(userId)) {
-      userId = uuidv4();
-      console.warn(`⚠️ Invalid userId. Generated new userId: ${userId}`);
+    if (!isValidUUID(userId) || !isValidUUID(chatroomId)) {
+      return res.status(400).json({ error: 'Invalid session ID format.' });
     }
-    if (!isValidUUID(chatroomId)) {
-      chatroomId = uuidv4();
-      console.warn(`⚠️ Invalid chatroomId. Generated new chatroomId: ${chatroomId}`);
+
+    // Fetch session from the database
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('user_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('chatroom_id', chatroomId)
+      .single();
+
+    if (sessionError || !sessionData) {
+      return res.status(401).json({ error: 'Session not found or invalid.' });
     }
 
     console.log(`🔐 Using user_id: ${userId}, chatroom_id: ${chatroomId}`);

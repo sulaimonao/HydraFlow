@@ -1,7 +1,7 @@
 // src/logic/gauge_logic.js
 import os from 'os';
 import { performance } from 'perf_hooks';
-import supabase, { supabaseRequest } from '../../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { logInfo, logError } from '../util/logger.js';
 
 /**

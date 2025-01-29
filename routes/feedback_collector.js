@@ -1,7 +1,7 @@
 // routes/feedback_collector.js
 import express from "express";
 import { getFeedbackLog, generateFeedbackSummary } from "../src/actions/feedback_collector.js";
-import supabase, { supabaseRequest} from '../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 

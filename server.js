@@ -42,12 +42,8 @@ app.use(
   })
 );
 
-// Serve static files (Homepage)
-app.use(express.static(path.join(process.cwd(), 'public')));
-
 // Middleware for session context handling
 app.use(sessionContext); // Apply sessionContext middleware to all routes
-
 app.use(appendGaugeMetrics);
 
 app.use('/favicon.ico', express.static('public/favicon.ico'));

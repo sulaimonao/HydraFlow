@@ -1,5 +1,5 @@
 // api/feedback.js
-import supabase from '../lib/supabaseClient.js';
+import { supabase } from '../lib/db.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js'; // Import orchestrateContextWorkflow
 import { sessionContext } from '../middleware/sessionContext.js';
 import { setSessionContext } from '../lib/sessionUtils.js';

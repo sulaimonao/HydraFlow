@@ -1,6 +1,6 @@
 // middleware/sessionInitializer.js
 import { v4 as uuidv4, validate as validateUUID } from 'uuid';
-import supabase from '../lib/supabaseClient.js';
+import { supabase } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import { isValidUUID } from '../src/util/helpers.js';
 import winston from 'winston';

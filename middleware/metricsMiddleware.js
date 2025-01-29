@@ -2,7 +2,7 @@
 
 import { calculateMetrics } from "../src/util/metrics.js";
 import { generateRecommendations } from "../src/util/recommendations.js";
-import supabase, { supabaseRequest} from '../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import { v4 as uuidv4, validate as validateUUID } from 'uuid';
 

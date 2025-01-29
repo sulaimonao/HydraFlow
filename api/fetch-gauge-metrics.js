@@ -1,8 +1,8 @@
 // api/fetch-gauge-metrics.js
 
 import express from "express";
-import { calculateMetrics } from "../src/util/metrics.js"; // Corrected import path
-import supabase from "../lib/supabaseClient.js"; // Corrected import path
+import { calculateMetrics } from "../src/util/metrics.js"; 
+import { supabase, supabaseRequest } from '../lib/db.js';
 
 const router = express.Router();
 

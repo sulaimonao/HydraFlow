@@ -1,20 +1,20 @@
 // routes/feedback_collector.js
 import express from "express";
 import { getFeedbackLog, generateFeedbackSummary } from "../src/actions/feedback_collector.js";
-import { supabase, supabaseRequest } from '../lib/db.js';
+import { supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 
 const router = express.Router();
 
-// ✅ Middleware to enforce session context using user_sessions table
+// Middleware to enforce session context using user_sessions table
 async function enforceSessionContext(req, res, next) {
   try {
     if (!req.session.userId || !req.session.chatroomId) {
       return res.status(403).json({ error: "Unauthorized access. Missing session identifiers." });
     }
 
-    // ✅ Set session context in user_sessions
+    // Set session context in user_sessions
     await setSessionContext(req.session.userId, req.session.chatroomId);
 
     req.user_id = req.session.userId;
@@ -26,7 +26,7 @@ async function enforceSessionContext(req, res, next) {
   }
 }
 
-// ✅ Get all feedback with session enforcement
+// Get all feedback with session enforcement
 router.get("/all", enforceSessionContext, async (req, res) => {
   try {
     const feedback = await supabaseRequest(
@@ -44,7 +44,7 @@ router.get("/all", enforceSessionContext, async (req, res) => {
   }
 });
 
-// ✅ Get summarized feedback insights
+// Get summarized feedback insights
 router.get("/summary", enforceSessionContext, async (req, res) => {
   try {
     const summary = await generateFeedbackSummary();
@@ -55,7 +55,7 @@ router.get("/summary", enforceSessionContext, async (req, res) => {
   }
 });
 
-// ✅ Get feedback by task ID
+// Get feedback by task ID
 router.get("/task/:taskId", enforceSessionContext, async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -64,7 +64,7 @@ router.get("/task/:taskId", enforceSessionContext, async (req, res) => {
       supabase
         .from('feedback_entries')
         .select('*')
-        .eq('task_id', taskId)        
+        .eq('task_id', taskId)
         .eq('user_id', req.session.userId)
         .eq('chatroom_id', req.session.chatroomId)
     );
@@ -76,7 +76,7 @@ router.get("/task/:taskId", enforceSessionContext, async (req, res) => {
   }
 });
 
-// ✅ Get feedback by persona
+// Get feedback by persona
 router.get("/persona/:personaName", enforceSessionContext, async (req, res) => {
   try {
     const { personaName } = req.params;
@@ -85,7 +85,7 @@ router.get("/persona/:personaName", enforceSessionContext, async (req, res) => {
       supabase
         .from('feedback_entries')
         .select('*')
-        .eq('persona', personaName)        
+        .eq('persona', personaName)
         .eq('user_id', req.session.userId)
         .eq('chatroom_id', req.session.chatroomId)
     );

@@ -6,7 +6,7 @@ import { supabase, supabaseRequest } from '../lib/db.js';
 
 const router = express.Router();
 
-export default async function handler(req, res) {
+router.post('/', async (req, res) => {
   try {
     const { userId, chatroomId } = req.session;
     await setSessionContext(userId, chatroomId);
@@ -58,6 +58,6 @@ export default async function handler(req, res) {
     console.error("❌ Error in fetch-gauge-metrics handler:", error);
     res.status(500).json({ error: "Failed to fetch gauge metrics.", details: error.message });
   }
-}
+});
 
-export { router };
+export default router;

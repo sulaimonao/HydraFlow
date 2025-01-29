@@ -1,66 +1,67 @@
 // api/autonomous.js
+import express from 'express';
 import { orchestrateContextWorkflow } from '../src/logic/workflow_manager.js';
 import { supabase, supabaseRequest } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 
-export default async (req, res) => {
-  sessionContext(req, res, async () => {
-    try {
-      const { query, memory, feedback } = req.body;
+const router = express.Router();
 
-      // ✅ Validate required input for query
-      if (!query || typeof query !== "object") {
-        return res.status(400).json({ error: "Invalid or missing query object." });
-      }
+router.post('/', sessionContext, async (req, res) => {
+  try {
+    const { query, memory, feedback } = req.body;
 
-      const { userId, chatroomId } = req.session;
-
-      // 🚀 Initialize workflow
-      const workflowContext = await orchestrateContextWorkflow(req, {
-        query: query || '',
-        memory: memory || '',
-        feedback: feedback || null,
-        tokenCount: req.body.tokenCount || 0,
-      });
-
-      // ✅ Dynamic action handling
-      let actionResult;
-      if (query.action && typeof query.action === "string") {
-        switch (query.action) {
-          case 'updateContext':
-            actionResult = await updateContext(query.data, { userId, chatroomId });
-            break;
-          case 'fetchData':
-            actionResult = await fetchData(query.data, { userId, chatroomId });
-            break;
-          default:
-            return res.status(400).json({ error: `Invalid action: ${query.action}` });
-        }
-      } else {
-        actionResult = workflowContext; // Reuse initial workflow result
-      }
-
-      // ✅ Attach gauge metrics to response
-      const responsePayload = {
-        message: "Workflow executed successfully",
-        ...actionResult,
-        gaugeMetrics: res.locals.gaugeMetrics || {},
-      };
-
-      console.log(`✅ Workflow completed for user: ${userId}, chatroom: ${chatroomId}`);
-
-      // ✅ Send successful response
-      res.status(200).json(responsePayload);
-
-    } catch (error) {
-      console.error("❌ Error in autonomous workflow:", error);
-      res.status(500).json({
-        error: "Failed to execute workflow. Please try again.",
-        details: error.message,
-      });
+    // ✅ Validate required input for query
+    if (!query || typeof query !== "object") {
+      return res.status(400).json({ error: "Invalid or missing query object." });
     }
-  });
-};
+
+    const { userId, chatroomId } = req.session;
+
+    // 🚀 Initialize workflow
+    const workflowContext = await orchestrateContextWorkflow(req, {
+      query: query || '',
+      memory: memory || '',
+      feedback: feedback || null,
+      tokenCount: req.body.tokenCount || 0,
+    });
+
+    // ✅ Dynamic action handling
+    let actionResult;
+    if (query.action && typeof query.action === "string") {
+      switch (query.action) {
+        case 'updateContext':
+          actionResult = await updateContext(query.data, { userId, chatroomId });
+          break;
+        case 'fetchData':
+          actionResult = await fetchData(query.data, { userId, chatroomId });
+          break;
+        default:
+          return res.status(400).json({ error: `Invalid action: ${query.action}` });
+      }
+    } else {
+      actionResult = workflowContext; // Reuse initial workflow result
+    }
+
+    // ✅ Attach gauge metrics to response
+    const responsePayload = {
+      message: "Workflow executed successfully",
+      ...actionResult,
+      gaugeMetrics: res.locals.gaugeMetrics || {},
+    };
+
+    console.log(`✅ Workflow completed for user: ${userId}, chatroom: ${chatroomId}`);
+
+    // ✅ Send successful response
+    res.status(200).json(responsePayload);
+
+  } catch (error) {
+    console.error("❌ Error in autonomous workflow:", error);
+    res.status(500).json({
+      error: "Failed to execute workflow. Please try again.",
+      details: error.message,
+    });
+  }
+});
 
 // ✅ Handles context updates
 async function updateContext(data, context) {
@@ -99,3 +100,5 @@ async function fetchData(data, context) {
     throw new Error("Failed to fetch data.");
   }
 }
+
+export default router;

@@ -4,11 +4,17 @@ import session from 'express-session';
 import path from 'path';
 import dotenv from 'dotenv';
 import feedbackRoutes from './routes/feedback_collector.js';
+import debugRoutes from './api/debug.js'; // Import debug routes
+import fetchGaugeMetricsRoutes from './api/fetch-gauge-metrics.js'; // Import fetch-gauge-metrics routes
+import createSubpersonaRoutes from './api/create-subpersona.js'; // Import create-subpersona routes
+import recommendationsRoutes from './api/recommendations.js'; // Import recommendations routes
+import parseQueryRoutes from './api/parse-query.js'; // Import parse-query routes
+import taskRoutes from './api/task.js'; // Import task routes
+import contextRecapRoutes from './api/context-recap.js'; // Import context-recap routes
+import compressMemoryRoutes from './api/compress-memory.js'; // Import compress-memory routes
+import autonomousRoutes from './api/autonomous.js'; // Import autonomous routes
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { sessionContext } from './middleware/sessionContext.js'; // Import sessionContext
-import createSubpersona from './api/create-subpersona.js';
-import compressMemory from './api/compress-memory.js';
-import { runAutonomousWorkflow } from './main.js';
 import pg from 'pg';
 import connectPgSimple from 'connect-pg-simple';
 
@@ -49,70 +55,17 @@ app.use(appendGaugeMetrics);
 app.use('/favicon.ico', express.static('public/favicon.ico'));
 app.use('/favicon.png', express.static('public/favicon.png'));
 
-// 🔍 Parse Query API
-app.post("/api/parse-query", (req, res) => {
-  const { query } = req.body;
-  if (!query) return res.status(400).json({ error: "Query is required." });
-
-  const actionItems = [];
-  if (query.includes("analyze logs")) actionItems.push("create-subpersona");
-  if (query.includes("compress")) actionItems.push("compress-memory");
-
-  res.status(200).json({ actionItems });
-});
-
-// 🤖 Autonomous Workflow API
-app.post("/api/autonomous", async (req, res) => {
-  try {
-    if (!req.session || !req.session.userId || !req.session.chatroomId) {
-      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
-    }
-
-    const { query } = req.body;
-    if (!query) return res.status(400).json({ error: "Query is required." });
-
-    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
-    const result = await runAutonomousWorkflow(query, req.session.userId, req.session.chatroomId); // Use session context
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("❌ Error in autonomous workflow:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 🔧 Create Subpersona API
-app.post("/api/create-subpersona", async (req, res) => {
-  try {
-    if (!req.session || !req.session.userId || !req.session.chatroomId) {
-      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
-    }
-
-    const { name, capabilities, preferences } = req.body;
-    await createSubpersona(name, req.session.userId, req.session.chatroomId, capabilities, preferences); // Use session context
-    res.status(201).json({ message: "Subpersona created successfully." });
-  } catch (error) {
-    console.error("❌ Error creating subpersona:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 🔧 Compress Memory API
-app.post("/api/compress-memory", async (req, res) => {
-  try {
-    if (!req.session || !req.session.userId || !req.session.chatroomId) {
-      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
-    }
-
-    const { memory } = req.body;
-    const result = await compressMemory(memory, req.session.userId, req.session.chatroomId); // Use session context
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("❌ Error compressing memory:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.use("/api/feedback", feedbackRoutes);
+// Register routes
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/debug', debugRoutes); // Register debug routes
+app.use('/api/fetch-gauge-metrics', fetchGaugeMetricsRoutes); // Register fetch-gauge-metrics routes
+app.use('/api/create-subpersona', createSubpersonaRoutes); // Register create-subpersona routes
+app.use('/api/recommendations', recommendationsRoutes); // Register recommendations routes
+app.use('/api/parse-query', parseQueryRoutes); // Register parse-query routes
+app.use('/api/task', taskRoutes); // Register task routes
+app.use('/api/context-recap', contextRecapRoutes); // Register context-recap routes
+app.use('/api/compress-memory', compressMemoryRoutes); // Register compress-memory routes
+app.use('/api/autonomous', autonomousRoutes); // Register autonomous routes
 
 // Serve the homepage
 app.get("/", (req, res) => {

@@ -1,8 +1,11 @@
 // api/compress-memory.js
+import express from 'express';
 import { compressMemory, calculateTokenUsage } from '../src/util/memoryUtils.js';
 import { supabase, supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import winston from 'winston';
+
+const router = express.Router();
 
 const logger = winston.createLogger({
   level: 'info',
@@ -32,7 +35,7 @@ async function withRetry(task, retries = 3) {
   }
 }
 
-export default async function handler(req, res) {
+router.post('/', sessionContext, async (req, res) => {
   try {
     if (!req.session || !req.session.userId || !req.session.chatroomId) {
       return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
@@ -128,4 +131,6 @@ export default async function handler(req, res) {
     logger.error("❌ Error in compress-memory handler:", error);
     res.status(500).json({ error: "Failed to compress memory.", details: error.message });
   }
-}
+});
+
+export default router;

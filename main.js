@@ -1,4 +1,4 @@
-// main.js (Updated for session persistence)
+// main.js 
 import fetch from "node-fetch";
 import dotenv from 'dotenv';
 import { validate as validateUUID } from 'uuid';

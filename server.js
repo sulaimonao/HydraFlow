@@ -1,6 +1,7 @@
 // server.js
 import express from 'express';
 import session from 'express-session';
+import path from 'path';
 import dotenv from 'dotenv';
 import feedbackRoutes from './routes/feedback_collector.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
@@ -40,6 +41,9 @@ app.use(
     },
   })
 );
+
+// Serve static files (Homepage)
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Middleware for session context handling
 app.use(sessionContext); // Apply sessionContext middleware to all routes
@@ -113,6 +117,11 @@ app.post("/api/compress-memory", async (req, res) => {
 });
 
 app.use("/api/feedback", feedbackRoutes);
+
+// Serve the homepage
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -19,6 +19,11 @@ const logger = winston.createLogger({
 export async function sessionContext(req, res, next) {
   console.log('🔍 Checking session context middleware execution...');
   try {
+    // Ensure req.session is initialized
+    if (!req.session) {
+      req.session = {};
+    }
+
     // Check for x-hydra-session-id header or generate a new session ID
     let sessionId = req.headers['x-hydra-session-id'];
     if (!sessionId) {
@@ -51,6 +56,10 @@ export async function sessionContext(req, res, next) {
     // Pass updated headers to next middleware
     req.headers['user_id'] = userId;
     req.headers['chatroom_id'] = chatroomId;
+
+    // Set session values
+    req.session.userId = userId;
+    req.session.chatroomId = chatroomId;
 
     next();
   } catch (error) {

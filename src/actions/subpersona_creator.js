@@ -1,6 +1,6 @@
 // src/actions/subpersona_creator.js
 import { insertHead, getHeads } from '../../lib/db.js';
-import { supabaseRequest } from '../../lib/supabaseClient.js';
+import { supabase, supabaseRequest } from '../../lib/db.js';
 import { setSessionContext } from '../../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 import supabase from '../../lib/supabaseClient.js';

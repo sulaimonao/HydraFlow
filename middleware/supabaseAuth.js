@@ -1,6 +1,5 @@
 // middleware/supabaseAuth.js
-
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/db.js';
 
 const supabase = createClient(process.env.DATABASE_URL, process.env.ANON_KEY);
 

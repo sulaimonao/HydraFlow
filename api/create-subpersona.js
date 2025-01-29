@@ -2,7 +2,7 @@
 import express from 'express';
 import Joi from 'joi';
 import { insertHead } from '../lib/db.js';
-import { sessionContext } from '../middleware/sessionContext.js';
+import { supabase, supabaseRequest } from '../lib/db.js';
 import { setSessionContext } from '../lib/sessionUtils.js';
 import validationMiddleware from '../middleware/validationMiddleware.js';
 import winston from 'winston';

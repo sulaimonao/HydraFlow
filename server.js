@@ -64,6 +64,10 @@ app.post("/api/parse-query", (req, res) => {
 // 🤖 Autonomous Workflow API
 app.post("/api/autonomous", async (req, res) => {
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
+    }
+
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Query is required." });
 
@@ -79,6 +83,10 @@ app.post("/api/autonomous", async (req, res) => {
 // 🔧 Create Subpersona API
 app.post("/api/create-subpersona", async (req, res) => {
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
+    }
+
     const { name, capabilities, preferences } = req.body;
     await createSubpersona(name, req.session.userId, req.session.chatroomId, capabilities, preferences); // Use session context
     res.status(201).json({ message: "Subpersona created successfully." });
@@ -91,6 +99,10 @@ app.post("/api/create-subpersona", async (req, res) => {
 // 🔧 Compress Memory API
 app.post("/api/compress-memory", async (req, res) => {
   try {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+      return res.status(400).json({ error: 'User ID and Chatroom ID are required.' });
+    }
+
     const { memory } = req.body;
     const result = await compressMemory(memory, req.session.userId, req.session.chatroomId); // Use session context
     res.status(200).json(result);

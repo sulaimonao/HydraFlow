@@ -1,14 +1,13 @@
 // api/fetch-gauge-metrics.js
 
 import express from "express";
-import { sessionContext } from "../../middleware/sessionContext.js";
-import { setSessionContext } from "../../lib/sessionUtils.js";
-import { calculateMetrics } from "../../src/util/metrics.js";
-import supabase from "../../lib/supabaseClient.js";
+import { sessionContext } from "../middleware/sessionContext.js"; // Corrected import path
+import { calculateMetrics } from "../src/util/metrics.js"; // Corrected import path
+import supabase from "../lib/supabaseClient.js"; // Corrected import path
 
 const router = express.Router();
 
-router.get("/fetch-gauge-metrics", async (req, res) => {
+export default async function handler(req, res) {
   sessionContext(req, res, async () => {
     try {
       const { userId, chatroomId } = req.session;
@@ -29,23 +28,7 @@ router.get("/fetch-gauge-metrics", async (req, res) => {
 
       // 🔄 Retrieve token usage if not provided
       if (!tokenUsage) {
-        const { data, error } = await supabase
-          .from('gauge_metrics')
-          .select('token_used, token_total')
-          .eq('user_id', userId)
-          .eq('chatroom_id', chatroomId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (error) {
-          console.warn("⚠️ Token usage fetch failed. Defaulting values.");
-          tokenUsage = { used: 0, total: 10000 };
-        } else if (data) {
-          tokenUsage = { used: data.token_used, total: data.token_total };
-        } else {
-          tokenUsage = { used: 0, total: 10000 };
-        }
+        tokenUsage = await calculateMetrics(query, memory, feedback, tokenCount);
       }
 
       // ⏳ Set defaults for latency and subpersonas
@@ -74,10 +57,10 @@ router.get("/fetch-gauge-metrics", async (req, res) => {
       res.status(200).json(enrichedMetrics);
 
     } catch (error) {
-      console.error("❌ Error fetching gauge metrics:", error);
+      console.error("❌ Error in fetch-gauge-metrics handler:", error);
       res.status(500).json({ error: "Failed to fetch gauge metrics.", details: error.message });
     }
   });
-});
+}
 
-export default router;
+export { router };

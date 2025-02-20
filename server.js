@@ -13,6 +13,7 @@ import taskRoutes from './api/task.js';
 import contextRecapRoutes from './api/context-recap.js';
 import compressMemoryRoutes from './api/compress-memory.js';
 import autonomousRoutes from './api/autonomous.js';
+import summarizeLogsRoutes from './api/summarize-logs.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { sessionContext } from './middleware/sessionContext.js';
 // REMOVE: Supabase-related imports
@@ -77,6 +78,7 @@ app.use('/api/task', taskRoutes);
 app.use('/api/context-recap', contextRecapRoutes);
 app.use('/api/compress-memory', compressMemoryRoutes);
 app.use('/api/autonomous', autonomousRoutes);
+app.use('/api/summarize-logs', summarizeLogsRoutes);
 
 // Serve the homepage
 app.get("/", (req, res) => {

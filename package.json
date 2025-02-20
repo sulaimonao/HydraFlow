@@ -1,29 +1,22 @@
 {
   "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.47.12",
-    "@vercel/analytics": "^1.4.1",
-    "acorn": "^8.14.0",
-    "archiver": "^7.0.1",
     "axios": "^1.7.9",
-    "connect-pg-simple": "^10.0.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "joi": "^17.13.3",
-    "node-fetch": "^3.3.2",
+    "sqlite3": "^5.1.7",
     "uuid": "^11.0.4",
-    "vercel": "^28.18.5",
     "winston": "^3.8.2",
-    "zlib": "^1.0.5"
+    "connect-sqlite3": "^0.9.13"
   },
   "scripts": {
     "start": "node --experimental-specifier-resolution=node server.js",
     "lint": "node simple-linter.js",
     "precommit": "npm run lint",
     "test": "jest --coverage",
-    "build": "npm run lint && npm run test",
-    "deploy": "vercel --prod"
+    "build": "npm run lint && npm run test"
   },
   "devDependencies": {
     "eslint": "^9.17.0",

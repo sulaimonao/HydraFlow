@@ -1,183 +1,171 @@
-// src/actions/subpersona_creator.js
-import { insertHead, getHeads } from '../../lib/db.js';
-import { supabase, supabaseRequest } from '../../lib/db.js';
-import { setSessionContext } from '../../lib/sessionUtils.js';
+// src/actions/subpersona_creator.js (Local SQLite Version)
+// Removed Supabase imports
+//import { supabase, supabaseRequest } from '../../lib/db.js';
+import * as db from '../../lib/db.js'; // Import SQLite db module
+// Removed setSessionContext import
+//import { setSessionContext } from '../../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
-import supabase from '../../lib/supabaseClient.js';
+// Removed unused supabase import
+//import supabase from '../../lib/supabaseClient.js';
 
-const activeHeads = {};
+const activeHeads = {}; // Keep this for in-memory tracking (optional)
 
 // 🔥 Predefined subpersona templates
 const subpersonaTemplates = {
-  logAnalyzer: {
-    task: "analyze logs",
-    description: "This subpersona specializes in log analysis.",
-  },
-  memoryOptimizer: {
-    task: "optimize memory",
-    description: "This subpersona specializes in memory optimization.",
-  },
+    logAnalyzer: {
+        task: "analyze logs",
+        description: "This subpersona specializes in log analysis.",
+    },
+    memoryOptimizer: {
+        task: "optimize memory",
+        description: "This subpersona specializes in memory optimization.",
+    },
 };
 
-// ✅ Validate required IDs
-const validateIds = (user_id, chatroom_id) => {
-  if (!user_id || !chatroom_id) {
-    throw new Error("❗ Missing user_id or chatroom_id. Both must be provided.");
-  }
+// ✅ Validate required IDs (Simplified - relies on req.session)
+const validateIds = (req) => {
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+        throw new Error("❗ Missing user_id or chatroom_id. Both must be provided.");
+    }
 };
 
 // 🚀 Create a subpersona from a predefined template
 async function createSubpersonaFromTemplate(templateName, query, req) {
-  try {
-    if (!req.session || !req.session.userId || !req.session.chatroomId) {
-      throw new Error("❗ Session context is missing");
+    try {
+        validateIds(req); // Use the simplified validation
+        const { userId, chatroomId } = req.session;
+
+        // Removed orchestrateContextWorkflow, no longer needed
+        //const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
+        //const { user_id, chatroom_id } = generatedIdentifiers;
+
+        // No need to call setSessionContext - handled by middleware
+        // await setSessionContext(userId, chatroomId);
+
+        const template = subpersonaTemplates[templateName];
+        if (!template) throw new Error(`❗ Unknown template: ${templateName}`);
+
+        // ✅ Check if subpersona already exists using db.getHeads
+        const existingHeads = await db.getHeads(userId, chatroomId);
+
+        if (existingHeads.some(head => head.name === `Head for ${template.task}`)) {
+            return { error: "⚠️ Subpersona already exists." };
+        }
+
+        // 📝 Insert subpersona into the database using db.insertHead
+          // Serialize capabilities and preferences
+        const capabilities = { task: template.task };
+        const preferences = { description: template.description };
+        const head = await db.insertHead(userId, chatroomId, `Head for ${template.task}`, capabilities, preferences);
+
+        // Update in-memory activeHeads (optional)
+        activeHeads[head.id] = {
+            name: head.name,
+            task_description: template.description,
+            status: "active",
+            memory: [] // Consider if you need this in-memory tracking
+        };
+
+        console.log(`✅ Created subpersona '${head.name}' for user ${userId}.`);
+        return { headId: head.id, name: head.name, status: "active" };
+    } catch (error) {
+        console.error("❌ Error creating subpersona from template:", error.message);
+        return { error: error.message };
     }
-
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const { user_id, chatroom_id } = generatedIdentifiers;
-
-    validateIds(user_id, chatroom_id);
-    await setSessionContext(user_id, chatroom_id);
-
-    const template = subpersonaTemplates[templateName];
-    if (!template) throw new Error(`❗ Unknown template: ${templateName}`);
-
-    // ✅ Check if subpersona already exists
-    const existingHeads = await getHeads(user_id, chatroom_id);
-    if (existingHeads.some(head => head.name === `Head for ${template.task}`)) {
-      return { error: "⚠️ Subpersona already exists." };
-    }
-
-    // 📝 Insert subpersona into the database
-    const head = await insertHead({
-      name: `Head for ${template.task}`,
-      capabilities: { task: template.task },
-      preferences: { description: template.description },
-      user_id,
-      chatroom_id
-    });
-
-    activeHeads[head.id] = {
-      name: head.name,
-      task_description: template.description,
-      status: "active",
-      memory: []
-    };
-
-    console.log(`✅ Created subpersona '${head.name}' for user ${user_id}.`);
-    return { headId: head.id, name: head.name, status: "active" };
-  } catch (error) {
-    console.error("❌ Error creating subpersona from template:", error.message);
-    return { error: error.message };
-  }
 }
 
-// 🟢 Activate a subpersona by head ID
+// 🟢 Activate a subpersona by head ID (Keep this for in-memory tracking, optional)
 function activateSubpersona(headId) {
-  if (activeHeads[headId]) {
-    activeHeads[headId].status = "active";
-    console.log(`✅ Subpersona ${headId} activated.`);
-  } else {
-    console.warn(`⚠️ Subpersona ${headId} not found.`);
-  }
+    if (activeHeads[headId]) {
+        activeHeads[headId].status = "active";
+        console.log(`✅ Subpersona ${headId} activated.`);
+    } else {
+        console.warn(`⚠️ Subpersona ${headId} not found.`);
+    }
 }
 
-// 🔴 Deactivate a subpersona by head ID
+// 🔴 Deactivate a subpersona by head ID (Keep this for in-memory tracking, optional)
 function deactivateSubpersona(headId) {
-  if (activeHeads[headId]) {
-    activeHeads[headId].status = "inactive";
-    console.log(`🛑 Subpersona ${headId} deactivated.`);
-  } else {
-    console.warn(`⚠️ Subpersona ${headId} not found.`);
-  }
+    if (activeHeads[headId]) {
+        activeHeads[headId].status = "inactive";
+        console.log(`🛑 Subpersona ${headId} deactivated.`);
+    } else {
+        console.warn(`⚠️ Subpersona ${headId} not found.`);
+    }
 }
 
 // 🗑️ Prune (delete) a subpersona from memory and database
-async function pruneHead(headId) {
-  if (!activeHeads[headId]) {
-    console.warn(`⚠️ Subpersona ${headId} not found or already pruned.`);
-    return { error: "Subpersona not found or already inactive." };
-  }
+async function pruneHead(headId, req) { // Added req parameter
+     try {
+        validateIds(req);
+        const { userId, chatroomId } = req.session;
 
-  try {
-    delete activeHeads[headId];
+        // Optional: Remove from in-memory activeHeads
+        if (activeHeads[headId]) {
+          delete activeHeads[headId];
+        }
+        // Use the validateHeadInteraction from db module.
+         const existingHead = await db.validateHeadInteraction(userId, chatroomId, headId);
 
-    await supabaseRequest(() =>
-      supabase.from('heads').delete().eq('id', headId)
-    );
+        if (!existingHead) {
+            console.warn(`⚠️ Subpersona ${headId} not found or already pruned.`);
+            return { error: "Subpersona not found or already inactive." };
+          }
+        // Use db.deleteHead (You'll need to implement this in lib/db.js)
+        await db.deleteHead(headId, userId, chatroomId);
 
-    console.log(`🗑️ Subpersona ${headId} has been pruned.`);
-    return { success: `Subpersona ${headId} successfully pruned.` };
-  } catch (error) {
-    console.error(`❌ Error pruning subpersona ${headId}:`, error.message);
-    return { error: `Failed to prune subpersona ${headId}.` };
-  }
+        console.log(`🗑️ Subpersona ${headId} has been pruned.`);
+        return { success: `Subpersona ${headId} successfully pruned.` };
+    } catch (error) {
+        console.error(`❌ Error pruning subpersona ${headId}:`, error.message);
+        return { error: `Failed to prune subpersona ${headId}.` };
+    }
 }
 
-// 📋 List all active subpersonas
+// 📋 List all active subpersonas (Keep this for in-memory tracking, optional)
 function listActiveSubpersonas() {
-  return Object.entries(activeHeads)
-    .filter(([_, head]) => head.status === "active")
-    .map(([headId, head]) => ({ headId, ...head }));
+    return Object.entries(activeHeads)
+        .filter(([_, head]) => head.status === "active")
+        .map(([headId, head]) => ({ headId, ...head }));
 }
 
 // 🛠️ Create a custom subpersona with user-defined parameters
 export async function createSubpersona(query, name, capabilities, preferences, req) {
-  try {
-    // Orchestrate the workflow to get user_id and chatroom_id from the request
-    const { generatedIdentifiers } = await orchestrateContextWorkflow({ query, req });
-    const user_id = req.session.userId;
-    const chatroom_id = req.session.chatroomId;
-    validateIds(user_id, chatroom_id);
-    await setSessionContext(user_id, chatroom_id);
+    try {
+        // Validate and get userId and chatroomId from req.session
+        validateIds(req);
+        const { userId, chatroomId } = req.session;
 
-    // ✅ Check for existing subpersona
-    const { data: existingHead, error } = await supabaseRequest(() =>
-      supabase
-        .from('heads')
-        .select('*')
-        .eq('name', name)
-        .eq('status', 'active')
-        .eq('user_id', user_id)
-        .eq('chatroom_id', chatroom_id)
-        .maybeSingle()
-    );
+        // No need for orchestrateContextWorkflow or setSessionContext
+        // await setSessionContext(userId, chatroomId);
 
-    if (existingHead) {
-      return { error: `⚠️ Subpersona '${name}' already exists.` };
+        // ✅ Check for existing subpersona using db.getHeads
+        const existingHeads = await db.getHeads(userId, chatroomId);
+        if (existingHeads.some(head => head.name === name && head.status === 'active')) { //added status check
+            return { error: `⚠️ Subpersona '${name}' already exists.` };
+        }
+
+        // 📝 Insert the new subpersona using db.insertHead
+        const head = await db.insertHead(userId, chatroomId, name, capabilities || {}, preferences || {});
+
+        console.log(`✅ Subpersona '${name}' created successfully.`);
+        return { message: '✅ Subpersona created successfully.', data: { id: head.id } }; // Return the ID
+    } catch (error) {
+        console.error('❌ Error creating subpersona:', error.message);
+        return { error: error.message };
     }
-
-    // 📝 Insert the new subpersona
-    const newSubpersona = {
-      name,
-      status: 'active',
-      user_id,
-      chatroom_id,
-      capabilities: capabilities || {},
-      preferences: preferences || {},
-      createdat: new Date().toISOString(),
-    };
-
-    const insertResult = await supabaseRequest(() =>
-      supabase.from('heads').insert([newSubpersona], { returning: 'representation' })
-    );
-
-    if (insertResult.error) {
-      throw new Error(`Insert failed: ${insertResult.error.message}`);
-    }
-
-    console.log(`✅ Subpersona '${name}' created successfully.`);
-    return { message: '✅ Subpersona created successfully.', data: insertResult.data };
-  } catch (error) {
-    console.error('❌ Error creating subpersona:', error.message);
-    return { error: error.message };
-  }
+}
+// Added deleteHead to db.js
+async function deleteHead(headId, userId, chatroomId) {
+    const sql = `DELETE FROM heads WHERE id = ? AND user_id = ? AND chatroom_id = ?`;
+    return promisifyDbRun(sql, [headId, userId, chatroomId]);
 }
 
 export {
-  createSubpersonaFromTemplate,
-  activateSubpersona,
-  deactivateSubpersona,
-  pruneHead,
-  listActiveSubpersonas
+    createSubpersonaFromTemplate,
+    activateSubpersona,
+    deactivateSubpersona,
+    pruneHead,
+    listActiveSubpersonas,
+    deleteHead
 };

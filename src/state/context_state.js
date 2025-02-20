@@ -1,71 +1,73 @@
-//src/state/context_state.js
-import { supabase, supabaseRequest } from '../lib/db.js';
-import { setSessionContext } from '../../lib/sessionUtils.js';
+// src/state/context_state.js (Local SQLite Version)
+// Removed Supabase imports
+//import { supabase, supabaseRequest } from '../lib/db.js';
+import * as db from '../../lib/db.js'; // Import SQLite db module
+// Removed setSessionContext import
+//import { setSessionContext } from '../../lib/sessionUtils.js';
 import { orchestrateContextWorkflow } from '../logic/workflow_manager.js';
 
 class ContextState {
-  constructor(user_id, chatroom_id) {
-    this.user_id = user_id;
-    this.chatroom_id = chatroom_id;
-    this.tokenUsage = { used: 0, total: 8192 };
-    this.responseLatency = 0.8;
-    this.updatedAt = new Date().toISOString();
-  }
-
-  /**
-   * ✅ Updates token usage for the current session.
-   */
-  async updateTokenUsage(usedTokens) {
-    this.tokenUsage.used += usedTokens;
-    this.updatedAt = new Date().toISOString();
-
-    try {
-      await setSessionContext(this.user_id, this.chatroom_id);
-      await supabaseRequest(() =>
-        supabase
-          .from('context_state')
-          .update({ tokenUsage: this.tokenUsage, updatedAt: this.updatedAt })
-          .eq('user_id', this.user_id)
-          .eq('chatroom_id', this.chatroom_id)
-      );
-      console.log(`📝 Token usage updated: ${this.tokenUsage.used}/${this.tokenUsage.total}`);
-    } catch (error) {
-      console.error('❌ Error updating token usage:', error.message);
+    constructor(user_id, chatroom_id) {
+        this.user_id = user_id;
+        this.chatroom_id = chatroom_id;
+        this.tokenUsage = { used: 0, total: 8192 };
+        this.responseLatency = 0.8;
+        this.updatedAt = new Date().toISOString();
+        this.data = {}; // To store other context data
     }
-  }
 
-  /**
-   * ✅ Updates response latency for the current session.
-   */
-  async updateResponseLatency(latency) {
-    this.responseLatency = latency;
-    this.updatedAt = new Date().toISOString();
+    /**
+     * ✅ Updates token usage for the current session.
+     */
+    async updateTokenUsage(usedTokens) {
+        this.tokenUsage.used += usedTokens;
+        this.updatedAt = new Date().toISOString();
 
-    try {
-      await setSessionContext(this.user_id, this.chatroom_id);
-      await supabaseRequest(() =>
-        supabase
-          .from('context_state')
-          .update({ responseLatency: this.responseLatency, updatedAt: this.updatedAt })
-          .eq('user_id', this.user_id)
-          .eq('chatroom_id', this.chatroom_id)
-      );
-      console.log(`⏱️ Response latency updated: ${this.responseLatency}s`);
-    } catch (error) {
-      console.error('❌ Error updating response latency:', error.message);
+        try {
+            // No need to call setSessionContext - handled by middleware
+            // await setSessionContext(this.user_id, this.chatroom_id);
+
+            // Use db.updateContext (you'll need to implement this in lib/db.js)
+            await db.updateContext(this.user_id, this.chatroom_id, this);
+            console.log(`📝 Token usage updated: ${this.tokenUsage.used}/${this.tokenUsage.total}`);
+        } catch (error) {
+            console.error('❌ Error updating token usage:', error.message);
+            // Consider re-throwing the error or handling it appropriately
+            throw new Error('Failed to update token usage');
+        }
     }
-  }
+
+    /**
+     * ✅ Updates response latency for the current session.
+     */
+    async updateResponseLatency(latency) {
+        this.responseLatency = latency;
+        this.updatedAt = new Date().toISOString();
+
+        try {
+            // No need to call setSessionContext
+            // await setSessionContext(this.user_id, this.chatroom_id);
+
+            // Use db.updateContext
+            await db.updateContext(this.user_id, this.chatroom_id, this);
+            console.log(`⏱️ Response latency updated: ${this.responseLatency}s`);
+        } catch (error) {
+            console.error('❌ Error updating response latency:', error.message);
+             throw new Error('Failed to update response latency');
+        }
+    }
 }
 
 let currentContext;
-const contextHistory = [];
+const contextHistory = []; // Keep this for in-memory history
 
 /**
  * ✅ Logs context updates for traceability.
  */
 export function logContextUpdate(newData) {
-  console.log('📝 Context Updated:', newData);
-  contextHistory.push({ ...currentContext, updatedAt: new Date().toISOString() });
+    console.log('📝 Context Updated:', newData);
+    // Deep copy of currentContext to avoid unintended modifications
+    contextHistory.push(JSON.parse(JSON.stringify({ ...currentContext, updatedAt: new Date().toISOString() })));
 }
 
 /**
@@ -74,42 +76,44 @@ export function logContextUpdate(newData) {
  * @param {Object} req - Request object for workflow context.
  */
 export async function updateContext(newData, req) {
-  console.log('🔍 Checking sessionContext middleware execution...');
-  try {
-    const { user_id, chatroom_id } = req.session;
+    console.log('🔍 Checking sessionContext middleware execution...');
+    try {
+        const { userId, chatroomId } = req.session;
 
-    if (!currentContext || currentContext.user_id !== user_id || currentContext.chatroom_id !== chatroom_id) {
-      currentContext = new ContextState(user_id, chatroom_id);
-    }    
+        if (!currentContext || currentContext.user_id !== userId || currentContext.chatroom_id !== chatroomId) {
+            currentContext = new ContextState(userId, chatroomId);
+        }
 
-    logContextUpdate(newData);
-    Object.assign(currentContext, newData);
+        logContextUpdate(newData);
 
-    await setSessionContext(user_id, chatroom_id);
+        // Merge newData into currentContext.data, and update other properties
+        currentContext.data = { ...currentContext.data, ...newData }; // Update the data property
+        currentContext.updatedAt = new Date().toISOString(); // Always update updatedAt
 
-    await supabaseRequest(() =>
-      supabase
-        .from('context_state')
-        .update(currentContext)
-        .eq('user_id', user_id)
-        .eq('chatroom_id', chatroom_id)
-    );
+         // Removed setSessionContext
+        //await setSessionContext(userId, chatroomId);
 
-    console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
-    console.log('✅ Context updated successfully.');
-    return currentContext;
+        // Use db.updateContext (you'll need to implement this in lib/db.js)
+        // Pass the entire currentContext object (or the relevant parts)
+        await db.updateContext(userId, chatroomId, currentContext);
+        // Ensure that data is stored as a JSON string
+        await db.insertContext(userId, chatroomId, currentContext.data);
 
-  } catch (error) {
-    console.error('❌ Error updating context:', error.message);
-    throw new Error("Failed to update context.");
-  }
+        console.log(`🔍 req.session content: ${JSON.stringify(req.session)}`);
+        console.log('✅ Context updated successfully.');
+        return currentContext; // Return the updated context
+
+    } catch (error) {
+        console.error('❌ Error updating context:', error.message);
+        throw new Error("Failed to update context.");
+    }
 }
 
 /**
  * ✅ Retrieves the context update history for debugging.
  */
 export function getContextHistory() {
-  return contextHistory;
+    return contextHistory;
 }
 
 export { currentContext };

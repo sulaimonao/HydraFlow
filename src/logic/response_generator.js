@@ -1,4 +1,4 @@
-// src/logic/response_generator.js
+// src/logic/response_generator.js (Local SQLite Version - No Changes Needed)
 /**
  * 📢 Generates a structured and detailed final response for the user.
  * @param {Object} params - Data required for generating the response.
@@ -8,6 +8,7 @@
  * @param {Object} params.context - Current workflow context (must include domain and project goal).
  * @param {Object} [params.taskCard] - Task card with subtasks (optional).
  * @param {Object} [params.actionsPerformed] - Actions executed with results (optional).
+ * @param {Object} req -  request object.
  * @returns {string} - A well-structured response for the user.
  */
 export async function generateFinalResponse({
@@ -17,12 +18,14 @@ export async function generateFinalResponse({
   context,
   taskCard,
   actionsPerformed
-}) {  
+}, req) { // Added req parameter
   // 🔍 Validate essential inputs
   if (!userInput || !context || !context.domain || !context.project_goal) {
     throw new Error("❗ Missing required fields: 'userInput' or 'context' (with 'domain' and 'project_goal').");
   }
+  // Added session validation
   if (!req.session.userId || !req.session.chatroomId){
+    throw new Error("❗ Missing userId or chatroomId in session.");
   }
 
   let draftResponse = `### 💬 Assistant Response\n\n`;

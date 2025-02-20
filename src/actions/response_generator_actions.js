@@ -1,4 +1,4 @@
-//src/actions/rresponse_generator_actions.js
+// src/actions/response_generator_actions.js (Local SQLite Version - Minimal Changes)
 import { calculateMetrics } from "../util/metrics.js";
 
 /**
@@ -11,74 +11,78 @@ import { calculateMetrics } from "../util/metrics.js";
  * @returns {string} - Structured final response.
  */
 export const generateFinalResponse = ({ contextDigest, taskCard, actionsPerformed, gaugeMetrics }) => {
-  const response = [];
+    const response = [];
 
-  // === 🧠 Context Digest Summary ===
-  if (contextDigest) {
-    response.push(
-      `### 🧠 Context Digest:\n- **Total Memory Entries:** ${contextDigest.totalEntries}\n- **Highlights:**\n${contextDigest.highlights
-        .map((entry, index) => `  ${index + 1}. ${entry}`)
-        .join("\n")}`
-    );
-  }
+    // === 🧠 Context Digest Summary ===
+    if (contextDigest) {
+        response.push(
+            `### 🧠 Context Digest:\n- **Total Memory Entries:** ${contextDigest.totalEntries}\n- **Highlights:**\n${contextDigest.highlights
+                .map((entry, index) => `  ${index + 1}. ${entry}`)
+                .join("\n")}`
+        );
+    }
 
-  // === 📋 Task Card Overview ===
-  if (taskCard) {
-    response.push(`### 📋 Task Card: **${taskCard.goal}**`);
-    taskCard.subtasks.forEach((subtask) => {
-      const statusIcon = subtask.status === "completed" ? "✅" : subtask.status === "in-progress" ? "⏳" : "❌";
-      response.push(`- **${subtask.task}** → *${statusIcon} ${subtask.status}*`);
-    });
-  }
+    // === 📋 Task Card Overview ===
+    if (taskCard) {
+        response.push(`### 📋 Task Card: **${taskCard.goal}**`);
+        taskCard.subtasks.forEach((subtask) => {
+            const statusIcon = subtask.status === "completed" ? "✅" : subtask.status === "in-progress" ? "⏳" : "❌";
+            response.push(`- **${subtask.task}** → *${statusIcon} ${subtask.status}*`);
+        });
+    }
 
-  // === ⚙️ Actions Performed ===
-  if (actionsPerformed && Object.keys(actionsPerformed).length > 0) {
-    response.push("### ⚙️ Actions Performed:");
-    Object.entries(actionsPerformed).forEach(([action, result]) => {
-      const formattedResult = typeof result === "object" ? JSON.stringify(result, null, 2) : result;
-      response.push(`- **${action}**:\n${formattedResult}`);
-    });
-  } else {
-    response.push("### ⚙️ Actions Performed:\n- No actions were executed in this workflow.");
-  }
+    // === ⚙️ Actions Performed ===
+    if (actionsPerformed && Object.keys(actionsPerformed).length > 0) {
+        response.push("### ⚙️ Actions Performed:");
+        Object.entries(actionsPerformed).forEach(([action, result]) => {
+            const formattedResult = typeof result === "object" ? JSON.stringify(result, null, 2) : result;
+            response.push(`- **${action}**:\n${formattedResult}`);
+        });
+    } else {
+        response.push("### ⚙️ Actions Performed:\n- No actions were executed in this workflow.");
+    }
 
-  // === 📊 Gauge Metrics Overview ===
-  if (gaugeMetrics) {
-    response.push(`### 📊 Gauge Metrics:\n- **Token Usage:** ${gaugeMetrics.tokenUsage.used} / ${gaugeMetrics.tokenUsage.total}\n- **Latency:** ${gaugeMetrics.responseLatency}s\n- **Active Subpersonas:** ${gaugeMetrics.activeSubpersonas.length}`);
-  }
+    // === 📊 Gauge Metrics Overview ===
+    if (gaugeMetrics) {
+        response.push(`### 📊 Gauge Metrics:\n- **Token Usage:** ${gaugeMetrics.tokenUsage.used} / ${gaugeMetrics.tokenUsage.total}\n- **Latency:** ${gaugeMetrics.responseLatency}s\n- **Active Subpersonas:** ${gaugeMetrics.activeSubpersonas.length}`);
+    }
 
-  return response.join("\n\n");
+    return response.join("\n\n");
 };
 
 /**
  * Generates a basic response based on user input and workflow context.
  * @param {string} input - The user's query or instruction.
  * @param {Object} context - Current state and data context.
+ * @param {object} req - The request object (for accessing session data).
  * @returns {Object} - Response with feedback and gauge metrics.
  */
-export async function generateResponse(input, context, req) {
-  try {
-    if (!input || typeof input !== "string" || input.trim() === "") {
-      throw new Error("❌ Invalid input provided to generateResponse. Input must be a non-empty string.");
+export async function generateResponse(input,  req) { // Removed context, added req
+    try {
+        if (!input || typeof input !== "string" || input.trim() === "") {
+            throw new Error("❌ Invalid input provided to generateResponse. Input must be a non-empty string.");
+        }
+         if (!req || !req.session || !req.session.userId || !req.session.chatroomId) {
+            throw new Error("❌ Invalid session data.  Session, userId, or chatroomId is missing.");
+        }
+
+        // 🔎 Basic input processing
+        const responseText = `🔍 **Processed Input:** ${input.trim()}`;
+
+        // 📊 Calculate and attach system metrics, passing userId and chatroomId
+        const gaugeMetrics = calculateMetrics(req.session.userId, req.session.chatroomId); // Pass userId and chatroomId
+
+        return {
+            status: "success",
+            response: responseText,
+            gauge: gaugeMetrics, // Include system metrics
+        };
+    } catch (error) {
+        console.error("❌ Error generating response:", error.message);
+        return {
+            status: "error",
+            message: "Failed to generate a response. Please check your input.",
+            details: error.message,
+        };
     }
-
-    // 🔎 Basic input processing
-    const responseText = `🔍 **Processed Input:** ${input.trim()}`;
-
-    // 📊 Calculate and attach system metrics
-    const gaugeMetrics = calculateMetrics(context, req.session.userId, req.session.chatroomId);
-
-    return {
-      status: "success",
-      response: responseText,
-      gauge: gaugeMetrics, // Include system metrics
-    };
-  } catch (error) {
-    console.error("❌ Error generating response:", error.message);
-    return {
-      status: "error",
-      message: "Failed to generate a response. Please check your input.",
-      details: error.message,
-    };
-  }
 }

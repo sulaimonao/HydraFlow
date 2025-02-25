@@ -50,3 +50,5 @@ directory_find_replace.mjs
 /data
 babel.config.cjs
 /coverage
+/coverage
+/coverage/lcov-report

@@ -1,4 +1,4 @@
-// server.js (Local SQLite Version)
+// server.js
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
@@ -17,17 +17,10 @@ import summarizeLogsRoutes from './api/summarize-logs.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { sessionContext } from './middleware/sessionContext.js';
 import sessionInitializer from './middleware/sessionInitializer.js';
-// REMOVE: Supabase-related imports
-// import pg from 'pg';
-// import connectPgSimple from 'connect-pg-simple';
 
-// Import __dirname from config.js
-import { __dirname } from './config.js'; //  <-- IMPORTANT CHANGE
-
-// REMOVE these lines:
-// import { fileURLToPath } from 'url'; // Import for __dirname fix
-// const __filename = fileURLToPath(import.meta.url); // Get file path
-// const __dirname = path.dirname(__filename);       // Get directory path
+// Import and *call* getDirname
+import { getDirname } from './config.js';
+const __dirname = getDirname(); // <-- Get __dirname by calling the function
 
 dotenv.config();
 

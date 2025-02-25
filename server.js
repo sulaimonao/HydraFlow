@@ -16,14 +16,18 @@ import autonomousRoutes from './api/autonomous.js';
 import summarizeLogsRoutes from './api/summarize-logs.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { sessionContext } from './middleware/sessionContext.js';
+import sessionInitializer from './middleware/sessionInitializer.js';
 // REMOVE: Supabase-related imports
 // import pg from 'pg';
 // import connectPgSimple from 'connect-pg-simple';
-import { fileURLToPath } from 'url'; // Import for __dirname fix
-import sessionInitializer from './middleware/sessionInitializer.js';
 
-const __filename = fileURLToPath(import.meta.url); // Get file path
-const __dirname = path.dirname(__filename);       // Get directory path
+// Import __dirname from config.js
+import { __dirname } from './config.js'; //  <-- IMPORTANT CHANGE
+
+// REMOVE these lines:
+// import { fileURLToPath } from 'url'; // Import for __dirname fix
+// const __filename = fileURLToPath(import.meta.url); // Get file path
+// const __dirname = path.dirname(__filename);       // Get directory path
 
 dotenv.config();
 
@@ -37,7 +41,7 @@ import connectSqlite3 from 'connect-sqlite3';
 const SQLiteStore = connectSqlite3(session);
 const sessionStore = new SQLiteStore({
   db: 'sessions.db', // Use a dedicated sessions database file
-  dir: path.resolve(__dirname, 'data'), // Put it in the 'data' directory
+  dir: path.resolve(__dirname, 'data'), // Put it in the 'data' directory  // Use the imported __dirname
   table: 'user_sessions', // You can customize the table name
   concurrentDB: true,
 });
@@ -64,8 +68,8 @@ app.use(sessionInitializer);
 app.use(sessionContext); // Apply sessionContext middleware to all routes
 app.use(appendGaugeMetrics);
 
-app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'favicon.ico')));
-app.use('/favicon.png', express.static(path.join(__dirname, 'public', 'favicon.png')));
+app.use('/favicon.ico', express.static(path.join(__dirname, 'public', 'favicon.ico'))); // Use the imported __dirname
+app.use('/favicon.png', express.static(path.join(__dirname, 'public', 'favicon.png')));  // Use the imported __dirname
 
 // Register routes (all your API endpoints)
 app.use('/api/feedback', feedbackRoutes);
@@ -82,7 +86,7 @@ app.use('/api/summarize-logs', summarizeLogsRoutes);
 
 // Serve the homepage
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(__dirname, "public", "index.html")); // Use the imported __dirname
 });
 
 const PORT = process.env.PORT || 3000;

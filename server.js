@@ -17,9 +17,12 @@ import summarizeLogsRoutes from './api/summarize-logs.js';
 import { appendGaugeMetrics } from './middleware/metricsMiddleware.js';
 import { sessionContext } from './middleware/sessionContext.js';
 import sessionInitializer from './middleware/sessionInitializer.js';
+import { getDirname } from './config.js'; // Get config.
+import config from './config.js';        // DEFAULT import for config
+import connectSqlite3 from 'connect-sqlite3';
+import fs from 'fs'; // Import the 'fs' module
 
-// Import and *call* getDirname
-import { getDirname } from './config.js';
+
 const __dirname = getDirname(); // <-- Get __dirname by calling the function
 
 dotenv.config();
@@ -28,23 +31,32 @@ const app = express();
 app.use(express.json());
 
 // 🛡️ Use SQLite for Session Store (simpler for local development)
-import sqlite3 from 'sqlite3';
-import connectSqlite3 from 'connect-sqlite3';
 
 const SQLiteStore = connectSqlite3(session);
+
+// --- CRUCIAL CHANGE ---
+// Ensure the 'data' directory exists
+const dataDir = path.resolve(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir); // Create the directory if it doesn't exist
+}
+
+// Use config.sessionsDbPath here, consistent with the db.js change
 const sessionStore = new SQLiteStore({
-  db: 'sessions.db', // Use a dedicated sessions database file
-  dir: path.resolve(__dirname, 'data'), // Put it in the 'data' directory  // Use the imported __dirname
+  db: path.basename(config.sessionsDbPath), // Use ONLY the filename here
+  dir: dataDir,       // Use the absolute path to the 'data' directory
   table: 'user_sessions', // You can customize the table name
   concurrentDB: true,
 });
+
+
 
 app.use(
     session({
         store: sessionStore,
         secret: process.env.SESSION_SECRET || 'your-secret-key', // Use .env for production
         resave: false,
-        saveUninitialized: false,
+        saveUninitialized: false,  // Changed to false, as it's generally recommended
         cookie: {
             // secure: process.env.NODE_ENV === 'production', // Only set 'secure' in production (HTTPS)
             secure: false,  // For local development, keep secure as false
@@ -83,8 +95,13 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running locally on port ${PORT}`);
-});
+
+// Only start listening if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running locally on port ${PORT}`);
+    });
+}
+
 
 export default app;

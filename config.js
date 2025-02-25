@@ -18,13 +18,10 @@ const dbPath = path.resolve(__dirname, 'data/hydraflow.db');
 const sessionsDbPath = path.resolve(__dirname, 'data/sessions.db');
 
 const config = {
-  // ... (rest of your config)
-
   dbPath, // Use the resolved path
   sessionsDbPath,
   __dirname, //added to be called in other files
-
-  // ...
+  // ... other config options ...
 };
 
 export default config;

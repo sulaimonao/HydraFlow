@@ -1,16 +1,30 @@
 // config.js
-import path from 'path';
 import { fileURLToPath } from 'url';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
 
-// Export a FUNCTION that returns __dirname
+dotenv.config();
+
+// Helper function to get the directory name
 export function getDirname() {
-    let __dirname;
-    if (process.env.NODE_ENV === 'test') {
-        // IN TEST ENVIRONMENT: Use a hardcoded relative path
-        __dirname = path.resolve('./'); // Points to project root
-    } else {
-        // In normal (non-test) execution, __dirname is calculated as before.
-        __dirname = path.dirname(fileURLToPath(import.meta.url));
-    }
-    return __dirname;
+  return path.dirname(fileURLToPath(import.meta.url));
 }
+
+const __dirname = getDirname();
+
+// Database file path (store it in a 'data' directory)
+const dbPath = path.resolve(__dirname, 'data/hydraflow.db');
+const sessionsDbPath = path.resolve(__dirname, 'data/sessions.db');
+
+const config = {
+  // ... (rest of your config)
+
+  dbPath, // Use the resolved path
+  sessionsDbPath,
+  __dirname, //added to be called in other files
+
+  // ...
+};
+
+export default config;

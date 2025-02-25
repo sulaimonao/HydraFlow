@@ -49,3 +49,4 @@ workflowClient.ts
 directory_find_replace.mjs
 /data
 babel.config.cjs
+/coverage

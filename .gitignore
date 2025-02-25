@@ -47,3 +47,4 @@ project_structure_with_contents.json
 find_missing_imports.cjs
 workflowClient.ts
 directory_find_replace.mjs
+/data

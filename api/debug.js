@@ -1,7 +1,6 @@
-// api/debug.js (Local SQLite Version)
 import express from 'express';
 // No changes to imports - already using db.js functions
-import { logIssue, fetchDebugLogs } from '../lib/db.js';
+import { logIssue as dbLogIssue, fetchDebugLogs } from '../lib/db.js';
 import { sessionContext } from '../middleware/sessionContext.js';
 
 const router = express.Router();
@@ -16,7 +15,7 @@ router.post('/log', sessionContext, async (req, res) => {
         }
 
         // Call logIssue with correct arguments (userId, chatroomId, issue, resolution)
-        const log = await db.logIssue(userId, chatroomId, issue, resolution);
+        const log = await dbLogIssue(userId, chatroomId, issue, resolution);
 
         res.status(200).json({
             message: "Issue logged successfully.",
@@ -38,7 +37,7 @@ router.get('/logs/:contextId', sessionContext, async (req, res) => {
         }
 
         // Call fetchDebugLogs with correct arguments (userId, chatroomId)
-        const logs = await db.fetchDebugLogs(userId, chatroomId);
+        const logs = await fetchDebugLogs(userId, chatroomId);
 
         res.status(200).json({
             message: "Debug logs retrieved successfully.",
@@ -49,5 +48,16 @@ router.get('/logs/:contextId', sessionContext, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch debug logs.", details: error.message });
     }
 });
+
+// Define and export the logIssue function
+export async function logIssue(userId, chatroomId, issue, resolution) {
+    try {
+        const log = await dbLogIssue(userId, chatroomId, issue, resolution);
+        return log;
+    } catch (error) {
+        console.error("❌ Error in logIssue:", error);
+        throw new Error("Failed to log issue.");
+    }
+}
 
 export default router;

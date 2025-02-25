@@ -120,5 +120,37 @@ export async function handleActions(actions, context, req) {
     return feedback; // Ensure feedback is always returned
 }
 
-// Export callAction if it's defined elsewhere and needed
-// export { callAction }; // Uncomment if you have a callAction function
+/**
+ * 🎯 Centralized action dispatcher
+ * @param {string} action - The action to execute.
+ * @param {Object} payload - The payload for the action.
+ * @param {Object} req - Request object for consistent session handling.
+ * @returns {Promise<any>} - Result of the action.
+ */
+async function callAction(action, payload, req) {
+    // Validate session (still needed, but simplified)
+    if (!req.session || !req.session.userId || !req.session.chatroomId) {
+        throw new Error("Missing userId or chatroomId in session.");
+    }
+
+    switch (action) {
+        case 'generate_response':
+            // Assuming generateResponse can now access req.session directly if needed
+            return await generateResponse(payload, req); // Pass req
+
+        case "fetch_gauge_metrics":
+            // Assuming calculateMetrics does NOT need database access, or it uses ../util/metrics.js
+            return calculateMetrics(payload); // What is context? Assuming it is payload
+
+        case "compress_memory":
+            return await callApiWithRetry('/api/compress-memory', payload, req);
+
+        case "create_subpersona":
+            return await callApiWithRetry('/api/create-subpersona', payload, req);
+
+        default:
+            throw new Error(`❌ Unknown action: ${action}`);
+    }
+}
+
+export {callAction };

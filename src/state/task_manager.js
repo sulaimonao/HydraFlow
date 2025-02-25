@@ -83,7 +83,6 @@ export const getTaskCard = async (taskId, userId, chatroomId) => { //Removed req
  */
 export async function addDependency(req, childSubtaskId, parentSubtaskId) {
   try {
-
     const { userId, chatroomId } = req.session;
 
     // Use db.insertTaskDependency
@@ -103,7 +102,7 @@ export async function addDependency(req, childSubtaskId, parentSubtaskId) {
  * @param {string} subtaskId - Subtask ID.
  * @param {string} status - New status (pending, in_progress, completed).
  */
-export const updateSubtaskStatus = async (req, subtaskId, status) => {
+export const updateTaskStatus = async (req, subtaskId, status) => {
     try {
         const { userId, chatroomId } = req.session;
         // Removed setSessionContext
@@ -169,3 +168,5 @@ export const simplifyResponses = (responses) => {
         message: response.message || "No message provided",
     }));
 };
+
+export { };

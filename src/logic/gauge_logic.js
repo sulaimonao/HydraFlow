@@ -3,7 +3,7 @@ import os from 'os';
 import { performance } from 'perf_hooks';
 // Removed Supabase imports
 //import { supabase, supabaseRequest } from '../lib/db.js';
-import * as db from '../lib/db.js'; // Import SQLite db module
+import * as db from '../../lib/db.js'; // Import SQLite db module
 import { logInfo, logError } from '../util/logger.js';
 
 /**

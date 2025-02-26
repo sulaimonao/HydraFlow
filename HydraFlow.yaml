@@ -2,13 +2,20 @@ openapi: "3.1.0"
 info:
   title: "HydraFlow Actions API"
   description: |
-    HydraFlow is an adaptive conversational assistant API for context management, query parsing, 
-    dynamic sub-persona creation, memory compression, and more. It supports integration with 
-    external systems like CustomGPT, ensuring smooth workflows with dynamic feedback and identifiers.
-  version: "1.6.0"
+    HydraFlow is an adaptive conversational assistant API for context management, query parsing,
+    dynamic sub-persona creation, memory compression, and more. It supports integration with
+    external systems, ensuring smooth workflows with dynamic feedback and identifiers.  This
+    version is configured for local development.
+  version: "1.6.0"  # Consider a separate version for local, e.g., 1.6.0-local
 servers:
-  - url: "https://hydra-flow.vercel.app/api"
-    description: "Deployed API server"
+  - url: "http://localhost:3000/api"  #  <-- CHANGED: Use localhost and a common port
+    description: "Local Development Server" # <-- CHANGED: Clarify it's local
+
+# components, schemas, and paths remain largely the same,
+# EXCEPT for removing the X-Hydra-Session-ID header requirement
+# if you are using a different session management approach locally.
+# I'll show the full YAML, and then highlight changes within sections.
+
 components:
   responses:
     ServerError:
@@ -22,6 +29,9 @@ components:
                 type: string
                 description: "Error message."
   schemas:
+    # ... (All your existing schemas - ParseQueryResponse, MemoryOptimization, etc.) ...
+    # These likely don't need changes for local development.  I'm including
+    # the TaskCard, SubTask, Head, and Memory schemas for completeness.
     ParseQueryResponse:
       type: object
       properties:
@@ -258,18 +268,20 @@ components:
           description: "IDs of tasks that this subtask depends on."
 
 paths:
+  # ... (Iterate through each path, making the changes below) ...
   /api/parse-query:
     post:
       summary: "Parse a query into actionable keywords and tasks"
-      description: "Parses user-provided query to extract keywords and actionable tasks, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Parses user-provided query to extract keywords and actionable tasks."
+      # parameters:  <-- CHANGED:  Remove or modify this section
+      #   - in: header
+      #     name: X-Hydra-Session-ID
+      #     required: true
+      #     schema:
+      #       type: string
+      #     description: Session ID for maintaining user context.
       requestBody:
+        # ... (rest of the requestBody remains the same) ...
         description: "User query to parse."
         required: true
         content:
@@ -282,6 +294,7 @@ paths:
                   type: string
                   description: "The query input that needs parsing."
       responses:
+        # ... (responses remain the same) ...
         200:
           description: "Successfully parsed query."
           content:
@@ -299,17 +312,13 @@ paths:
                     type: string
                     description: "Error message."
 
+    # ... Repeat this pattern for ALL other paths ...
   /api/autonomous:
     post:
       summary: "Run an autonomous workflow based on the provided query"
-      description: "Executes an autonomous workflow using the provided query, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Executes an autonomous workflow using the provided query."
+      # parameters: <-- Remove or modify for local session handling
+      # ...
       requestBody:
         description: "User query to execute the autonomous workflow."
         required: true
@@ -360,14 +369,9 @@ paths:
   /api/create-subpersona:
     post:
       summary: "Create a new subpersona"
-      description: "Creates a new subpersona with the provided details, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Creates a new subpersona with the provided details."
+      # parameters: <-- Remove or modify
+      # ...
       requestBody:
         description: "Details for the new subpersona."
         required: true
@@ -421,14 +425,9 @@ paths:
   /api/compress-memory:
     post:
       summary: "Compress memory data"
-      description: "Compresses memory data, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Compresses memory data."
+      # parameters: <-- Remove or modify
+      # ...
       requestBody:
         description: "Memory data to compress."
         required: true
@@ -480,14 +479,9 @@ paths:
     post:
       operationId: "parseQuery"
       summary: "Parse a query into actionable keywords and tasks"
-      description: "Parses user-provided query to extract keywords and actionable tasks, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Parses user-provided query to extract keywords and actionable tasks."
+      # parameters: <-- Remove or modify
+      # ...
       requestBody:
         description: "User query to parse."
         required: true
@@ -511,20 +505,13 @@ paths:
           description: "Invalid input; query missing or malformed."
         500:
           $ref: "#/components/responses/ServerError"
-
   /create-subpersona:
     post:
       operationId: "createSubpersona"
       summary: "Create a specialized sub-persona"
-      description: |
-        Dynamically generates a sub-persona for a task, referencing the session context via the X-Hydra-Session-ID header to maintain continuity.
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Dynamically generates a sub-persona for a task."
+      # parameters: <-- Remove or modify
+      # ...
       requestBody:
         description: "Details for sub-persona creation."
         required: true
@@ -555,14 +542,9 @@ paths:
     post:
       operationId: "compressMemory"
       summary: "Compress and optimize memory"
-      description: "Compresses lengthy conversation memory for optimized context management. Automatically triggers if memory usage exceeds the defined threshold, utilizing session context from X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Compresses lengthy conversation memory for optimized context management. Automatically triggers if memory usage exceeds the defined threshold."
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         description: "Full memory content to compress."
         required: true
@@ -591,14 +573,9 @@ paths:
     post:
       operationId: "summarizeLogs"
       summary: "Summarize logs for patterns and errors"
-      description: "Analyzes log data to generate summaries of key patterns and errors, with session context maintained via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Analyzes log data to generate summaries of key patterns and errors."
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         description: "Log data to summarize."
         required: true
@@ -627,14 +604,9 @@ paths:
     get:
       operationId: "getFeedbackSummary"
       summary: "Retrieve feedback summary"
-      description: "Fetches a summarized view of all feedback, including totals and averages, utilizing session context via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Fetches a summarized view of all feedback, including totals and averages."
+      # parameters: <-- Remove or modify
+      # ...
       responses:
         200:
           description: "Successfully retrieved feedback summary."
@@ -649,14 +621,9 @@ paths:
     get:
       operationId: "fetchGaugeMetrics"
       summary: "Fetch gauge metrics for the user interface"
-      description: "Provides real-time metrics including token usage, engine load, and latency, with session context maintained via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Provides real-time metrics including token usage, engine load, and latency."
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         '200':
           description: "Successfully fetched metrics."
@@ -691,14 +658,9 @@ paths:
     get:
       operationId: "getRecommendations"
       summary: "Fetch actionable recommendations"
-      description: "Provides recommendations based on system performance and metrics, utilizing session context via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Provides recommendations based on system performance and metrics."
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         '200':
           description: "Successfully fetched recommendations."
@@ -713,14 +675,9 @@ paths:
     post:
       operationId: "addTaskDependency"
       summary: "Add a dependency for a subtask"
-      description: "Creates a dependency relationship between subtasks, with session context maintained via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Creates a dependency relationship between subtasks."
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         description: "Details of the dependency to add."
         required: true
@@ -759,7 +716,7 @@ paths:
     get:
       operationId: "getTaskDependencies"
       summary: "Fetch task dependencies"
-      description: "Fetches all dependencies for a given subtask, utilizing session context via X-Hydra-Session-ID."
+      description: "Fetches all dependencies for a given subtask."
       parameters:
         - name: subtaskId
           in: path
@@ -767,12 +724,12 @@ paths:
           schema:
             type: integer
           description: "ID of the subtask."
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+        # - in: header     <-- Remove or modify
+        #   name: X-Hydra-Session-ID
+        #   required: true
+        #   schema:
+        #     type: string
+        #   description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched task dependencies."
@@ -804,7 +761,7 @@ paths:
     get:
       operationId: "getTaskCard"
       summary: "Fetch a task card with its subtasks and dependencies"
-      description: "Fetches a specific task card and its associated subtasks and dependencies, with session context maintained via X-Hydra-Session-ID."
+      description: "Fetches a specific task card and its associated subtasks and dependencies."
       parameters:
         - name: taskCardId
           in: path
@@ -812,12 +769,12 @@ paths:
           schema:
             type: integer
           description: "The ID of the task card."
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+        # - in: header     <-- Remove or modify
+        #   name: X-Hydra-Session-ID
+        #   required: true
+        #   schema:
+        #     type: string
+        #   description: Session ID for maintaining user context.
       responses:
         200:
           description: "Successfully fetched the task card."
@@ -838,14 +795,9 @@ paths:
     get:
       operationId: "getContextState"
       summary: "Retrieve the current context state"
-      description: "Fetches the current context state for the user and chatroom, utilizing session context via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Fetches the current context state for the user and chatroom."
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         200:
           description: "Successfully retrieved the context state."
@@ -865,14 +817,9 @@ paths:
     post:
       operationId: "updateContextState"
       summary: "Update the context state"
-      description: "Updates the current context state with new data, with session context maintained via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Updates the current context state with new data."
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         description: "Details of the new context state."
         required: true
@@ -900,14 +847,9 @@ paths:
     get:
       operationId: "getFeedback"
       summary: "Retrieve all feedback"
-      description: "Fetches all feedback entries, utilizing session context via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Fetches all feedback entries."
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         200:
           description: "Successfully retrieved feedback."
@@ -926,14 +868,9 @@ paths:
     post:
       operationId: "submitFeedback"
       summary: "Submit feedback"
-      description: "Submits feedback for a task or workflow, with session context maintained via X-Hydra-Session-ID."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      description: "Submits feedback for a task or workflow."
+      # parameters: <-- Remove or modify.
+      # ...
       requestBody:
         description: "Details of the feedback to submit."
         required: true
@@ -984,15 +921,10 @@ paths:
   /heads:
     get:
       summary: "Get heads"
-      description: "Retrieve heads based on user_id and chatroom_id, utilizing session context via X-Hydra-Session-ID."
+      description: "Retrieve heads based on user_id and chatroom_id."
       operationId: getHeads
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         '200':
           description: "A list of heads."
@@ -1006,15 +938,10 @@ paths:
   /memories:
     get:
       summary: "Get memories"
-      description: "Retrieve memories based on user_id and chatroom_id, utilizing session context via X-Hydra-Session-ID."
+      description: "Retrieve memories based on user_id and chatroom_id."
       operationId: getMemories
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      # parameters:  <-- Remove or modify
+      # ...
       responses:
         '200':
           description: "A list of memories."
@@ -1028,15 +955,10 @@ paths:
   /task_cards:
     get:
       summary: "Get task cards"
-      description: "Retrieve task cards based on user_id and chatroom_id, utilizing session context via X-Hydra-Session-ID."
+      description: "Retrieve task cards based on user_id and chatroom_id."
       operationId: getTaskCards
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      # parameters: <-- Remove or modify.
+      # ...
       responses:
         '200':
           description: "A list of task cards."
@@ -1050,15 +972,10 @@ paths:
   /feedback_entries:
     post:
       summary: "Post feedback entries"
-      description: "Submit feedback entries, utilizing session context via X-Hydra-Session-ID."
+      description: "Submit feedback entries."
       operationId: postFeedbackEntries
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: Session ID for maintaining user context.
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         required: true
         content:
@@ -1080,14 +997,9 @@ paths:
     post:
       operationId: "logIssue"
       summary: "Log an issue in debug logs"
-      description: "Logs an issue and its resolution for a given user and context, utilizing the session context maintained via the X-Hydra-Session-ID header."
-      parameters:
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: "Session ID for maintaining user context."
+      description: "Logs an issue and its resolution for a given user and context."
+      # parameters:  <-- Remove or modify
+      # ...
       requestBody:
         description: "Details of the issue to log."
         required: true
@@ -1126,7 +1038,7 @@ paths:
     get:
       operationId: "getDebugLogs"
       summary: "Retrieve debug logs for a specific context"
-      description: "Fetches debug logs for a given user and context ID, utilizing the session context maintained via the X-Hydra-Session-ID header."
+      description: "Fetches debug logs for a given user and context ID."
       parameters:
         - name: contextId
           in: path
@@ -1134,12 +1046,12 @@ paths:
           schema:
             type: string
             description: "The ID of the context to retrieve logs for."
-        - in: header
-          name: X-Hydra-Session-ID
-          required: true
-          schema:
-            type: string
-          description: "Session ID for maintaining user context."
+        # - in: header   <-- Remove or modify
+        #   name: X-Hydra-Session-ID
+        #   required: true
+        #   schema:
+        #     type: string
+        #   description: "Session ID for maintaining user context."
       responses:
         200:
           description: "Successfully retrieved debug logs."
